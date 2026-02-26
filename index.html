@@ -6011,6 +6011,98 @@ function renderAnomalyPage() {
       </div>
     </div>
 
+    <!-- Analysetypen Info-Panel -->
+    <details style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px;">
+      <summary style="padding:11px 16px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:8px;list-style:none;user-select:none;">
+        <i class="fa-solid fa-circle-info" style="color:var(--accent2)"></i>
+        Analysetypen &amp; Erkennungsschwellenwerte
+        <i class="fa-solid fa-chevron-down" style="margin-left:auto;font-size:10px;opacity:.5"></i>
+      </summary>
+      <div style="padding:0 16px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:4px;">
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-microchip" style="color:#f87171"></i> CPU-Überlastung
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Last &gt; <strong style="color:var(--text)">85 %</strong> oder Trend → 90 % in &lt; 7 Tagen<br>
+            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Last &gt; <strong style="color:var(--text)">70 %</strong> oder Trend steigend (R² &gt; 0.4)<br>
+            <span style="opacity:.5;font-size:11px">Quelle: device-info · cpuLoadPercent</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-memory" style="color:#f87171"></i> Memory-Leak
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Monotoner Anstieg → 95 % in &lt; 14 Tagen<br>
+            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Slope &gt; 0.5 %/Tag &amp; RAM &gt; <strong style="color:var(--text)">60 %</strong> &amp; R² &gt; 0.45<br>
+            <span style="opacity:.5;font-size:11px">Quelle: device-info · memoryUtilizationPercent</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-temperature-half" style="color:#f87171"></i> Überhitzung
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Temperatur &gt; <strong style="color:var(--text)">70 °C</strong><br>
+            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> &gt; <strong style="color:var(--text)">60 °C</strong> oder Trend steigend → 75 °C<br>
+            <span style="opacity:.5;font-size:11px">Quelle: device-info · temperature</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-ethernet" style="color:#fbbf24"></i> Port-Flapping
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> &gt; <strong style="color:var(--text)">2 Flaps/Tag</strong> (Link up/down)<br>
+            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> &gt; <strong style="color:var(--text)">0.5 Flaps/Tag</strong> in 30 Tagen<br>
+            <span style="opacity:.5;font-size:11px">Quelle: lan-interface · active (Zustandswechsel)</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-shield-halved" style="color:#fbbf24"></i> VPN-Instabilität
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Paketverlust &gt; <strong style="color:var(--text)">8 %</strong><br>
+            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Paketverlust &gt; <strong style="color:var(--text)">3 %</strong> oder Trend → 15 %<br>
+            <span style="opacity:.5;font-size:11px">Quelle: vpn-connection · packetLossPercent, rttAvgUs</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-signal" style="color:#fbbf24"></i> LTE-Signal-Abbau
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Signal &lt; <strong style="color:var(--text)">-70 dBm</strong> &amp; Slope &lt; -0.2 dBm/Tag<br>
+            Trend-Grenzwert: <strong style="color:var(--text)">-95 dBm</strong> (Verbindungsabbruch)<br>
+            <span style="opacity:.5;font-size:11px">Quelle: wan-interface · mobileModemSignalDecibelMw</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-wifi" style="color:var(--blue)"></i> WLAN-Sättigung
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> &gt; <strong style="color:var(--text)">35 Clients</strong> oder Trend → ${LC_AP_MAX_CLIENTS} in &lt; 14 Tagen<br>
+            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> &gt; <strong style="color:var(--text)">20 Clients</strong> oder Trend steigend (R² &gt; 0.35)<br>
+            <span style="opacity:.5;font-size:11px">Quelle: wlan_info_json · stations (DAY1-Period)</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-brain" style="color:var(--purple)"></i> ML-Modelle &amp; Konfidenz
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="pa-model-badge">EMA</span> Glättung (α=0.3) · Rauschen reduzieren<br>
+            <span class="pa-model-badge" style="background:rgba(99,102,241,.2);color:var(--accent2)">LinReg</span> Trendstärke via R² (0–1)<br>
+            <span class="pa-model-badge" style="background:rgba(239,68,68,.15);color:#f87171">IsoForest</span> Z-Score Anomalie-Frequenz<br>
+            <span style="opacity:.5;font-size:11px">Konfidenz = Trend×40% + Frequenz×35% + Dringlichkeit×25%</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
     <!-- 48h Predictions -->
     ${next48h.length ? `
     <div class="pa-section-title"><i class="fa-solid fa-clock" style="color:#f87171"></i> Vorhersagen nächste 48 Stunden</div>
