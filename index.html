@@ -534,6 +534,52 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
 .log-load-more:disabled{opacity:.4;cursor:not-allowed;}
 .log-empty{text-align:center;padding:40px;color:var(--text3);}
 
+/* ── PREDICTIVE ANOMALY ──────────────────────────────── */
+.pa-wrap{padding:0 24px 32px;display:flex;flex-direction:column;gap:20px;}
+.pa-kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.pa-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.pa-kpi-val{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+.pa-kpi-lbl{font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+.pa-kpi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:8px;}
+.pki-red   {background:rgba(239,68,68,.15);color:var(--red);}
+.pki-amber {background:rgba(245,158,11,.15);color:var(--amber);}
+.pki-blue  {background:rgba(56,189,248,.15);color:var(--blue);}
+.pki-green {background:rgba(34,197,94,.15); color:var(--green);}
+.pa-section-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.pa-section-title i{color:var(--accent2);}
+.pa-alert-list{display:flex;flex-direction:column;gap:8px;}
+.pa-alert{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:flex-start;gap:12px;}
+.pa-alert-critical{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.035);}
+.pa-alert-warning {border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.025);}
+.pa-alert-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.pai-critical{background:rgba(239,68,68,.15);color:var(--red);}
+.pai-warning {background:rgba(245,158,11,.15);color:var(--amber);}
+.pa-alert-body{flex:1;min-width:0;}
+.pa-alert-title{font-size:13px;font-weight:700;margin-bottom:3px;}
+.pa-alert-desc{font-size:12px;color:var(--text2);line-height:1.45;}
+.pa-alert-meta{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;}
+.pa-model-badge{background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);color:var(--purple);font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;}
+.pa-conf-badge{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+.pa-risk-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.pa-risk-table th{text-align:left;padding:7px 14px;background:var(--bg2);color:var(--text3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border2);}
+.pa-risk-table td{padding:8px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.pa-risk-table tr:last-child td{border-bottom:none;}
+.pa-risk-table tbody tr:hover>td{background:rgba(255,255,255,.02);}
+.pa-device-detail{padding:14px;background:var(--bg);display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;}
+.pa-pred-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;}
+.pa-pred-critical{border-color:rgba(239,68,68,.3);}
+.pa-pred-warning {border-color:rgba(245,158,11,.25);}
+.pa-pred-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.pa-pred-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px;}
+.ppi-critical{background:rgba(239,68,68,.15);color:var(--red);}
+.ppi-warning {background:rgba(245,158,11,.15);color:var(--amber);}
+.pa-pred-title{font-size:12px;font-weight:700;margin-bottom:2px;}
+.pa-pred-desc{font-size:11px;color:var(--text2);line-height:1.4;}
+.pa-sparkline{margin:8px 0;border-radius:4px;overflow:hidden;background:rgba(255,255,255,.03);padding:4px 6px 2px;}
+.pa-fixes{margin-top:8px;}
+.pa-fix-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(99,102,241,.09);border:1px solid rgba(99,102,241,.2);color:var(--accent2);font-size:10px;font-weight:600;padding:3px 8px;border-radius:7px;}
+.pa-model-row{font-size:10px;color:var(--text3);margin-top:8px;display:flex;align-items:center;gap:5px;}
+
 /* ── LIFECYCLE PLANNER ───────────────────────────────── */
 .lc-wrap{padding:0 24px 32px;display:flex;flex-direction:column;gap:20px;}
 .lc-kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
@@ -792,6 +838,11 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
         <span class="tb-icon"><i class="fa-solid fa-timeline"></i></span>
         <span class="tb-label">Lifecycle-Planner</span>
         <span class="tab-badge" id="badge-lifecycle">–</span>
+      </button>
+      <button class="tab-btn" onclick="showTab('anomaly')" id="tab-btn-anomaly" data-tooltip="Predictive Anomaly">
+        <span class="tb-icon"><i class="fa-solid fa-brain"></i></span>
+        <span class="tb-label">Predictive Anomaly</span>
+        <span class="tab-badge" id="badge-anomaly">–</span>
       </button>
 
       <!-- Verwaltung -->
@@ -1370,6 +1421,19 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
     </div>
     <div class="lc-wrap" id="lc-wrap">
       <div class="empty-state"><i class="fa-solid fa-timeline"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: PREDICTIVE ANOMALY -->
+  <section class="tab-section" id="tab-anomaly">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-brain" style="color:var(--purple);margin-right:6px"></i>Predictive Anomaly</span>
+      <div class="toolbar-spacer"></div>
+      <span id="pa-last-run" style="color:var(--text3);font-size:12px"></span>
+      <button class="icon-btn" onclick="paState.loaded=false;paState.results={};renderAnomalyPage()" title="Neu analysieren"><i class="fa-solid fa-arrows-rotate"></i></button>
+    </div>
+    <div class="pa-wrap" id="pa-wrap">
+      <div class="empty-state"><i class="fa-solid fa-brain"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden, dann Analyse starten.</p></div>
     </div>
   </section>
 
@@ -1967,6 +2031,7 @@ function showTab(id) {
   if(id==='settings') loadSettingsUI();
   if(id==='energy') { loadEnergyPrice(); renderEnergy(); }
   if(id==='lifecycle') renderLifecycle();
+  if(id==='anomaly') renderAnomalyPage();
   if(id==='firmware') renderFirmware();
   if(id==='sites') loadSites();
 }
@@ -5510,6 +5575,515 @@ function topoExportSvg() {
   a.click();
   URL.revokeObjectURL(a.href);
   toast('success', 'SVG exportiert', 'Netzwerkplan als SVG gespeichert.');
+}
+
+// ─── PREDICTIVE ANOMALY ───────────────────────────────────────────────────────
+const PA_DAYS = 30;
+
+let paState = {
+  loaded: false,
+  loading: false,
+  results: {},          // deviceId → { predictions[], riskScore }
+  progress: { total: 0, done: 0, current: '' },
+  lastRun: null
+};
+
+/* ── ML Helpers ── */
+
+// Exponential Moving Average (smoothing, α=0.3)
+function paEMA(vals, alpha = 0.3) {
+  if (!vals.length) return [];
+  let e = vals[0];
+  return vals.map(v => { e = alpha * v + (1 - alpha) * e; return e; });
+}
+
+// Linear Regression → { slope, intercept, r2, predict(x) }
+function paLinReg(vals) {
+  const n = vals.length;
+  if (n < 2) return { slope: 0, intercept: vals[0] || 0, r2: 0, predict: () => vals[0] || 0 };
+  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+  vals.forEach((v, i) => { sumX += i; sumY += v; sumXY += i * v; sumX2 += i * i; });
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX) || 0;
+  const intercept = (sumY - slope * sumX) / n;
+  const mean = sumY / n;
+  let ssTot = 0, ssRes = 0;
+  vals.forEach((v, i) => { ssTot += (v - mean) ** 2; ssRes += (v - (slope * i + intercept)) ** 2; });
+  const r2 = ssTot > 0 ? Math.max(0, 1 - ssRes / ssTot) : 0;
+  return { slope, intercept, r2, predict: x => slope * x + intercept };
+}
+
+// Isolation Forest via Z-score → anomaly score [0..1] per value
+function paAnomalyScores(vals) {
+  if (vals.length < 3) return vals.map(() => 0);
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const std = Math.sqrt(vals.reduce((a, v) => a + (v - mean) ** 2, 0) / vals.length) || 1;
+  return vals.map(v => Math.min(1, Math.abs(v - mean) / (std * 3)));
+}
+
+// Days until trend reaches threshold from index fromIdx
+function paDaysTo(reg, fromIdx, threshold) {
+  if (Math.abs(reg.slope) < 0.0001) return Infinity;
+  const d = (threshold - reg.predict(fromIdx)) / reg.slope;
+  return d > 0 ? d : Infinity;
+}
+
+// Confidence score [0..1] combining trend strength, anomaly frequency, urgency
+function paConf(r2, aniFreq, urgencyDays) {
+  const trendScore  = Math.min(1, r2);
+  const freqScore   = Math.min(1, aniFreq / 0.3);
+  const urgScore    = urgencyDays < Infinity ? Math.max(0, 1 - urgencyDays / 30) : 0;
+  return Math.round((trendScore * 0.4 + freqScore * 0.35 + urgScore * 0.25) * 100);
+}
+
+// Overall device risk score 0-100
+function paRiskScore(predictions) {
+  if (!predictions.length) return 0;
+  let score = 0;
+  predictions.forEach(p => {
+    const base = p.severity === 'critical' ? 20 : 8;
+    score += base * (p.conf / 100);
+  });
+  return Math.min(100, Math.round(score));
+}
+
+/* ── Data Fetching ── */
+
+// Fetch 30-day telemetry for one device (5 tables)
+async function paFetchDevice(deviceId) {
+  const fromMs = Date.now() - PA_DAYS * 86400000;
+  const fromStr = new Date(fromMs).toISOString().slice(0, 19) + 'Z';
+  const fields = {
+    'device-info':    ['timeMs','cpuLoadPercent','memoryUtilizationPercent','temperature'],
+    'lan-interface':  ['timeMs','name','active','rxCounterBytes','txCounterBytes'],
+    'vpn-connection': ['timeMs','peerName','active','packetLossPercent','rttAvgUs'],
+    'wan-interface':  ['timeMs','connectionType','logicalState','mobileModemSignalDecibelMw'],
+  };
+  const results = {};
+  await Promise.allSettled(Object.entries(fields).map(async ([table, cols]) => {
+    try {
+      const qs = `deviceIds=${deviceId}&fields=${cols.join(',')}&from=${fromStr}&limit=2000`;
+      const data = await api('monitoring', `/api/${S.accountId}/tables/${table}?${qs}`);
+      results[table] = (data?.data || data || []);
+    } catch { results[table] = []; }
+  }));
+  // WLAN time-series (Records API)
+  try {
+    const data = await api('monitoring', `/accounts/${S.accountId}/records/wlan_info_json?group=DEVICE&groupId=${deviceId}&period=DAY1&type=json&name=stations&latest=${PA_DAYS}`);
+    results['wlan'] = data?.items?.stations?.values || [];
+  } catch { results['wlan'] = []; }
+  return results;
+}
+
+// Bin rows by day-index (0 = oldest) → array of daily avg values for a field
+function paBinByDay(rows, timeField, valueField, aggFn = 'avg') {
+  const fromMs = Date.now() - PA_DAYS * 86400000;
+  const buckets = {};
+  rows.forEach(r => {
+    const t = r[timeField] || r.timeMs;
+    if (!t || t < fromMs) return;
+    const dayIdx = Math.floor((t - fromMs) / 86400000);
+    if (!buckets[dayIdx]) buckets[dayIdx] = [];
+    const v = parseFloat(r[valueField]);
+    if (!isNaN(v)) buckets[dayIdx].push(v);
+  });
+  const result = [];
+  for (let i = 0; i < PA_DAYS; i++) {
+    const vals = buckets[i] || [];
+    if (!vals.length) { result.push(null); continue; }
+    if (aggFn === 'avg') result.push(vals.reduce((a, b) => a + b, 0) / vals.length);
+    else if (aggFn === 'max') result.push(Math.max(...vals));
+    else if (aggFn === 'min') result.push(Math.min(...vals));
+  }
+  return result;
+}
+
+// Fill nulls with linear interpolation for ML (use last-seen for gaps)
+function paFillNulls(arr) {
+  const filled = [...arr];
+  let last = 0;
+  for (let i = 0; i < filled.length; i++) {
+    if (filled[i] !== null) { last = filled[i]; }
+    else { filled[i] = last; }
+  }
+  return filled;
+}
+
+/* ── Analysis ── */
+
+function paAnalyzeDevice(deviceId, raw) {
+  const dev = S.devices[deviceId] || {};
+  const name = deviceName(dev);
+  const predictions = [];
+
+  // Helper: push prediction
+  const push = (type, title, desc, severity, conf, vals, unit, threshold, daysTo, autofix) => {
+    predictions.push({ type, title, desc, severity, conf: Math.max(1, Math.min(99, conf)), vals, unit, threshold, daysTo, autofix });
+  };
+
+  // ── 1. CPU overload trend ──────────────────────────────────────────────────
+  const cpuRows = raw['device-info'] || [];
+  const cpuDaily = paFillNulls(paBinByDay(cpuRows, 'timeMs', 'cpuLoadPercent', 'avg'));
+  if (cpuDaily.length >= 5) {
+    const smooth = paEMA(cpuDaily);
+    const reg = paLinReg(smooth);
+    const ani = paAnomalyScores(cpuDaily);
+    const aniFreq = ani.filter(s => s > 0.5).length / ani.length;
+    const last = smooth[smooth.length - 1];
+    const daysTo90 = paDaysTo(reg, smooth.length - 1, 90);
+    if (last > 70 || (reg.slope > 1.5 && reg.r2 > 0.4)) {
+      const sev = last > 85 || daysTo90 < 7 ? 'critical' : 'warning';
+      const conf = paConf(reg.r2, aniFreq, daysTo90);
+      if (conf > 20) push('cpu_overload',
+        `CPU-Überlastung: ${name}`,
+        daysTo90 < Infinity ? `Trend: 90 % in ~${Math.round(daysTo90)} Tagen erreicht (aktuell ${Math.round(last)} %)` : `Aktuell ${Math.round(last)} % – Anomaliefrequenz erhöht`,
+        sev, conf, cpuDaily, '%', 90, daysTo90, ['Prozesse prüfen', 'Firmware-Update', 'Gerät neustarten']);
+    }
+  }
+
+  // ── 2. Memory leak ────────────────────────────────────────────────────────
+  const memDaily = paFillNulls(paBinByDay(cpuRows, 'timeMs', 'memoryUtilizationPercent', 'avg'));
+  if (memDaily.length >= 5) {
+    const smooth = paEMA(memDaily);
+    const reg = paLinReg(smooth);
+    const last = smooth[smooth.length - 1];
+    const daysTo95 = paDaysTo(reg, smooth.length - 1, 95);
+    if (reg.slope > 0.5 && reg.r2 > 0.45 && last > 60) {
+      const sev = daysTo95 < 14 ? 'critical' : 'warning';
+      const conf = paConf(reg.r2, 0, daysTo95);
+      if (conf > 20) push('memory_leak',
+        `Memory-Leak-Verdacht: ${name}`,
+        `RAM-Auslastung steigt monoton (${Math.round(reg.slope * 10) / 10}%/Tag). 95 % in ~${isFinite(daysTo95) ? Math.round(daysTo95) : '>30'} Tagen.`,
+        sev, conf, memDaily, '%', 95, daysTo95, ['Gerät neustarten', 'Firmware-Update', 'Prozess-Diagnose via LCOS']);
+    }
+  }
+
+  // ── 3. Overheating ────────────────────────────────────────────────────────
+  const tempDaily = paFillNulls(paBinByDay(cpuRows, 'timeMs', 'temperature', 'max'));
+  if (tempDaily.some(v => v > 0)) {
+    const reg = paLinReg(paEMA(tempDaily));
+    const last = tempDaily.filter(v => v > 0).slice(-1)[0] || 0;
+    const daysTo75 = paDaysTo(reg, tempDaily.length - 1, 75);
+    if (last > 60 || (reg.slope > 0.3 && reg.r2 > 0.4)) {
+      const sev = last > 70 ? 'critical' : 'warning';
+      const conf = paConf(reg.r2, 0, daysTo75);
+      if (conf > 15) push('overheating',
+        `Überhitzung: ${name}`,
+        `Temperatur: ${Math.round(last)} °C${isFinite(daysTo75) ? ` – 75 °C in ~${Math.round(daysTo75)} Tagen` : ''}`,
+        sev, conf, tempDaily, '°C', 75, daysTo75, ['Belüftung prüfen', 'Montageort optimieren', 'Hardware-Check']);
+    }
+  }
+
+  // ── 4. Port flapping (LAN-Interface) ─────────────────────────────────────
+  const lanRows = raw['lan-interface'] || [];
+  const portMap = {};
+  lanRows.forEach(r => {
+    const p = r.name || 'unk';
+    if (!portMap[p]) portMap[p] = [];
+    portMap[p].push(r);
+  });
+  Object.entries(portMap).forEach(([port, rows]) => {
+    if (rows.length < 10) return;
+    // Count state changes (active flips)
+    let flaps = 0;
+    let prev = rows[0].active;
+    rows.forEach(r => { if (r.active !== prev) { flaps++; prev = r.active; } });
+    const flapsPerDay = flaps / PA_DAYS;
+    if (flapsPerDay > 0.5) {
+      const sev = flapsPerDay > 2 ? 'critical' : 'warning';
+      const conf = Math.min(90, 30 + Math.round(flapsPerDay * 15));
+      const daysTo = flapsPerDay > 3 ? 2 : 7;
+      push('port_flapping',
+        `Port-Flapping: ${name} – ${port}`,
+        `Port ${port} schaltete ${flaps}× in ${PA_DAYS} Tagen (${Math.round(flapsPerDay * 10) / 10}×/Tag). Ausfall in ~${daysTo} Tagen möglich.`,
+        sev, conf, [], 'Flaps/Tag', 2, daysTo, ['Kabel tauschen', 'SFP prüfen', 'PoE-Reset', 'Port deaktivieren & aktivieren']);
+    }
+  });
+
+  // ── 5. VPN instability ────────────────────────────────────────────────────
+  const vpnRows = raw['vpn-connection'] || [];
+  const vpnLoss  = paFillNulls(paBinByDay(vpnRows, 'timeMs', 'packetLossPercent', 'avg'));
+  const vpnRtt   = paFillNulls(paBinByDay(vpnRows, 'timeMs', 'rttAvgUs', 'avg'));
+  if (vpnLoss.some(v => v > 0)) {
+    const reg = paLinReg(paEMA(vpnLoss));
+    const ani = paAnomalyScores(vpnLoss);
+    const aniFreq = ani.filter(s => s > 0.5).length / ani.length;
+    const last = vpnLoss.filter(v => v > 0).slice(-1)[0] || 0;
+    if (last > 3 || (reg.slope > 0.1 && reg.r2 > 0.35)) {
+      const sev = last > 8 ? 'critical' : 'warning';
+      const daysTo = paDaysTo(reg, vpnLoss.length - 1, 15);
+      const conf = paConf(reg.r2, aniFreq, daysTo);
+      if (conf > 15) push('vpn_instability',
+        `VPN-Instabilität: ${name}`,
+        `Paketverlust ${Math.round(last * 10) / 10} %${isFinite(daysTo) ? `, 15 % in ~${Math.round(daysTo)} Tagen` : ''}. RTT ⌀ ${Math.round((vpnRtt.filter(v=>v>0).slice(-1)[0]||0)/1000)} ms.`,
+        sev, conf, vpnLoss, '%', 15, daysTo, ['WAN-Interface prüfen', 'MTU anpassen', 'ISP-Ticket', 'Backup-VPN aktivieren']);
+    }
+  }
+
+  // ── 6. WAN signal degradation ─────────────────────────────────────────────
+  const wanRows = raw['wan-interface'] || [];
+  const sigDaily = paFillNulls(paBinByDay(wanRows, 'timeMs', 'mobileModemSignalDecibelMw', 'avg'));
+  if (sigDaily.some(v => v < -50)) {
+    const smooth = paEMA(sigDaily.map(v => v || 0));
+    const reg = paLinReg(smooth);
+    const last = smooth[smooth.length - 1];
+    if (reg.slope < -0.2 && reg.r2 > 0.35 && last < -70) {
+      const daysToLost = paDaysTo(reg, smooth.length - 1, -95);
+      const conf = paConf(reg.r2, 0, daysToLost);
+      if (conf > 15) push('wan_signal',
+        `LTE-Signal-Abbau: ${name}`,
+        `Signalpegel ${Math.round(last)} dBm und sinkend. Verbindungsabbruch in ~${isFinite(daysToLost) ? Math.round(daysToLost) : '>30'} Tagen.`,
+        'warning', conf, sigDaily, 'dBm', -95, daysToLost, ['Antenne ausrichten', 'Antennen-Upgrade', 'SIM-Karte wechseln']);
+    }
+  }
+
+  // ── 7. WLAN capacity saturation ───────────────────────────────────────────
+  const wlanVals = (raw['wlan'] || []).map(v => typeof v === 'number' ? v : (Array.isArray(v) ? v.length : 0));
+  if (wlanVals.length >= 5) {
+    const reg = paLinReg(paEMA(wlanVals));
+    const last = wlanVals[wlanVals.length - 1];
+    const daysTo40 = paDaysTo(reg, wlanVals.length - 1, LC_AP_MAX_CLIENTS);
+    if (last > 20 || (reg.slope > 0.3 && reg.r2 > 0.35)) {
+      const sev = last > 35 || daysTo40 < 14 ? 'critical' : 'warning';
+      const conf = paConf(reg.r2, 0, daysTo40);
+      if (conf > 20) push('wlan_capacity',
+        `WLAN-Sättigung: ${name}`,
+        `${Math.round(last)} Clients aktuell. Kapazitätsgrenze (${LC_AP_MAX_CLIENTS}) in ~${isFinite(daysTo40) ? Math.round(daysTo40) : '>30'} Tagen.`,
+        sev, conf, wlanVals, 'Clients', LC_AP_MAX_CLIENTS, daysTo40, ['AP hinzufügen', 'Band Steering aktivieren', 'TX-Power optimieren']);
+    }
+  }
+
+  return predictions;
+}
+
+/* ── SVG Sparkline ── */
+
+function paSparkSvg(vals, sev, threshold) {
+  const w = 120, h = 36, pad = 4;
+  const clean = vals.filter(v => v !== null && !isNaN(v));
+  if (clean.length < 2) return '<svg width="120" height="36"></svg>';
+  const mn = Math.min(...clean), mx = Math.max(...clean, threshold || 0);
+  const rng = mx - mn || 1;
+  const sx = i => pad + (i / (vals.length - 1)) * (w - 2 * pad);
+  const sy = v => pad + (1 - (v - mn) / rng) * (h - 2 * pad);
+  const pts = vals.map((v, i) => [sx(i), sy(v !== null ? v : mn)]);
+  const polyline = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const col = sev === 'critical' ? '#f87171' : '#fbbf24';
+  let thLine = '';
+  if (threshold !== undefined) {
+    const ty = sy(threshold).toFixed(1);
+    thLine = `<line x1="${pad}" y1="${ty}" x2="${w-pad}" y2="${ty}" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  }
+  return `<svg width="${w}" height="${h}" style="display:block"><polyline points="${polyline}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round"/>${thLine}</svg>`;
+}
+
+/* ── Progress & Rendering ── */
+
+function paToggleDetail(id) {
+  const el = document.getElementById(`pa-detail-${id}`);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function paLoadAll() {
+  if (!S.accountId || !Object.keys(S.devices).length) return;
+  paState.loading = true;
+  paState.loaded  = false;
+  paState.results = {};
+  const ids = Object.keys(S.devices);
+  paState.progress = { total: ids.length, done: 0, current: '' };
+  renderAnomalyPage();
+
+  // Process in batches of 3
+  const batchSize = 3;
+  for (let i = 0; i < ids.length; i += batchSize) {
+    const batch = ids.slice(i, i + batchSize);
+    await Promise.allSettled(batch.map(async id => {
+      paState.progress.current = deviceName(S.devices[id]);
+      try {
+        const raw = await paFetchDevice(id);
+        const preds = paAnalyzeDevice(id, raw);
+        paState.results[id] = { predictions: preds, riskScore: paRiskScore(preds) };
+      } catch { paState.results[id] = { predictions: [], riskScore: 0 }; }
+      paState.progress.done++;
+    }));
+    // Update progress bar
+    const wrap = document.getElementById('pa-wrap');
+    const pb = wrap?.querySelector('.pa-progress-bar');
+    if (pb) { pb.style.width = `${Math.round(paState.progress.done / paState.progress.total * 100)}%`; }
+    const pl = wrap?.querySelector('.pa-progress-label');
+    if (pl) pl.textContent = `Analysiere ${paState.progress.current}… (${paState.progress.done}/${paState.progress.total})`;
+  }
+  paState.loading = false;
+  paState.loaded  = true;
+  paState.lastRun = new Date();
+  const lr = document.getElementById('pa-last-run');
+  if (lr) lr.textContent = 'Letzte Analyse: ' + paState.lastRun.toLocaleTimeString('de-DE');
+  renderAnomalyPage();
+}
+
+function renderAnomalyPage() {
+  const wrap = document.getElementById('pa-wrap');
+  if (!wrap) return;
+
+  // No devices loaded yet
+  if (!Object.keys(S.devices).length) {
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-brain"></i><h3>Keine Geräte geladen</h3><p>Zuerst oben verbinden und Gerätedaten laden.</p></div>`;
+    return;
+  }
+
+  // Not yet started → show start button
+  if (!paState.loaded && !paState.loading) {
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-brain" style="color:var(--purple)"></i>
+        <h3>30-Tage Telemetry-Analyse</h3>
+        <p>Analysiert CPU, RAM, Temperatur, Port-Flapping, VPN, WAN-Signal und WLAN-Kapazität<br>
+        für alle ${Object.keys(S.devices).length} Geräte mit 3 ML-Modellen.</p>
+        <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <div class="pa-model-row"><span class="pa-model-badge">EMA</span> Exponential Moving Average</div>
+          <div class="pa-model-row"><span class="pa-model-badge" style="background:rgba(99,102,241,.2);color:var(--accent2)">LinReg</span> Linear Regression</div>
+          <div class="pa-model-row"><span class="pa-model-badge" style="background:rgba(239,68,68,.15);color:#f87171">IsoForest</span> Isolation Forest (Z-Score)</div>
+        </div>
+        <button onclick="paLoadAll()" style="margin-top:20px;background:linear-gradient(135deg,var(--purple),var(--accent2));border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;padding:12px 28px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">
+          <i class="fa-solid fa-play"></i> Analyse starten
+        </button>
+      </div>`;
+    return;
+  }
+
+  // Loading / Progress
+  if (paState.loading) {
+    const pct = paState.progress.total ? Math.round(paState.progress.done / paState.progress.total * 100) : 0;
+    wrap.innerHTML = `
+      <div style="max-width:500px;margin:60px auto;text-align:center">
+        <i class="fa-solid fa-brain fa-spin" style="font-size:40px;color:var(--purple);margin-bottom:20px"></i>
+        <h3 style="color:var(--text);margin-bottom:12px">Telemetry wird analysiert…</h3>
+        <div style="background:var(--border);border-radius:8px;height:10px;overflow:hidden;margin-bottom:12px">
+          <div class="pa-progress-bar" style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--purple),var(--accent2));transition:width .3s"></div>
+        </div>
+        <p class="pa-progress-label" style="color:var(--text2);font-size:13px">Analysiere… (${paState.progress.done}/${paState.progress.total})</p>
+      </div>`;
+    return;
+  }
+
+  // Results
+  const allPreds = [];
+  const deviceScores = Object.entries(paState.results)
+    .map(([id, r]) => ({ id, dev: S.devices[id], score: r.riskScore, preds: r.predictions }))
+    .sort((a, b) => b.score - a.score);
+
+  deviceScores.forEach(d => d.preds.forEach(p => allPreds.push({ ...p, deviceId: d.id, deviceName: deviceName(d.dev || {}) })));
+
+  const critical = allPreds.filter(p => p.severity === 'critical');
+  const warnings = allPreds.filter(p => p.severity === 'warning');
+  const devWithRisk = deviceScores.filter(d => d.score > 0).length;
+  const avgRisk = deviceScores.length ? Math.round(deviceScores.reduce((a, d) => a + d.score, 0) / deviceScores.length) : 0;
+
+  // Update sidebar badge
+  const badge = document.getElementById('badge-anomaly');
+  if (badge) badge.textContent = (critical.length + warnings.length) || '–';
+
+  // 48h predictions (high-confidence, short timeframe)
+  const next48h = allPreds.filter(p => p.daysTo !== undefined && p.daysTo < 3 && p.conf > 40)
+    .sort((a, b) => a.daysTo - b.daysTo).slice(0, 5);
+
+  let html = `
+    <!-- KPI Row -->
+    <div class="pa-kpi-row">
+      <div class="pa-kpi">
+        <div class="pa-kpi-icon pki-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="pa-kpi-val">${critical.length}</div>
+        <div class="pa-kpi-lbl">Kritische Anomalien</div>
+      </div>
+      <div class="pa-kpi">
+        <div class="pa-kpi-icon pki-amber"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <div class="pa-kpi-val">${warnings.length}</div>
+        <div class="pa-kpi-lbl">Warnungen</div>
+      </div>
+      <div class="pa-kpi">
+        <div class="pa-kpi-icon pki-blue"><i class="fa-solid fa-server"></i></div>
+        <div class="pa-kpi-val">${devWithRisk}</div>
+        <div class="pa-kpi-lbl">Geräte mit Risiko</div>
+      </div>
+      <div class="pa-kpi">
+        <div class="pa-kpi-icon pki-green"><i class="fa-solid fa-gauge-high"></i></div>
+        <div class="pa-kpi-val">${avgRisk}</div>
+        <div class="pa-kpi-lbl">Ø Risk-Score</div>
+      </div>
+    </div>
+
+    <!-- 48h Predictions -->
+    ${next48h.length ? `
+    <div class="pa-section-title"><i class="fa-solid fa-clock" style="color:#f87171"></i> Vorhersagen nächste 48 Stunden</div>
+    <div class="pa-alert-list">
+      ${next48h.map(p => `
+        <div class="pa-alert ${p.severity === 'critical' ? 'pa-alert-critical' : 'pa-alert-warning'}">
+          <div class="pa-alert-icon ${p.severity === 'critical' ? 'pai-critical' : 'pai-warning'}">
+            <i class="fa-solid fa-${p.severity === 'critical' ? 'skull' : 'bolt'}"></i>
+          </div>
+          <div class="pa-alert-body">
+            <div class="pa-alert-title">${p.title}</div>
+            <div class="pa-alert-desc">${p.desc}</div>
+            <div class="pa-alert-meta">
+              <span class="pa-model-badge">EMA+LinReg</span>
+              <span class="pa-conf-badge" style="color:${p.conf>70?'var(--green)':p.conf>40?'#fbbf24':'var(--text3)'}">Konfidenz ${p.conf}%</span>
+              <span style="color:var(--text3);font-size:11px">In ~${Math.round(p.daysTo * 24)} Stunden</span>
+            </div>
+            ${p.autofix?.length ? `<div class="pa-fixes">${p.autofix.map(f=>`<span class="pa-fix-chip"><i class="fa-solid fa-wrench"></i>${f}</span>`).join('')}</div>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <!-- Risk Table -->
+    <div class="pa-section-title"><i class="fa-solid fa-table-cells" style="color:var(--accent2)"></i> Geräte-Risikoübersicht</div>
+    ${!deviceScores.filter(d => d.score > 0).length
+      ? `<div class="empty-state" style="padding:40px"><i class="fa-solid fa-circle-check" style="color:var(--green)"></i><h3>Alle Geräte unauffällig</h3><p>Keine signifikanten Anomalien in den letzten 30 Tagen.</p></div>`
+      : `<table class="pa-risk-table">
+        <thead><tr><th>Gerät</th><th>Standort</th><th>Risk-Score</th><th>Anomalien</th><th>Details</th></tr></thead>
+        <tbody>
+        ${deviceScores.map((d, idx) => {
+          const riskCol = d.score >= 60 ? '#f87171' : d.score >= 30 ? '#fbbf24' : 'var(--green)';
+          const riskLabel = d.score >= 60 ? 'Kritisch' : d.score >= 30 ? 'Warnung' : 'OK';
+          const devInfo = d.dev || {};
+          return `<tr>
+            <td style="font-weight:600;color:var(--text)">${deviceName(devInfo)}</td>
+            <td style="color:var(--text2);font-size:12px">${devInfo.location?.site || devInfo.site || '–'}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="flex:1;background:var(--border);border-radius:4px;height:6px;min-width:60px">
+                  <div style="width:${d.score}%;height:100%;background:${riskCol};border-radius:4px"></div>
+                </div>
+                <span style="color:${riskCol};font-weight:700;font-size:13px;min-width:24px">${d.score}</span>
+                <span style="color:${riskCol};font-size:11px">${riskLabel}</span>
+              </div>
+            </td>
+            <td>${d.preds.length ? d.preds.map(p => `<span style="font-size:11px;padding:2px 6px;border-radius:4px;margin-right:3px;background:${p.severity==='critical'?'rgba(239,68,68,.15)':'rgba(251,191,36,.1)'};color:${p.severity==='critical'?'#f87171':'#fbbf24'}">${p.type.replace(/_/g,' ')}</span>`).join('') : '<span style="color:var(--text3);font-size:12px">–</span>'}</td>
+            <td>${d.preds.length ? `<button onclick="paToggleDetail('${d.id}')" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 10px;cursor:pointer"><i class="fa-solid fa-chevron-down"></i></button>` : ''}</td>
+          </tr>
+          ${d.preds.length ? `<tr id="pa-detail-${d.id}" style="display:none"><td colspan="5" style="padding:0">
+            <div class="pa-device-detail">
+              ${d.preds.map(p => `
+                <div class="pa-pred-card ${p.severity === 'critical' ? 'pa-pred-critical' : 'pa-pred-warning'}">
+                  <div class="pa-pred-header">
+                    <span class="pa-pred-icon ${p.severity === 'critical' ? 'ppi-critical' : 'ppi-warning'}"><i class="fa-solid fa-${p.severity==='critical'?'triangle-exclamation':'circle-exclamation'}"></i></span>
+                    <div>
+                      <div class="pa-pred-title">${p.title}</div>
+                      <div class="pa-pred-desc">${p.desc}</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-left:auto;flex-shrink:0">
+                      ${p.vals?.length ? paSparkSvg(p.vals, p.severity, p.threshold) : ''}
+                      <span class="pa-conf-badge">Konfidenz ${p.conf}%</span>
+                    </div>
+                  </div>
+                  ${p.autofix?.length ? `<div class="pa-fixes">${p.autofix.map(f=>`<span class="pa-fix-chip"><i class="fa-solid fa-wrench"></i>${f}</span>`).join('')}</div>` : ''}
+                </div>`).join('')}
+            </div>
+          </td></tr>` : ''}`;
+        }).join('')}
+        </tbody>
+      </table>`}
+  `;
+
+  wrap.innerHTML = html;
 }
 
 // ─── LIFECYCLE PLANNER ────────────────────────────────────────────────────────
