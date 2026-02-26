@@ -5648,18 +5648,34 @@ function paRiskScore(predictions) {
 
 /* ── Data Fetching ── */
 
-// Fetch 30-day telemetry for one device (5 tables)
+// Parse Records API type=table response { keys/columns, values } → array of row-objects
+function paParseTableRecord(tableData) {
+  if (!tableData) return [];
+  const keys = tableData.keys || tableData.columns || [];
+  const values = tableData.values || [];
+  const rows = values.map(row => {
+    const obj = {};
+    keys.forEach((k, i) => { obj[k] = row[i]; });
+    // Normalize timestamp → timeMs if needed
+    if (obj.timestamp !== undefined && obj.timeMs === undefined) obj.timeMs = obj.timestamp;
+    return obj;
+  });
+  return rows.sort((a, b) => (a.timeMs || 0) - (b.timeMs || 0));
+}
+
+// Fetch 30-day telemetry for one device
 async function paFetchDevice(deviceId) {
   const fromMs = Date.now() - PA_DAYS * 86400000;
   const fromStr = new Date(fromMs).toISOString().slice(0, 19) + 'Z';
-  const fields = {
-    'device-info':    ['timeMs','cpuLoadPercent','memoryUtilizationPercent','temperature'],
+  const tables = {
     'lan-interface':  ['timeMs','name','active','rxCounterBytes','txCounterBytes'],
     'vpn-connection': ['timeMs','peerName','active','packetLossPercent','rttAvgUs'],
     'wan-interface':  ['timeMs','connectionType','logicalState','mobileModemSignalDecibelMw'],
   };
   const results = {};
-  await Promise.allSettled(Object.entries(fields).map(async ([table, cols]) => {
+
+  // Tables API for LAN / VPN / WAN
+  await Promise.allSettled(Object.entries(tables).map(async ([table, cols]) => {
     try {
       const colStr = cols.map(c => `column=${encodeURIComponent(c)}`).join('&');
       const qs = `deviceId=${encodeURIComponent(deviceId)}&from=${encodeURIComponent(fromStr)}&limit=2000&sort=timeMs&order=asc&${colStr}`;
@@ -5667,6 +5683,15 @@ async function paFetchDevice(deviceId) {
       results[table] = (data?.data || []);
     } catch { results[table] = []; }
   }));
+
+  // Records API: device_info → cpu_load, free_memory, total_memory, temperature
+  try {
+    const data = await api('monitoring',
+      `/accounts/${S.accountId}/records/device_info?group=DEVICE&groupId=${encodeURIComponent(deviceId)}&period=HOUR1&type=table&source=NEW&name=device&latest=720`
+    );
+    results['device-info'] = paParseTableRecord(data?.items?.device);
+  } catch { results['device-info'] = []; }
+
   // WLAN time-series (Records API)
   try {
     const data = await api('monitoring', `/accounts/${S.accountId}/records/wlan_info_json?group=DEVICE&groupId=${deviceId}&period=DAY1&type=json&name=stations&latest=${PA_DAYS}`);
@@ -5723,7 +5748,7 @@ function paAnalyzeDevice(deviceId, raw) {
 
   // ── 1. CPU overload trend ──────────────────────────────────────────────────
   const cpuRows = raw['device-info'] || [];
-  const cpuDaily = paFillNulls(paBinByDay(cpuRows, 'timeMs', 'cpuLoadPercent', 'avg'));
+  const cpuDaily = paFillNulls(paBinByDay(cpuRows, 'timeMs', 'cpu_load', 'avg'));
   if (cpuDaily.length >= 5) {
     const smooth = paEMA(cpuDaily);
     const reg = paLinReg(smooth);
@@ -5742,7 +5767,13 @@ function paAnalyzeDevice(deviceId, raw) {
   }
 
   // ── 2. Memory leak ────────────────────────────────────────────────────────
-  const memDaily = paFillNulls(paBinByDay(cpuRows, 'timeMs', 'memoryUtilizationPercent', 'avg'));
+  // Compute utilization % from free_memory + total_memory
+  const memComputedRows = cpuRows.map(r => {
+    const total = r.total_memory || 0;
+    const free  = r.free_memory  || 0;
+    return { ...r, _memUtil: total > 0 ? Math.round((1 - free / total) * 100) : 0 };
+  });
+  const memDaily = paFillNulls(paBinByDay(memComputedRows, 'timeMs', '_memUtil', 'avg'));
   if (memDaily.length >= 5) {
     const smooth = paEMA(memDaily);
     const reg = paLinReg(smooth);
@@ -5855,10 +5886,17 @@ function paAnalyzeDevice(deviceId, raw) {
 
   // ── Collect current telemetry snapshot ────────────────────────────────────
   const lastPos = arr => arr.filter(v => v !== null && !isNaN(v) && v > 0).slice(-1)[0] ?? null;
+  // Latest raw values directly from last device-info row
+  const lastDevRow = cpuRows.slice(-1)[0] || {};
+  const rawCpu  = lastDevRow.cpu_load    != null ? Math.round(lastDevRow.cpu_load)    : (cpuDaily.length ? Math.round(paEMA(cpuDaily).slice(-1)[0]) : null);
+  const rawTotal = lastDevRow.total_memory || 0;
+  const rawFree  = lastDevRow.free_memory  || 0;
+  const rawMem   = rawTotal > 0 ? Math.round((1 - rawFree / rawTotal) * 100) : (memDaily.length ? Math.round(paEMA(memDaily).slice(-1)[0]) : null);
+  const rawTemp  = lastDevRow.temperature  != null ? Math.round(lastDevRow.temperature) : lastPos(tempDaily);
   const currentVals = {
-    cpu:         cpuDaily.length  ? Math.round(paEMA(cpuDaily).slice(-1)[0])  : null,
-    mem:         memDaily.length  ? Math.round(paEMA(memDaily).slice(-1)[0])  : null,
-    temp:        lastPos(tempDaily) !== null ? Math.round(lastPos(tempDaily)) : null,
+    cpu:         rawCpu,
+    mem:         rawMem,
+    temp:        rawTemp != null ? Math.round(rawTemp) : null,
     vpnLoss:     vpnLoss.some(v => v > 0) ? Math.round(vpnLoss.filter(v=>v>0).slice(-1)[0] * 10) / 10 : null,
     vpnRtt:      vpnRtt.some(v => v > 0)  ? Math.round(vpnRtt.filter(v=>v>0).slice(-1)[0] / 1000)      : null,
     wanSignal:   sigDaily.some(v => v < -10) ? Math.round(sigDaily.filter(v=>v<-10).slice(-1)[0])       : null,
@@ -6071,7 +6109,7 @@ function renderAnomalyPage() {
           <div style="color:var(--text2);line-height:1.8">
             <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Last &gt; <strong style="color:var(--text)">85 %</strong> oder Trend → 90 % in &lt; 7 Tagen<br>
             <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Last &gt; <strong style="color:var(--text)">70 %</strong> oder Trend steigend (R² &gt; 0.4)<br>
-            <span style="opacity:.5;font-size:11px">Quelle: device-info · cpuLoadPercent</span>
+            <span style="opacity:.5;font-size:11px">Quelle: records/device_info · cpu_load</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
@@ -6081,7 +6119,7 @@ function renderAnomalyPage() {
           <div style="color:var(--text2);line-height:1.8">
             <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Monotoner Anstieg → 95 % in &lt; 14 Tagen<br>
             <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Slope &gt; 0.5 %/Tag &amp; RAM &gt; <strong style="color:var(--text)">60 %</strong> &amp; R² &gt; 0.45<br>
-            <span style="opacity:.5;font-size:11px">Quelle: device-info · memoryUtilizationPercent</span>
+            <span style="opacity:.5;font-size:11px">Quelle: records/device_info · (total_memory − free_memory) / total_memory</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
@@ -6091,7 +6129,7 @@ function renderAnomalyPage() {
           <div style="color:var(--text2);line-height:1.8">
             <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Temperatur &gt; <strong style="color:var(--text)">70 °C</strong><br>
             <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> &gt; <strong style="color:var(--text)">60 °C</strong> oder Trend steigend → 75 °C<br>
-            <span style="opacity:.5;font-size:11px">Quelle: device-info · temperature</span>
+            <span style="opacity:.5;font-size:11px">Quelle: records/device_info · temperature</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
