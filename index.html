@@ -5661,9 +5661,10 @@ async function paFetchDevice(deviceId) {
   const results = {};
   await Promise.allSettled(Object.entries(fields).map(async ([table, cols]) => {
     try {
-      const qs = `deviceIds=${deviceId}&fields=${cols.join(',')}&from=${fromStr}&limit=2000`;
+      const colStr = cols.map(c => `column=${encodeURIComponent(c)}`).join('&');
+      const qs = `deviceId=${encodeURIComponent(deviceId)}&from=${encodeURIComponent(fromStr)}&limit=2000&sort=timeMs&order=asc&${colStr}`;
       const data = await api('monitoring', `/api/${S.accountId}/tables/${table}?${qs}`);
-      results[table] = (data?.data || data || []);
+      results[table] = (data?.data || []);
     } catch { results[table] = []; }
   }));
   // WLAN time-series (Records API)
@@ -6183,7 +6184,7 @@ function renderAnomalyPage() {
         const devInfo = d.dev || {};
         return `<tr>
           <td style="font-weight:600;color:var(--text)">${deviceName(devInfo)}</td>
-          <td style="color:var(--text2);font-size:12px">${devInfo.location?.site || devInfo.site || '–'}</td>
+          <td style="color:var(--text2);font-size:12px">${devInfo.siteName || '–'}</td>
           <td>
             <div style="display:flex;align-items:center;gap:8px">
               <div style="flex:1;background:var(--border);border-radius:4px;height:6px;min-width:60px">
