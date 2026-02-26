@@ -5852,7 +5852,23 @@ function paAnalyzeDevice(deviceId, raw) {
     }
   }
 
-  return predictions;
+  // ── Collect current telemetry snapshot ────────────────────────────────────
+  const lastPos = arr => arr.filter(v => v !== null && !isNaN(v) && v > 0).slice(-1)[0] ?? null;
+  const currentVals = {
+    cpu:         cpuDaily.length  ? Math.round(paEMA(cpuDaily).slice(-1)[0])  : null,
+    mem:         memDaily.length  ? Math.round(paEMA(memDaily).slice(-1)[0])  : null,
+    temp:        lastPos(tempDaily) !== null ? Math.round(lastPos(tempDaily)) : null,
+    vpnLoss:     vpnLoss.some(v => v > 0) ? Math.round(vpnLoss.filter(v=>v>0).slice(-1)[0] * 10) / 10 : null,
+    vpnRtt:      vpnRtt.some(v => v > 0)  ? Math.round(vpnRtt.filter(v=>v>0).slice(-1)[0] / 1000)      : null,
+    wanSignal:   sigDaily.some(v => v < -10) ? Math.round(sigDaily.filter(v=>v<-10).slice(-1)[0])       : null,
+    wlanClients: wlanVals.length ? wlanVals[wlanVals.length - 1] : null,
+    ports: Object.entries(portMap).map(([pname, prows]) => {
+      let flaps = 0, prev = prows[0]?.active;
+      prows.forEach(r => { if (r.active !== prev) { flaps++; prev = r.active; } });
+      return { name: pname, active: !!(prows[prows.length - 1]?.active), flapsTotal: flaps };
+    })
+  };
+  return { predictions, currentVals };
 }
 
 /* ── SVG Sparkline ── */
@@ -5874,6 +5890,34 @@ function paSparkSvg(vals, sev, threshold) {
     thLine = `<line x1="${pad}" y1="${ty}" x2="${w-pad}" y2="${ty}" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="3,3"/>`;
   }
   return `<svg width="${w}" height="${h}" style="display:block"><polyline points="${polyline}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round"/>${thLine}</svg>`;
+}
+
+function paRenderCurrentVals(cv) {
+  if (!cv) return '<em style="color:var(--text3);font-size:12px">Keine Messdaten verfügbar.</em>';
+  const chip = (col, icon, text) => {
+    const bg  = col==='r' ? 'rgba(239,68,68,.12)'   : col==='a' ? 'rgba(251,191,36,.1)'  : 'rgba(34,197,94,.1)';
+    const bdr = col==='r' ? 'rgba(239,68,68,.3)'    : col==='a' ? 'rgba(251,191,36,.3)'  : 'rgba(34,197,94,.25)';
+    const clr = col==='r' ? '#f87171'                : col==='a' ? '#fbbf24'               : 'var(--green)';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600;background:${bg};border:1px solid ${bdr};color:${clr}"><i class="fa-solid fa-${icon}" style="font-size:10px;opacity:.8"></i>${text}</span>`;
+  };
+  const chips = [];
+  if (cv.cpu         !== null) chips.push(chip(cv.cpu  >= 70 ? 'r' : cv.cpu  >= 50 ? 'a' : 'g', 'microchip',        `CPU: ${cv.cpu} %`));
+  if (cv.mem         !== null) chips.push(chip(cv.mem  >= 75 ? 'r' : cv.mem  >= 60 ? 'a' : 'g', 'memory',           `RAM: ${cv.mem} %`));
+  if (cv.temp        !== null) chips.push(chip(cv.temp >= 65 ? 'r' : cv.temp >= 50 ? 'a' : 'g', 'temperature-half', `Temp: ${cv.temp} °C`));
+  if (cv.vpnLoss     !== null) chips.push(chip(cv.vpnLoss >= 5 ? 'r' : cv.vpnLoss >= 2 ? 'a' : 'g', 'shield-halved', `VPN-Verlust: ${cv.vpnLoss} %`));
+  if (cv.vpnRtt      !== null) chips.push(chip(cv.vpnRtt  >= 100 ? 'r' : cv.vpnRtt  >= 50 ? 'a' : 'g', 'clock',     `VPN-RTT: ${cv.vpnRtt} ms`));
+  if (cv.wanSignal   !== null) chips.push(chip(cv.wanSignal <= -80 ? 'r' : cv.wanSignal <= -70 ? 'a' : 'g', 'signal', `LTE: ${cv.wanSignal} dBm`));
+  if (cv.wlanClients !== null) chips.push(chip(cv.wlanClients >= 30 ? 'r' : cv.wlanClients >= 20 ? 'a' : 'g', 'wifi', `WLAN: ${cv.wlanClients} Clients`));
+  if (cv.ports?.length) {
+    const active = cv.ports.filter(p => p.active).length;
+    chips.push(chip(active < cv.ports.length * 0.5 ? 'a' : 'g', 'ethernet', `Ports: ${active}/${cv.ports.length} aktiv`));
+    cv.ports.filter(p => p.flapsTotal > 0).forEach(p => {
+      const fpd = Math.round(p.flapsTotal / PA_DAYS * 10) / 10;
+      chips.push(chip(fpd > 2 ? 'r' : 'a', 'bolt', `${p.name}: ${fpd}×/Tag`));
+    });
+  }
+  if (!chips.length) return '<em style="color:var(--text3);font-size:12px">Keine Messdaten in 30 Tagen.</em>';
+  return chips.join('');
 }
 
 /* ── Progress & Rendering ── */
@@ -5900,9 +5944,9 @@ async function paLoadAll() {
       paState.progress.current = deviceName(S.devices[id]);
       try {
         const raw = await paFetchDevice(id);
-        const preds = paAnalyzeDevice(id, raw);
-        paState.results[id] = { predictions: preds, riskScore: paRiskScore(preds) };
-      } catch { paState.results[id] = { predictions: [], riskScore: 0 }; }
+        const { predictions: preds, currentVals } = paAnalyzeDevice(id, raw);
+        paState.results[id] = { predictions: preds, riskScore: paRiskScore(preds), currentVals };
+      } catch { paState.results[id] = { predictions: [], riskScore: 0, currentVals: null }; }
       paState.progress.done++;
     }));
     // Update progress bar
@@ -5968,7 +6012,7 @@ function renderAnomalyPage() {
   // Results
   const allPreds = [];
   const deviceScores = Object.entries(paState.results)
-    .map(([id, r]) => ({ id, dev: S.devices[id], score: r.riskScore, preds: r.predictions }))
+    .map(([id, r]) => ({ id, dev: S.devices[id], score: r.riskScore, preds: r.predictions, cv: r.currentVals || null }))
     .sort((a, b) => b.score - a.score);
 
   deviceScores.forEach(d => d.preds.forEach(p => allPreds.push({ ...p, deviceId: d.id, deviceName: deviceName(d.dev || {}) })));
@@ -6128,51 +6172,58 @@ function renderAnomalyPage() {
     <!-- Risk Table -->
     <div class="pa-section-title"><i class="fa-solid fa-table-cells" style="color:var(--accent2)"></i> Geräte-Risikoübersicht</div>
     ${!deviceScores.filter(d => d.score > 0).length
-      ? `<div class="empty-state" style="padding:40px"><i class="fa-solid fa-circle-check" style="color:var(--green)"></i><h3>Alle Geräte unauffällig</h3><p>Keine signifikanten Anomalien in den letzten 30 Tagen.</p></div>`
-      : `<table class="pa-risk-table">
-        <thead><tr><th>Gerät</th><th>Standort</th><th>Risk-Score</th><th>Anomalien</th><th>Details</th></tr></thead>
-        <tbody>
-        ${deviceScores.map((d, idx) => {
-          const riskCol = d.score >= 60 ? '#f87171' : d.score >= 30 ? '#fbbf24' : 'var(--green)';
-          const riskLabel = d.score >= 60 ? 'Kritisch' : d.score >= 30 ? 'Warnung' : 'OK';
-          const devInfo = d.dev || {};
-          return `<tr>
-            <td style="font-weight:600;color:var(--text)">${deviceName(devInfo)}</td>
-            <td style="color:var(--text2);font-size:12px">${devInfo.location?.site || devInfo.site || '–'}</td>
-            <td>
-              <div style="display:flex;align-items:center;gap:8px">
-                <div style="flex:1;background:var(--border);border-radius:4px;height:6px;min-width:60px">
-                  <div style="width:${d.score}%;height:100%;background:${riskCol};border-radius:4px"></div>
-                </div>
-                <span style="color:${riskCol};font-weight:700;font-size:13px;min-width:24px">${d.score}</span>
-                <span style="color:${riskCol};font-size:11px">${riskLabel}</span>
+      ? `<div style="padding:10px 14px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);border-radius:8px;color:var(--green);font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:10px"><i class="fa-solid fa-circle-check"></i> Keine Anomalien erkannt – alle Geräte im Normbereich.</div>`
+      : ''}
+    <table class="pa-risk-table">
+      <thead><tr><th>Gerät</th><th>Standort</th><th>Risk-Score</th><th>Anomalien</th><th></th></tr></thead>
+      <tbody>
+      ${deviceScores.map(d => {
+        const riskCol = d.score >= 60 ? '#f87171' : d.score >= 30 ? '#fbbf24' : 'var(--green)';
+        const riskLabel = d.score >= 60 ? 'Kritisch' : d.score >= 30 ? 'Warnung' : 'OK';
+        const devInfo = d.dev || {};
+        return `<tr>
+          <td style="font-weight:600;color:var(--text)">${deviceName(devInfo)}</td>
+          <td style="color:var(--text2);font-size:12px">${devInfo.location?.site || devInfo.site || '–'}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="flex:1;background:var(--border);border-radius:4px;height:6px;min-width:60px">
+                <div style="width:${d.score}%;height:100%;background:${riskCol};border-radius:4px"></div>
               </div>
-            </td>
-            <td>${d.preds.length ? d.preds.map(p => `<span style="font-size:11px;padding:2px 6px;border-radius:4px;margin-right:3px;background:${p.severity==='critical'?'rgba(239,68,68,.15)':'rgba(251,191,36,.1)'};color:${p.severity==='critical'?'#f87171':'#fbbf24'}">${p.type.replace(/_/g,' ')}</span>`).join('') : '<span style="color:var(--text3);font-size:12px">–</span>'}</td>
-            <td>${d.preds.length ? `<button onclick="paToggleDetail('${d.id}')" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 10px;cursor:pointer"><i class="fa-solid fa-chevron-down"></i></button>` : ''}</td>
-          </tr>
-          ${d.preds.length ? `<tr id="pa-detail-${d.id}" style="display:none"><td colspan="5" style="padding:0">
-            <div class="pa-device-detail">
-              ${d.preds.map(p => `
-                <div class="pa-pred-card ${p.severity === 'critical' ? 'pa-pred-critical' : 'pa-pred-warning'}">
-                  <div class="pa-pred-header">
-                    <span class="pa-pred-icon ${p.severity === 'critical' ? 'ppi-critical' : 'ppi-warning'}"><i class="fa-solid fa-${p.severity==='critical'?'triangle-exclamation':'circle-exclamation'}"></i></span>
-                    <div>
-                      <div class="pa-pred-title">${p.title}</div>
-                      <div class="pa-pred-desc">${p.desc}</div>
-                    </div>
-                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-left:auto;flex-shrink:0">
-                      ${p.vals?.length ? paSparkSvg(p.vals, p.severity, p.threshold) : ''}
-                      <span class="pa-conf-badge">Konfidenz ${p.conf}%</span>
-                    </div>
-                  </div>
-                  ${p.autofix?.length ? `<div class="pa-fixes">${p.autofix.map(f=>`<span class="pa-fix-chip"><i class="fa-solid fa-wrench"></i>${f}</span>`).join('')}</div>` : ''}
-                </div>`).join('')}
+              <span style="color:${riskCol};font-weight:700;font-size:13px;min-width:24px">${d.score}</span>
+              <span style="color:${riskCol};font-size:11px">${riskLabel}</span>
             </div>
-          </td></tr>` : ''}`;
-        }).join('')}
-        </tbody>
-      </table>`}
+          </td>
+          <td>${d.preds.length ? d.preds.map(p => `<span style="font-size:11px;padding:2px 6px;border-radius:4px;margin-right:3px;background:${p.severity==='critical'?'rgba(239,68,68,.15)':'rgba(251,191,36,.1)'};color:${p.severity==='critical'?'#f87171':'#fbbf24'}">${p.type.replace(/_/g,' ')}</span>`).join('') : '<span style="color:var(--text3);font-size:12px">–</span>'}</td>
+          <td><button onclick="paToggleDetail('${d.id}')" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 10px;cursor:pointer" title="Messwerte & Details"><i class="fa-solid fa-chevron-down"></i></button></td>
+        </tr>
+        <tr id="pa-detail-${d.id}" style="display:none"><td colspan="5" style="padding:0">
+          <div class="pa-device-detail">
+            <!-- Current values row -->
+            <div style="padding:10px 14px 8px;border-bottom:${d.preds.length?'1px solid var(--border)':'none'}">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px"><i class="fa-solid fa-chart-simple"></i> Aktuelle Messwerte (30-Tage-Ø / letzter Wert)</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">${paRenderCurrentVals(d.cv)}</div>
+            </div>
+            <!-- Anomaly prediction cards -->
+            ${d.preds.map(p => `
+              <div class="pa-pred-card ${p.severity === 'critical' ? 'pa-pred-critical' : 'pa-pred-warning'}">
+                <div class="pa-pred-header">
+                  <span class="pa-pred-icon ${p.severity === 'critical' ? 'ppi-critical' : 'ppi-warning'}"><i class="fa-solid fa-${p.severity==='critical'?'triangle-exclamation':'circle-exclamation'}"></i></span>
+                  <div>
+                    <div class="pa-pred-title">${p.title}</div>
+                    <div class="pa-pred-desc">${p.desc}</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-left:auto;flex-shrink:0">
+                    ${p.vals?.length ? paSparkSvg(p.vals, p.severity, p.threshold) : ''}
+                    <span class="pa-conf-badge">Konfidenz ${p.conf}%</span>
+                  </div>
+                </div>
+                ${p.autofix?.length ? `<div class="pa-fixes">${p.autofix.map(f=>`<span class="pa-fix-chip"><i class="fa-solid fa-wrench"></i>${f}</span>`).join('')}</div>` : ''}
+              </div>`).join('')}
+          </div>
+        </td></tr>`;
+      }).join('')}
+      </tbody>
+    </table>
   `;
 
   wrap.innerHTML = html;
