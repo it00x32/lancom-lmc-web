@@ -534,50 +534,52 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
 .log-load-more:disabled{opacity:.4;cursor:not-allowed;}
 .log-empty{text-align:center;padding:40px;color:var(--text3);}
 
-/* ── PREDICTIVE ANOMALY ──────────────────────────────── */
+/* ── PREDICTIVE ANOMALY – LANCOM Brand Colors ─────── */
+/* Electric Blue #2d5fff · Dark Blue #001d41 · Light Blue #aadaf7  */
+/* Apple Green #a0ed3a · Red #ff004d · Turquoise #77c8d2            */
 .pa-wrap{padding:0 24px 32px;display:flex;flex-direction:column;gap:20px;}
 .pa-kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
-.pa-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.pa-kpi{background:var(--card);border:1px solid rgba(45,95,255,.3);border-radius:12px;padding:14px 16px;}
 .pa-kpi-val{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
 .pa-kpi-lbl{font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
 .pa-kpi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:8px;}
-.pki-red   {background:rgba(239,68,68,.15);color:var(--red);}
-.pki-amber {background:rgba(245,158,11,.15);color:var(--amber);}
-.pki-blue  {background:rgba(56,189,248,.15);color:var(--blue);}
-.pki-green {background:rgba(34,197,94,.15); color:var(--green);}
+.pki-red   {background:rgba(255,0,77,.15);  color:#ff004d;}
+.pki-amber {background:rgba(119,200,210,.15);color:#77c8d2;}
+.pki-blue  {background:rgba(45,95,255,.15); color:#2d5fff;}
+.pki-green {background:rgba(160,237,58,.15);color:#a0ed3a;}
 .pa-section-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-.pa-section-title i{color:var(--accent2);}
+.pa-section-title i{color:#2d5fff;}
 .pa-alert-list{display:flex;flex-direction:column;gap:8px;}
-.pa-alert{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:flex-start;gap:12px;}
-.pa-alert-critical{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.035);}
-.pa-alert-warning {border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.025);}
+.pa-alert{background:var(--card);border:1px solid rgba(45,95,255,.2);border-radius:10px;padding:14px;display:flex;align-items:flex-start;gap:12px;}
+.pa-alert-critical{border-color:rgba(255,0,77,.5);background:rgba(255,0,77,.04);}
+.pa-alert-warning {border-color:rgba(45,95,255,.4);background:rgba(45,95,255,.04);}
 .pa-alert-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-.pai-critical{background:rgba(239,68,68,.15);color:var(--red);}
-.pai-warning {background:rgba(245,158,11,.15);color:var(--amber);}
+.pai-critical{background:rgba(255,0,77,.15);  color:#ff004d;}
+.pai-warning {background:rgba(45,95,255,.15); color:#2d5fff;}
 .pa-alert-body{flex:1;min-width:0;}
 .pa-alert-title{font-size:13px;font-weight:700;margin-bottom:3px;}
 .pa-alert-desc{font-size:12px;color:var(--text2);line-height:1.45;}
 .pa-alert-meta{display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;}
-.pa-model-badge{background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);color:var(--purple);font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;}
-.pa-conf-badge{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+.pa-model-badge{background:rgba(45,95,255,.15);border:1px solid rgba(45,95,255,.35);color:#2d5fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;}
+.pa-conf-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(45,95,255,.12);color:#aadaf7;border:1px solid rgba(45,95,255,.3);}
 .pa-risk-table{width:100%;border-collapse:collapse;font-size:12.5px;}
-.pa-risk-table th{text-align:left;padding:7px 14px;background:var(--bg2);color:var(--text3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border2);}
+.pa-risk-table th{text-align:left;padding:7px 14px;background:rgba(0,29,65,.6);color:#aadaf7;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(45,95,255,.3);}
 .pa-risk-table td{padding:8px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
 .pa-risk-table tr:last-child td{border-bottom:none;}
-.pa-risk-table tbody tr:hover>td{background:rgba(255,255,255,.02);}
-.pa-device-detail{padding:14px;background:var(--bg);display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;}
-.pa-pred-card{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;}
-.pa-pred-critical{border-color:rgba(239,68,68,.3);}
-.pa-pred-warning {border-color:rgba(245,158,11,.25);}
+.pa-risk-table tbody tr:hover>td{background:rgba(45,95,255,.05);}
+.pa-device-detail{padding:14px;background:rgba(0,17,48,.35);display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;}
+.pa-pred-card{background:var(--card);border:1px solid rgba(45,95,255,.2);border-radius:9px;padding:12px 14px;}
+.pa-pred-critical{border-color:rgba(255,0,77,.4); background:rgba(255,0,77,.03);}
+.pa-pred-warning {border-color:rgba(45,95,255,.4);background:rgba(45,95,255,.03);}
 .pa-pred-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
 .pa-pred-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px;}
-.ppi-critical{background:rgba(239,68,68,.15);color:var(--red);}
-.ppi-warning {background:rgba(245,158,11,.15);color:var(--amber);}
+.ppi-critical{background:rgba(255,0,77,.15);  color:#ff004d;}
+.ppi-warning {background:rgba(45,95,255,.15); color:#2d5fff;}
 .pa-pred-title{font-size:12px;font-weight:700;margin-bottom:2px;}
 .pa-pred-desc{font-size:11px;color:var(--text2);line-height:1.4;}
-.pa-sparkline{margin:8px 0;border-radius:4px;overflow:hidden;background:rgba(255,255,255,.03);padding:4px 6px 2px;}
+.pa-sparkline{margin:8px 0;border-radius:4px;overflow:hidden;background:rgba(0,29,65,.3);padding:4px 6px 2px;}
 .pa-fixes{margin-top:8px;}
-.pa-fix-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(99,102,241,.09);border:1px solid rgba(99,102,241,.2);color:var(--accent2);font-size:10px;font-weight:600;padding:3px 8px;border-radius:7px;}
+.pa-fix-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(0,29,65,.5);border:1px solid rgba(45,95,255,.3);color:#aadaf7;font-size:10px;font-weight:600;padding:3px 8px;border-radius:7px;}
 .pa-model-row{font-size:10px;color:var(--text3);margin-top:8px;display:flex;align-items:center;gap:5px;}
 
 /* ── LIFECYCLE PLANNER ───────────────────────────────── */
@@ -5918,7 +5920,7 @@ function paSparkSvg(vals, sev, threshold) {
   const sy = v => pad + (1 - (v - mn) / rng) * (h - 2 * pad);
   const pts = vals.map((v, i) => [sx(i), sy(v !== null ? v : mn)]);
   const polyline = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
-  const col = sev === 'critical' ? '#f87171' : '#fbbf24';
+  const col = sev === 'critical' ? '#ff004d' : '#2d5fff';
   let thLine = '';
   if (threshold !== undefined) {
     const ty = sy(threshold).toFixed(1);
@@ -5930,9 +5932,9 @@ function paSparkSvg(vals, sev, threshold) {
 function paRenderCurrentVals(cv) {
   if (!cv) return '<em style="color:var(--text3);font-size:12px">Keine Messdaten verfügbar.</em>';
   const chip = (col, icon, text) => {
-    const bg  = col==='r' ? 'rgba(239,68,68,.12)'   : col==='a' ? 'rgba(251,191,36,.1)'  : 'rgba(34,197,94,.1)';
-    const bdr = col==='r' ? 'rgba(239,68,68,.3)'    : col==='a' ? 'rgba(251,191,36,.3)'  : 'rgba(34,197,94,.25)';
-    const clr = col==='r' ? '#f87171'                : col==='a' ? '#fbbf24'               : 'var(--green)';
+    const bg  = col==='r' ? 'rgba(255,0,77,.12)'    : col==='a' ? 'rgba(45,95,255,.1)'   : 'rgba(160,237,58,.1)';
+    const bdr = col==='r' ? 'rgba(255,0,77,.3)'     : col==='a' ? 'rgba(45,95,255,.3)'   : 'rgba(160,237,58,.25)';
+    const clr = col==='r' ? '#ff004d'               : col==='a' ? '#2d5fff'              : '#a0ed3a';
     return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:600;background:${bg};border:1px solid ${bdr};color:${clr}"><i class="fa-solid fa-${icon}" style="font-size:10px;opacity:.8"></i>${text}</span>`;
   };
   const chips = [];
@@ -6013,16 +6015,16 @@ function renderAnomalyPage() {
   if (!paState.loaded && !paState.loading) {
     wrap.innerHTML = `
       <div class="empty-state">
-        <i class="fa-solid fa-brain" style="color:var(--purple)"></i>
+        <i class="fa-solid fa-brain" style="color:#2d5fff"></i>
         <h3>30-Tage Telemetry-Analyse</h3>
         <p>Analysiert CPU, RAM, Temperatur, Port-Flapping, VPN, WAN-Signal und WLAN-Kapazität<br>
         für alle ${Object.keys(S.devices).length} Geräte mit 3 ML-Modellen.</p>
         <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <div class="pa-model-row"><span class="pa-model-badge">EMA</span> Exponential Moving Average</div>
-          <div class="pa-model-row"><span class="pa-model-badge" style="background:rgba(99,102,241,.2);color:var(--accent2)">LinReg</span> Linear Regression</div>
-          <div class="pa-model-row"><span class="pa-model-badge" style="background:rgba(239,68,68,.15);color:#f87171">IsoForest</span> Isolation Forest (Z-Score)</div>
+          <div class="pa-model-row"><span class="pa-model-badge" style="background:rgba(119,200,210,.15);color:#77c8d2">LinReg</span> Linear Regression</div>
+          <div class="pa-model-row"><span class="pa-model-badge" style="background:rgba(255,0,77,.15);color:#ff004d">IsoForest</span> Isolation Forest (Z-Score)</div>
         </div>
-        <button onclick="paLoadAll()" style="margin-top:20px;background:linear-gradient(135deg,var(--purple),var(--accent2));border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;padding:12px 28px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">
+        <button onclick="paLoadAll()" style="margin-top:20px;background:linear-gradient(135deg,#001d41,#2d5fff);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;padding:12px 28px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">
           <i class="fa-solid fa-play"></i> Analyse starten
         </button>
       </div>`;
@@ -6034,10 +6036,10 @@ function renderAnomalyPage() {
     const pct = paState.progress.total ? Math.round(paState.progress.done / paState.progress.total * 100) : 0;
     wrap.innerHTML = `
       <div style="max-width:500px;margin:60px auto;text-align:center">
-        <i class="fa-solid fa-brain fa-spin" style="font-size:40px;color:var(--purple);margin-bottom:20px"></i>
+        <i class="fa-solid fa-brain fa-spin" style="font-size:40px;color:#2d5fff;margin-bottom:20px"></i>
         <h3 style="color:var(--text);margin-bottom:12px">Telemetry wird analysiert…</h3>
         <div style="background:var(--border);border-radius:8px;height:10px;overflow:hidden;margin-bottom:12px">
-          <div class="pa-progress-bar" style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--purple),var(--accent2));transition:width .3s"></div>
+          <div class="pa-progress-bar" style="height:100%;width:${pct}%;background:linear-gradient(90deg,#001d41,#2d5fff);transition:width .3s"></div>
         </div>
         <p class="pa-progress-label" style="color:var(--text2);font-size:13px">Analysiere… (${paState.progress.done}/${paState.progress.total})</p>
       </div>`;
@@ -6093,67 +6095,67 @@ function renderAnomalyPage() {
     <!-- Analysetypen Info-Panel -->
     <details style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:4px;">
       <summary style="padding:11px 16px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:8px;list-style:none;user-select:none;">
-        <i class="fa-solid fa-circle-info" style="color:var(--accent2)"></i>
+        <i class="fa-solid fa-circle-info" style="color:#2d5fff"></i>
         Analysetypen &amp; Erkennungsschwellenwerte
         <i class="fa-solid fa-chevron-down" style="margin-left:auto;font-size:10px;opacity:.5"></i>
       </summary>
       <div style="padding:0 16px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:4px;">
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
           <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
-            <i class="fa-solid fa-microchip" style="color:#f87171"></i> CPU-Überlastung
+            <i class="fa-solid fa-microchip" style="color:#ff004d"></i> CPU-Überlastung
           </div>
           <div style="color:var(--text2);line-height:1.8">
-            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Last &gt; <strong style="color:var(--text)">85 %</strong> oder Trend → 90 % in &lt; 7 Tagen<br>
-            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Last &gt; <strong style="color:var(--text)">70 %</strong> oder Trend steigend (R² &gt; 0.4)<br>
+            <span class="pa-conf-badge" style="background:rgba(255,0,77,.15);color:#ff004d">Kritisch</span> Last &gt; <strong style="color:var(--text)">85 %</strong> oder Trend → 90 % in &lt; 7 Tagen<br>
+            <span class="pa-conf-badge" style="background:rgba(45,95,255,.1);color:#2d5fff">Warnung</span> Last &gt; <strong style="color:var(--text)">70 %</strong> oder Trend steigend (R² &gt; 0.4)<br>
             <span style="opacity:.5;font-size:11px">Quelle: records/device_info · cpu_load</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
           <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
-            <i class="fa-solid fa-memory" style="color:#f87171"></i> Memory-Leak
+            <i class="fa-solid fa-memory" style="color:#ff004d"></i> Memory-Leak
           </div>
           <div style="color:var(--text2);line-height:1.8">
-            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Monotoner Anstieg → 95 % in &lt; 14 Tagen<br>
-            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Slope &gt; 0.5 %/Tag &amp; RAM &gt; <strong style="color:var(--text)">60 %</strong> &amp; R² &gt; 0.45<br>
+            <span class="pa-conf-badge" style="background:rgba(255,0,77,.15);color:#ff004d">Kritisch</span> Monotoner Anstieg → 95 % in &lt; 14 Tagen<br>
+            <span class="pa-conf-badge" style="background:rgba(45,95,255,.1);color:#2d5fff">Warnung</span> Slope &gt; 0.5 %/Tag &amp; RAM &gt; <strong style="color:var(--text)">60 %</strong> &amp; R² &gt; 0.45<br>
             <span style="opacity:.5;font-size:11px">Quelle: records/device_info · (total_memory − free_memory) / total_memory</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
           <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
-            <i class="fa-solid fa-temperature-half" style="color:#f87171"></i> Überhitzung
+            <i class="fa-solid fa-temperature-half" style="color:#ff004d"></i> Überhitzung
           </div>
           <div style="color:var(--text2);line-height:1.8">
-            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Temperatur &gt; <strong style="color:var(--text)">70 °C</strong><br>
-            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> &gt; <strong style="color:var(--text)">60 °C</strong> oder Trend steigend → 75 °C<br>
+            <span class="pa-conf-badge" style="background:rgba(255,0,77,.15);color:#ff004d">Kritisch</span> Temperatur &gt; <strong style="color:var(--text)">70 °C</strong><br>
+            <span class="pa-conf-badge" style="background:rgba(45,95,255,.1);color:#2d5fff">Warnung</span> &gt; <strong style="color:var(--text)">60 °C</strong> oder Trend steigend → 75 °C<br>
             <span style="opacity:.5;font-size:11px">Quelle: records/device_info · temperature</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
           <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
-            <i class="fa-solid fa-ethernet" style="color:#fbbf24"></i> Port-Flapping
+            <i class="fa-solid fa-ethernet" style="color:#2d5fff"></i> Port-Flapping
           </div>
           <div style="color:var(--text2);line-height:1.8">
-            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> &gt; <strong style="color:var(--text)">2 Flaps/Tag</strong> (Link up/down)<br>
-            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> &gt; <strong style="color:var(--text)">0.5 Flaps/Tag</strong> in 30 Tagen<br>
+            <span class="pa-conf-badge" style="background:rgba(255,0,77,.15);color:#ff004d">Kritisch</span> &gt; <strong style="color:var(--text)">2 Flaps/Tag</strong> (Link up/down)<br>
+            <span class="pa-conf-badge" style="background:rgba(45,95,255,.1);color:#2d5fff">Warnung</span> &gt; <strong style="color:var(--text)">0.5 Flaps/Tag</strong> in 30 Tagen<br>
             <span style="opacity:.5;font-size:11px">Quelle: lan-interface · active (Zustandswechsel)</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
           <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
-            <i class="fa-solid fa-shield-halved" style="color:#fbbf24"></i> VPN-Instabilität
+            <i class="fa-solid fa-shield-halved" style="color:#2d5fff"></i> VPN-Instabilität
           </div>
           <div style="color:var(--text2);line-height:1.8">
-            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> Paketverlust &gt; <strong style="color:var(--text)">8 %</strong><br>
-            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Paketverlust &gt; <strong style="color:var(--text)">3 %</strong> oder Trend → 15 %<br>
+            <span class="pa-conf-badge" style="background:rgba(255,0,77,.15);color:#ff004d">Kritisch</span> Paketverlust &gt; <strong style="color:var(--text)">8 %</strong><br>
+            <span class="pa-conf-badge" style="background:rgba(45,95,255,.1);color:#2d5fff">Warnung</span> Paketverlust &gt; <strong style="color:var(--text)">3 %</strong> oder Trend → 15 %<br>
             <span style="opacity:.5;font-size:11px">Quelle: vpn-connection · packetLossPercent, rttAvgUs</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
           <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
-            <i class="fa-solid fa-signal" style="color:#fbbf24"></i> LTE-Signal-Abbau
+            <i class="fa-solid fa-signal" style="color:#2d5fff"></i> LTE-Signal-Abbau
           </div>
           <div style="color:var(--text2);line-height:1.8">
-            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> Signal &lt; <strong style="color:var(--text)">-70 dBm</strong> &amp; Slope &lt; -0.2 dBm/Tag<br>
+            <span class="pa-conf-badge" style="background:rgba(45,95,255,.1);color:#2d5fff">Warnung</span> Signal &lt; <strong style="color:var(--text)">-70 dBm</strong> &amp; Slope &lt; -0.2 dBm/Tag<br>
             Trend-Grenzwert: <strong style="color:var(--text)">-95 dBm</strong> (Verbindungsabbruch)<br>
             <span style="opacity:.5;font-size:11px">Quelle: wan-interface · mobileModemSignalDecibelMw</span>
           </div>
@@ -6163,19 +6165,19 @@ function renderAnomalyPage() {
             <i class="fa-solid fa-wifi" style="color:var(--blue)"></i> WLAN-Sättigung
           </div>
           <div style="color:var(--text2);line-height:1.8">
-            <span class="pa-conf-badge" style="background:rgba(239,68,68,.15);color:#f87171">Kritisch</span> &gt; <strong style="color:var(--text)">35 Clients</strong> oder Trend → ${LC_AP_MAX_CLIENTS} in &lt; 14 Tagen<br>
-            <span class="pa-conf-badge" style="background:rgba(251,191,36,.1);color:#fbbf24">Warnung</span> &gt; <strong style="color:var(--text)">20 Clients</strong> oder Trend steigend (R² &gt; 0.35)<br>
+            <span class="pa-conf-badge" style="background:rgba(255,0,77,.15);color:#ff004d">Kritisch</span> &gt; <strong style="color:var(--text)">35 Clients</strong> oder Trend → ${LC_AP_MAX_CLIENTS} in &lt; 14 Tagen<br>
+            <span class="pa-conf-badge" style="background:rgba(45,95,255,.1);color:#2d5fff">Warnung</span> &gt; <strong style="color:var(--text)">20 Clients</strong> oder Trend steigend (R² &gt; 0.35)<br>
             <span style="opacity:.5;font-size:11px">Quelle: wlan_info_json · stations (DAY1-Period)</span>
           </div>
         </div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
           <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
-            <i class="fa-solid fa-brain" style="color:var(--purple)"></i> ML-Modelle &amp; Konfidenz
+            <i class="fa-solid fa-brain" style="color:#2d5fff"></i> ML-Modelle &amp; Konfidenz
           </div>
           <div style="color:var(--text2);line-height:1.8">
             <span class="pa-model-badge">EMA</span> Glättung (α=0.3) · Rauschen reduzieren<br>
-            <span class="pa-model-badge" style="background:rgba(99,102,241,.2);color:var(--accent2)">LinReg</span> Trendstärke via R² (0–1)<br>
-            <span class="pa-model-badge" style="background:rgba(239,68,68,.15);color:#f87171">IsoForest</span> Z-Score Anomalie-Frequenz<br>
+            <span class="pa-model-badge" style="background:rgba(119,200,210,.15);color:#77c8d2">LinReg</span> Trendstärke via R² (0–1)<br>
+            <span class="pa-model-badge" style="background:rgba(255,0,77,.15);color:#ff004d">IsoForest</span> Z-Score Anomalie-Frequenz<br>
             <span style="opacity:.5;font-size:11px">Konfidenz = Trend×40% + Frequenz×35% + Dringlichkeit×25%</span>
           </div>
         </div>
@@ -6184,7 +6186,7 @@ function renderAnomalyPage() {
 
     <!-- 48h Predictions -->
     ${next48h.length ? `
-    <div class="pa-section-title"><i class="fa-solid fa-clock" style="color:#f87171"></i> Vorhersagen nächste 48 Stunden</div>
+    <div class="pa-section-title"><i class="fa-solid fa-clock" style="color:#ff004d"></i> Vorhersagen nächste 48 Stunden</div>
     <div class="pa-alert-list">
       ${next48h.map(p => `
         <div class="pa-alert ${p.severity === 'critical' ? 'pa-alert-critical' : 'pa-alert-warning'}">
@@ -6196,7 +6198,7 @@ function renderAnomalyPage() {
             <div class="pa-alert-desc">${p.desc}</div>
             <div class="pa-alert-meta">
               <span class="pa-model-badge">EMA+LinReg</span>
-              <span class="pa-conf-badge" style="color:${p.conf>70?'var(--green)':p.conf>40?'#fbbf24':'var(--text3)'}">Konfidenz ${p.conf}%</span>
+              <span class="pa-conf-badge" style="color:${p.conf>70?'#a0ed3a':p.conf>40?'#2d5fff':'var(--text3)'}">Konfidenz ${p.conf}%</span>
               <span style="color:var(--text3);font-size:11px">In ~${Math.round(p.daysTo * 24)} Stunden</span>
             </div>
             ${p.autofix?.length ? `<div class="pa-fixes">${p.autofix.map(f=>`<span class="pa-fix-chip"><i class="fa-solid fa-wrench"></i>${f}</span>`).join('')}</div>` : ''}
@@ -6205,21 +6207,21 @@ function renderAnomalyPage() {
     </div>` : ''}
 
     <!-- Risk Table -->
-    <div class="pa-section-title"><i class="fa-solid fa-table-cells" style="color:var(--accent2)"></i> Geräte-Risikoübersicht</div>
+    <div class="pa-section-title"><i class="fa-solid fa-table-cells" style="color:#2d5fff"></i> Geräte-Risikoübersicht</div>
     ${!deviceScores.filter(d => d.score > 0).length
-      ? `<div style="padding:10px 14px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);border-radius:8px;color:var(--green);font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:10px"><i class="fa-solid fa-circle-check"></i> Keine Anomalien erkannt – alle Geräte im Normbereich.</div>`
+      ? `<div style="padding:10px 14px;background:rgba(160,237,58,.07);border:1px solid rgba(160,237,58,.25);border-radius:8px;color:#a0ed3a;font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:10px"><i class="fa-solid fa-circle-check"></i> Keine Anomalien erkannt – alle Geräte im Normbereich.</div>`
       : ''}
     <table class="pa-risk-table">
       <thead><tr><th>Gerät</th><th>Standort</th><th>CPU</th><th>RAM</th><th>Risk-Score</th><th>Anomalien</th><th></th></tr></thead>
       <tbody>
       ${deviceScores.map(d => {
-        const riskCol = d.score >= 60 ? '#f87171' : d.score >= 30 ? '#fbbf24' : 'var(--green)';
+        const riskCol = d.score >= 60 ? '#ff004d' : d.score >= 30 ? '#2d5fff' : '#a0ed3a';
         const riskLabel = d.score >= 60 ? 'Kritisch' : d.score >= 30 ? 'Warnung' : 'OK';
         const devInfo = d.dev || {};
         const devLabel = devInfo.status?.name || devInfo.label || devInfo.name || devInfo.id?.substring(0,8) || '–';
         const cpu = d.cv?.cpu; const mem = d.cv?.mem;
-        const cpuCol = cpu >= 70 ? '#f87171' : cpu >= 50 ? '#fbbf24' : 'var(--green)';
-        const memCol = mem >= 75 ? '#f87171' : mem >= 60 ? '#fbbf24' : 'var(--green)';
+        const cpuCol = cpu >= 70 ? '#ff004d' : cpu >= 50 ? '#2d5fff' : '#a0ed3a';
+        const memCol = mem >= 75 ? '#ff004d' : mem >= 60 ? '#2d5fff' : '#a0ed3a';
         return `<tr>
           <td style="font-weight:600;color:var(--text)">${devLabel}</td>
           <td style="color:var(--text2);font-size:12px">${devInfo.siteName || '–'}</td>
@@ -6236,7 +6238,7 @@ function renderAnomalyPage() {
               <span style="color:${riskCol};font-size:11px">${riskLabel}</span>
             </div>
           </td>
-          <td>${d.preds.length ? d.preds.map(p => `<span style="font-size:11px;padding:2px 6px;border-radius:4px;margin-right:3px;background:${p.severity==='critical'?'rgba(239,68,68,.15)':'rgba(251,191,36,.1)'};color:${p.severity==='critical'?'#f87171':'#fbbf24'}">${p.type.replace(/_/g,' ')}</span>`).join('') : '<span style="color:var(--text3);font-size:12px">–</span>'}</td>
+          <td>${d.preds.length ? d.preds.map(p => `<span style="font-size:11px;padding:2px 6px;border-radius:4px;margin-right:3px;background:${p.severity==='critical'?'rgba(255,0,77,.15)':'rgba(45,95,255,.1)'};color:${p.severity==='critical'?'#ff004d':'#2d5fff'}">${p.type.replace(/_/g,' ')}</span>`).join('') : '<span style="color:var(--text3);font-size:12px">–</span>'}</td>
           <td><button onclick="paToggleDetail('${d.id}')" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 10px;cursor:pointer" title="Messwerte & Details"><i class="fa-solid fa-chevron-down"></i></button></td>
         </tr>
         <tr id="pa-detail-${d.id}" style="display:none"><td colspan="7" style="padding:0">
