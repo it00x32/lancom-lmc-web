@@ -533,6 +533,58 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
 .log-load-more:hover{border-color:var(--accent);color:var(--accent);}
 .log-load-more:disabled{opacity:.4;cursor:not-allowed;}
 .log-empty{text-align:center;padding:40px;color:var(--text3);}
+
+/* ── ENERGIE DASHBOARD ───────────────────────────────── */
+.energy-wrap{padding:0 24px 32px;display:flex;flex-direction:column;gap:20px;}
+.energy-kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.energy-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;}
+.energy-kpi-val{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+.energy-kpi-lbl{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.energy-kpi-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+.energy-kpi-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:6px;}
+.eki-power{background:rgba(245,158,11,.15);color:var(--amber);}
+.eki-co2  {background:rgba(34,197,94,.15); color:var(--green);}
+.eki-cost {background:rgba(99,102,241,.15);color:var(--accent2);}
+.eki-poe  {background:rgba(56,189,248,.15);color:var(--blue);}
+.eki-dev  {background:rgba(168,85,247,.15);color:var(--purple);}
+
+.energy-section-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.energy-section-title i{color:var(--accent2);}
+
+.energy-sites-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;}
+.energy-site-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.energy-site-name{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.energy-site-name i{color:var(--accent);font-size:12px;}
+.energy-site-stats{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap;}
+.energy-site-stat{display:flex;flex-direction:column;gap:1px;}
+.energy-site-stat-val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;}
+.energy-site-stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.energy-bar-wrap{background:var(--bg);border-radius:4px;height:6px;overflow:hidden;}
+.energy-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--amber),var(--accent));transition:width .4s ease;}
+
+.energy-dev-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.energy-dev-table th{text-align:left;padding:7px 12px;background:var(--bg2);color:var(--text3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border2);}
+.energy-dev-table td{padding:7px 12px;border-bottom:1px solid var(--border);}
+.energy-dev-table tr:last-child td{border-bottom:none;}
+.energy-dev-table tr:hover td{background:rgba(255,255,255,.02);}
+.energy-type-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.etb-router{background:rgba(99,102,241,.15);color:var(--accent2);}
+.etb-ap    {background:rgba(20,184,166,.15);color:var(--teal);}
+.etb-switch{background:rgba(56,189,248,.15);color:var(--blue);}
+.etb-other {background:rgba(255,255,255,.06);color:var(--text3);}
+
+.energy-suggest-list{display:flex;flex-direction:column;gap:8px;}
+.energy-suggest{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;}
+.energy-suggest-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.esi-green {background:rgba(34,197,94,.15); color:var(--green);}
+.esi-amber {background:rgba(245,158,11,.15);color:var(--amber);}
+.esi-blue  {background:rgba(56,189,248,.15);color:var(--blue);}
+.esi-purple{background:rgba(168,85,247,.15);color:var(--purple);}
+.energy-suggest-body{flex:1;min-width:0;}
+.energy-suggest-title{font-size:13px;font-weight:700;margin-bottom:3px;}
+.energy-suggest-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.energy-suggest-badge{margin-left:auto;flex-shrink:0;background:rgba(245,158,11,.15);color:var(--amber);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;border:1px solid rgba(245,158,11,.25);align-self:flex-start;}
+.energy-note{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;}
 </style>
 </head>
 <body>
@@ -660,6 +712,10 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
         <span class="tb-icon"><i class="fa-solid fa-chart-area"></i></span>
         <span class="tb-label">Traffic</span>
         <span class="tab-badge" id="badge-traffic">–</span>
+      </button>
+      <button class="tab-btn" onclick="showTab('energy')" id="tab-btn-energy" data-tooltip="Energie / CO₂">
+        <span class="tb-icon"><i class="fa-solid fa-leaf"></i></span>
+        <span class="tb-label">Energie / CO₂</span>
       </button>
 
       <!-- Analyse -->
@@ -928,6 +984,27 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
       <i class="fa-solid fa-chart-area"></i><h3>Keine Daten</h3><p>Keine WAN-Interfaces mit Verlaufsdaten gefunden.</p>
     </div>
     <div class="traffic-grid" id="traffic-grid"></div>
+  </section>
+
+  <!-- TAB: ENERGIE / CO₂ -->
+  <section class="tab-section" id="tab-energy">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-leaf" style="color:var(--green);margin-right:6px"></i>Energie / CO₂</span>
+      <div class="toolbar-spacer"></div>
+      <div style="display:flex;align-items:center;gap:7px;">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;">Strompreis</label>
+        <div style="display:flex;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:7px;overflow:hidden;">
+          <input id="energy-price-input" type="number" min="0" step="0.01"
+            style="width:70px;background:none;border:none;outline:none;color:var(--text);font-size:13px;font-weight:600;padding:5px 8px;font-variant-numeric:tabular-nums;"
+            value="0.32" oninput="saveEnergyPrice();renderEnergy()">
+          <span style="font-size:12px;color:var(--text3);padding-right:9px;font-weight:600;">€/kWh</span>
+        </div>
+      </div>
+      <button class="icon-btn" onclick="renderEnergy()" title="Neu berechnen"><i class="fa-solid fa-arrows-rotate"></i></button>
+    </div>
+    <div class="energy-wrap" id="energy-wrap">
+      <div class="empty-state"><i class="fa-solid fa-leaf"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
   </section>
 
   <!-- TAB: NACHBARSCHAFT -->
@@ -1822,6 +1899,7 @@ function showTab(id) {
   if(id==='addins'&&S.accountId&&!addinsData.length) loadAddins();
   if(id==='client-explorer') ceInitDevices();
   if(id==='settings') loadSettingsUI();
+  if(id==='energy') { loadEnergyPrice(); renderEnergy(); }
   if(id==='firmware') renderFirmware();
   if(id==='sites') loadSites();
 }
@@ -1889,6 +1967,7 @@ function renderCurrentTab() {
   renderNeighbors();
   renderLldp();
   buildTopoSelector();
+  renderEnergy();
   if(S.activeTab==='topology') setTimeout(()=>{renderTopology();setTimeout(topoFit,80);},30);
   if(S.activeTab==='addins') loadAddins();
 }
@@ -5363,6 +5442,343 @@ function topoExportSvg() {
   a.click();
   URL.revokeObjectURL(a.href);
   toast('success', 'SVG exportiert', 'Netzwerkplan als SVG gespeichert.');
+}
+
+// ─── ENERGIE / CO₂ DASHBOARD ──────────────────────────────────────────────────
+// Schätzwerte Grundlast je Gerätetyp (Watt)
+const ENERGY_BASE = { router: 18, ap: 12, switch: 9, other: 15 };
+const CO2_PER_KWH = 400; // g CO₂/kWh (DE-Strommix ~2024)
+const EUR_PER_KWH = 0.32; // €/kWh Standardwert
+
+function saveEnergyPrice() {
+  const v = document.getElementById('energy-price-input')?.value;
+  if (v) localStorage.setItem('lmc_energy_price', v);
+}
+function loadEnergyPrice() {
+  const saved = localStorage.getItem('lmc_energy_price');
+  const el = document.getElementById('energy-price-input');
+  if (saved && el) el.value = saved;
+}
+
+function energyDeviceType(d) {
+  const m = (d.status?.model || d.label || d.name || '').toUpperCase();
+  if (/\bW-\d|\bWAP\b|ACCESS.?POINT|\bAP\b|W\d{3,}/.test(m)) return 'ap';
+  if (/\bGS-|\bGS\d|SWITCH|SW\d/.test(m)) return 'switch';
+  if (/ROUTER|FIREWALL|GATEWAY|VPN|IAP-\d|R\d{3,}|FX\d|1[0-9]{3}|OAP/.test(m)) return 'router';
+  // Fallback: Geräte ohne WLAN-Clients = Router, sonst AP
+  if (S.wlanClients[d.id] > 0) return 'ap';
+  return 'router';
+}
+
+function energyTypeBadge(type) {
+  const map = {
+    router: ['etb-router','fa-shield-halved','Router'],
+    ap:     ['etb-ap',    'fa-wifi',         'Access Point'],
+    switch: ['etb-switch','fa-diagram-project','Switch'],
+    other:  ['etb-other', 'fa-microchip',    'Sonstige'],
+  };
+  const [cls, icon, label] = map[type] || map.other;
+  return `<span class="energy-type-badge ${cls}"><i class="fa-solid ${icon}"></i>${label}</span>`;
+}
+
+function renderEnergy() {
+  const wrap = document.getElementById('energy-wrap');
+  if (!wrap) return;
+  const devs = Object.values(S.devices);
+  if (!devs.length) {
+    wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-leaf"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>';
+    return;
+  }
+
+  // ── PoE-Daten aus lldpNeighbors ──────────────────────────────────
+  // S.lldpNeighbors enthält pro Port: { _deviceId, poePower, poeStatus }
+  const poeByDevice = {};
+  for (const port of (S.lldpNeighbors || [])) {
+    const w = parseFloat(port.poePower) || 0;
+    if (w > 0) {
+      if (!poeByDevice[port._deviceId]) poeByDevice[port._deviceId] = 0;
+      poeByDevice[port._deviceId] += w;
+    }
+  }
+
+  // ── Pro Gerät: Typ + Leistung schätzen ────────────────────────────
+  const deviceRows = devs.map(d => {
+    const type     = energyDeviceType(d);
+    const baseW    = ENERGY_BASE[type];
+    const poeW     = poeByDevice[d.id] || 0;
+    const totalW   = baseW + poeW;
+    const online   = isOnline(d);
+    return { d, type, baseW, poeW, totalW, online, site: d.siteName || '(kein Standort)' };
+  });
+
+  // ── Gesamtwerte ───────────────────────────────────────────────────
+  const totalW    = deviceRows.reduce((s,r) => s + (r.online ? r.totalW : 0), 0);
+  const totalPoeW = deviceRows.reduce((s,r) => s + (r.online ? r.poeW  : 0), 0);
+  const totalPoeCount = (S.lldpNeighbors||[]).filter(p => (parseFloat(p.poePower)||0) > 0).length;
+  const eurPerKwh = parseFloat(document.getElementById('energy-price-input')?.value) || EUR_PER_KWH;
+  const co2PerDay = (totalW * 24 / 1000) * CO2_PER_KWH;       // g
+  const costMonth = (totalW * 24 * 30 / 1000) * eurPerKwh;    // €
+
+  // ── Per-Standort ──────────────────────────────────────────────────
+  const siteMap = {};
+  for (const r of deviceRows) {
+    if (!siteMap[r.site]) siteMap[r.site] = { name:r.site, rows:[] };
+    siteMap[r.site].rows.push(r);
+  }
+  const sites = Object.values(siteMap).sort((a,b)=>a.name.localeCompare(b.name));
+  const maxSiteW = Math.max(1, ...sites.map(s => s.rows.reduce((x,r)=>x+(r.online?r.totalW:0),0)));
+
+  // ── Optimierungsvorschläge ────────────────────────────────────────
+  const suggestions = [];
+  // Monatliche Ersparnis in Euro berechnen: saveW Watt für hoursDay Stunden/Tag
+  const eurSave = (saveW, hoursDay=24) => {
+    const eur = saveW * hoursDay * 30 / 1000 * eurPerKwh;
+    return eur >= 0.01 ? `~${eur.toFixed(2)} €/Monat` : null;
+  };
+
+  // 1. TX-Power Reduktion: APs mit wenig Clients
+  const sparseAPs = deviceRows.filter(r => r.type==='ap' && r.online && (S.wlanClients[r.d.id]||0) <= 2);
+  if (sparseAPs.length) {
+    const saveW = sparseAPs.length * 3;
+    suggestions.push({
+      icon:'fa-wifi', cls:'esi-green',
+      title:'TX-Power-Reduktion möglich',
+      desc: `${sparseAPs.length} Access Point${sparseAPs.length>1?'s haben':'hat'} ≤ 2 WLAN-Clients. `+
+            `Durch Reduktion der Sendeleistung (z. B. auf 50 %) lassen sich ca. ~${saveW} W einsparen.`,
+      badge: `~${saveW} W`, eur: eurSave(saveW),
+    });
+  }
+
+  // 2. Zeitplan für APs nachts (6 h Abschaltung/Dimmung)
+  const apCount = deviceRows.filter(r => r.type==='ap' && r.online).length;
+  if (apCount > 0) {
+    const saveW = Math.round(apCount * ENERGY_BASE.ap * 0.5);
+    suggestions.push({
+      icon:'fa-clock', cls:'esi-blue',
+      title:'WLAN-Zeitplan einrichten',
+      desc: `Ein Nacht-Zeitplan (00:00–06:00) für ${apCount} Access Point${apCount>1?'s':''} `+
+            `reduziert den Verbrauch um ca. ${saveW} W während 6 h/Tag.`,
+      badge: `${apCount} APs`, eur: eurSave(saveW, 6),
+    });
+  }
+
+  // 3. PoE-Zeitplan für Bürozeiten (12 h Off außerhalb der Arbeitszeit)
+  const poeActiveCount = (S.lldpNeighbors||[]).filter(p=>(parseFloat(p.poePower)||0)>0).length;
+  if (poeActiveCount > 0) {
+    suggestions.push({
+      icon:'fa-plug', cls:'esi-amber',
+      title:'PoE-Zeitplan für Bürozeiten',
+      desc: `${poeActiveCount} PoE-Port${poeActiveCount>1?'s liefern':'liefert'} zusammen ${totalPoeW.toFixed(1)} W. `+
+            `Ein Schedule (Mo–Fr 07:00–19:00) spart außerhalb der Bürozeiten ~${(totalPoeW*12/24).toFixed(0)} Wh/Tag.`,
+      badge: `${totalPoeW.toFixed(0)} W`, eur: eurSave(totalPoeW, 12),
+    });
+  }
+
+  // 4. Hohe PoE-Einzelverbraucher (> 20 W pro Port)
+  const heavyPoe = (S.lldpNeighbors||[]).filter(p=>(parseFloat(p.poePower)||0)>20);
+  if (heavyPoe.length) {
+    const totalSaveW = heavyPoe.reduce((s,p)=>s+Math.max(0,parseFloat(p.poePower)-15),0);
+    const names = [...new Set(heavyPoe.map(p=>p._deviceName||''))].filter(Boolean).slice(0,3).join(', ');
+    suggestions.push({
+      icon:'fa-bolt', cls:'esi-amber',
+      title:`${heavyPoe.length} PoE-Port${heavyPoe.length>1?'s':''} mit hohem Verbrauch (> 20 W)`,
+      desc: `Prüfen Sie ob Geräte an diesen Ports (${names||'–'}) durch effizientere Alternativen `+
+            `ersetzt werden können. Potenzial bei Reduktion auf 15 W: ~${totalSaveW.toFixed(0)} W.`,
+      badge: `${heavyPoe.length} Ports`, eur: eurSave(totalSaveW),
+    });
+  }
+
+  // 5. 2.4 GHz-dominierte APs → Band-Steering-Potenzial
+  const apBy24 = {}, apByTotal = {};
+  for (const st of (S.wlanStations||[])) {
+    const id = st._deviceId||st.deviceId; if(!id) continue;
+    apByTotal[id] = (apByTotal[id]||0)+1;
+    if ((st.band||'').includes('24')) apBy24[id] = (apBy24[id]||0)+1;
+  }
+  const band24APs = deviceRows.filter(r => r.type==='ap' && r.online &&
+    (apByTotal[r.d.id]||0) >= 3 && (apBy24[r.d.id]||0) / apByTotal[r.d.id] > 0.6);
+  if (band24APs.length) {
+    suggestions.push({
+      icon:'fa-signal', cls:'esi-purple',
+      title:`Band-Steering aktivieren (${band24APs.length} AP${band24APs.length>1?'s':''})`,
+      desc: `${band24APs.length} Access Point${band24APs.length>1?'s haben':'hat'} > 60 % der Clients auf 2.4 GHz. `+
+            `2.4 GHz belegt mehr Airtime pro Client → höhere AP-Auslastung. `+
+            `Band-Steering auf 5 GHz/6 GHz spart Energie und verbessert den Durchsatz.`,
+      badge: `${band24APs.length} APs`, eur: null,
+    });
+  }
+
+  // 6. Mobile WAN-Verbindungen (Modem ~6 W Mehrverbrauch ggü. Kabel)
+  const mobileWans = (S.wanInterfaces||[]).filter(w =>
+    w.mobileModemSignalDecibelMw != null ||
+    /mobile|lte|4g|5g|umts|gsm/i.test(w.connectionType||''));
+  const mobileDevIds = [...new Set(mobileWans.map(w=>w._deviceId||w.deviceId).filter(Boolean))];
+  if (mobileDevIds.length) {
+    const saveW = mobileDevIds.length * 6;
+    suggestions.push({
+      icon:'fa-tower-broadcast', cls:'esi-blue',
+      title:`${mobileDevIds.length} Gerät${mobileDevIds.length>1?'e nutzen':'e nutzt'} mobiles WAN`,
+      desc: `LTE/5G-Modems verbrauchen ~6 W mehr als kabelgebundene Anschlüsse (DSL/Glasfaser). `+
+            `Falls ein Kabelanschluss verfügbar ist, lohnt sich ein Wechsel.`,
+      badge: `${mobileDevIds.length} Geräte`, eur: eurSave(saveW),
+    });
+  }
+
+  // 7. Veraltete Firmware (fehlende Power-Management-Verbesserungen)
+  const obsoleteFw = deviceRows.filter(r=>r.d.firmwareState==='OBSOLETE' && r.online);
+  if (obsoleteFw.length) {
+    suggestions.push({
+      icon:'fa-microchip', cls:'esi-purple',
+      title:`Firmware-Update für ${obsoleteFw.length} Gerät${obsoleteFw.length>1?'e':''}`,
+      desc: `Neuere Firmware enthält oft verbesserte Power-Management-Features und Bugfixes. `+
+            `${obsoleteFw.length} Online-Gerät${obsoleteFw.length>1?'e haben':'hat'} eine veraltete Firmware (OBSOLETE).`,
+      badge: `${obsoleteFw.length} Geräte`, eur: null,
+    });
+  }
+
+  // 8. Offline-Geräte (Info – könnten noch Strom ziehen)
+  const offlineCount = deviceRows.filter(r=>!r.online).length;
+  if (offlineCount > 0) {
+    suggestions.push({
+      icon:'fa-power-off', cls:'esi-purple',
+      title:`${offlineCount} Gerät${offlineCount>1?'e offline':' offline'}`,
+      desc: `Offline-Geräte werden im Verbrauch nicht gezählt. Prüfen Sie, ob diese physisch `+
+            `ausgeschaltet sind oder ein Problem vorliegt – im letzteren Fall ziehen sie ggf. noch Strom.`,
+      badge: `${offlineCount} Geräte`, eur: null,
+    });
+  }
+
+  // ── Rendern ───────────────────────────────────────────────────────
+  wrap.innerHTML = `
+
+    <!-- KPI-Zeile -->
+    <div class="energy-kpi-row">
+      <div class="energy-kpi">
+        <div class="energy-kpi-icon eki-power"><i class="fa-solid fa-bolt"></i></div>
+        <div class="energy-kpi-val" style="color:var(--amber)">${totalW.toFixed(0)} <span style="font-size:16px;font-weight:400">W</span></div>
+        <div class="energy-kpi-lbl">Echtzeit-Verbrauch</div>
+        <div class="energy-kpi-sub">davon ${totalPoeW.toFixed(0)} W PoE</div>
+      </div>
+      <div class="energy-kpi">
+        <div class="energy-kpi-icon eki-co2"><i class="fa-solid fa-leaf"></i></div>
+        <div class="energy-kpi-val" style="color:var(--green)">${co2PerDay>=1000?(co2PerDay/1000).toFixed(2)+' <span style="font-size:16px;font-weight:400">kg</span>':co2PerDay.toFixed(0)+' <span style="font-size:16px;font-weight:400">g</span>'}</div>
+        <div class="energy-kpi-lbl">CO₂ pro Tag</div>
+        <div class="energy-kpi-sub">@ ${CO2_PER_KWH} g/kWh (DE-Strommix)</div>
+      </div>
+      <div class="energy-kpi">
+        <div class="energy-kpi-icon eki-cost"><i class="fa-solid fa-euro-sign"></i></div>
+        <div class="energy-kpi-val" style="color:var(--accent2)">${costMonth.toFixed(2)} <span style="font-size:16px;font-weight:400">€</span></div>
+        <div class="energy-kpi-lbl">Kosten / Monat</div>
+        <div class="energy-kpi-sub">@ ${EUR_PER_KWH} €/kWh</div>
+      </div>
+      <div class="energy-kpi">
+        <div class="energy-kpi-icon eki-poe"><i class="fa-solid fa-plug"></i></div>
+        <div class="energy-kpi-val" style="color:var(--blue)">${totalPoeCount}</div>
+        <div class="energy-kpi-lbl">PoE-Ports aktiv</div>
+        <div class="energy-kpi-sub">${totalPoeW.toFixed(1)} W gesamt</div>
+      </div>
+      <div class="energy-kpi">
+        <div class="energy-kpi-icon eki-dev"><i class="fa-solid fa-server"></i></div>
+        <div class="energy-kpi-val" style="color:var(--purple)">${devs.filter(d=>isOnline(d)).length}</div>
+        <div class="energy-kpi-lbl">Geräte online</div>
+        <div class="energy-kpi-sub">von ${devs.length} gesamt</div>
+      </div>
+    </div>
+
+    <!-- Pro Standort -->
+    <div>
+      <div class="energy-section-title"><i class="fa-solid fa-location-dot"></i>Verbrauch pro Standort</div>
+      <div class="energy-sites-grid">
+        ${sites.map(s => {
+          const sW   = s.rows.reduce((x,r)=>x+(r.online?r.totalW:0),0);
+          const sPoe = s.rows.reduce((x,r)=>x+(r.online?r.poeW:0),0);
+          const sCo2 = (sW*24/1000)*CO2_PER_KWH;
+          const pct  = Math.round((sW/maxSiteW)*100);
+          const onl  = s.rows.filter(r=>r.online).length;
+          const aps  = s.rows.filter(r=>r.type==='ap').length;
+          const rtrs = s.rows.filter(r=>r.type==='router').length;
+          const swts = s.rows.filter(r=>r.type==='switch').length;
+          return `<div class="energy-site-card">
+            <div class="energy-site-name"><i class="fa-solid fa-location-dot"></i>${escHtml(s.name)}</div>
+            <div class="energy-site-stats">
+              <div class="energy-site-stat">
+                <div class="energy-site-stat-val" style="color:var(--amber)">${sW.toFixed(0)} W</div>
+                <div class="energy-site-stat-lbl">Verbrauch</div>
+              </div>
+              <div class="energy-site-stat">
+                <div class="energy-site-stat-val" style="color:var(--green)">${sCo2>=1000?(sCo2/1000).toFixed(1)+' kg':sCo2.toFixed(0)+' g'}</div>
+                <div class="energy-site-stat-lbl">CO₂/Tag</div>
+              </div>
+              <div class="energy-site-stat">
+                <div class="energy-site-stat-val" style="color:var(--blue)">${sPoe.toFixed(1)} W</div>
+                <div class="energy-site-stat-lbl">PoE</div>
+              </div>
+              <div class="energy-site-stat">
+                <div class="energy-site-stat-val" style="color:var(--text2)">${onl}/${s.rows.length}</div>
+                <div class="energy-site-stat-lbl">Online</div>
+              </div>
+            </div>
+            <div class="energy-bar-wrap"><div class="energy-bar" style="width:${pct}%"></div></div>
+            <div class="energy-note" style="margin-top:8px">
+              ${rtrs?`<i class="fa-solid fa-shield-halved" style="color:var(--accent2)"></i> ${rtrs} Router &nbsp;`:''}
+              ${aps?`<i class="fa-solid fa-wifi" style="color:var(--teal)"></i> ${aps} APs &nbsp;`:''}
+              ${swts?`<i class="fa-solid fa-diagram-project" style="color:var(--blue)"></i> ${swts} Switches`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Gerätdetails-Tabelle -->
+    <div>
+      <div class="energy-section-title"><i class="fa-solid fa-table-list"></i>Gerätedetails</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+        <table class="energy-dev-table">
+          <thead><tr>
+            <th>Gerät</th><th>Standort</th><th>Typ</th>
+            <th>Grundlast</th><th>PoE</th><th>Gesamt</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+            ${deviceRows
+              .sort((a,b)=>b.totalW-a.totalW)
+              .map(r=>`<tr>
+                <td style="font-weight:600">${escHtml(deviceName(r.d))}</td>
+                <td class="muted">${escHtml(r.site)}</td>
+                <td>${energyTypeBadge(r.type)}</td>
+                <td class="muted">${r.online?r.baseW+' W':'–'}</td>
+                <td>${r.poeW>0?`<span style="color:var(--blue);font-weight:600">${r.poeW.toFixed(1)} W</span>`:'<span class="muted">–</span>'}</td>
+                <td><span style="font-weight:700;color:${r.online?'var(--amber)':'var(--text3)'}">${r.online?r.totalW.toFixed(0)+' W':'offline'}</span></td>
+                <td>${r.online?'<span class="sdot sdot-green">Online</span>':'<span class="sdot sdot-red">Offline</span>'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Optimierungsvorschläge -->
+    <div>
+      <div class="energy-section-title"><i class="fa-solid fa-lightbulb"></i>Optimierungsvorschläge</div>
+      ${suggestions.length ? `<div class="energy-suggest-list">
+        ${suggestions.map(s=>`<div class="energy-suggest">
+          <div class="energy-suggest-icon ${s.cls}"><i class="fa-solid ${s.icon}"></i></div>
+          <div class="energy-suggest-body">
+            <div class="energy-suggest-title">${s.title}</div>
+            <div class="energy-suggest-desc">${s.desc}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;align-self:flex-start;flex-shrink:0;text-align:right">
+            <div class="energy-suggest-badge">${s.badge}</div>
+            ${s.eur ? `<div class="energy-suggest-badge" style="background:rgba(34,197,94,.15);color:var(--green);border-color:rgba(34,197,94,.25)">${s.eur}</div>` : ''}
+          </div>
+        </div>`).join('')}
+      </div>` : `<div class="empty-state" style="padding:30px"><i class="fa-solid fa-circle-check" style="color:var(--green)"></i><h3>Alles optimal</h3><p>Keine Verbesserungsvorschläge.</p></div>`}
+    </div>
+
+    <div class="energy-note" style="text-align:center;padding-bottom:8px">
+      Grundlastschätzung: Router ${ENERGY_BASE.router} W · Access Point ${ENERGY_BASE.ap} W · Switch ${ENERGY_BASE.switch} W.
+      PoE-Werte stammen aus dem Live-Monitoring (lan_info_json).
+      CO₂: ${CO2_PER_KWH} g/kWh · Strompreis: ${eurPerKwh.toFixed(4)} €/kWh.
+    </div>
+  `;
 }
 </script>
 </body>
