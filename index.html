@@ -5667,30 +5667,24 @@ function paParseTableRecord(tableData) {
 async function paFetchDevice(deviceId) {
   const fromMs = Date.now() - PA_DAYS * 86400000;
   const fromStr = new Date(fromMs).toISOString().slice(0, 19) + 'Z';
+  // All tables via monitor-frontend service (correct field names + period support)
   const tables = {
-    'lan-interface':  ['timeMs','name','active','rxCounterBytes','txCounterBytes'],
-    'vpn-connection': ['timeMs','peerName','active','packetLossPercent','rttAvgUs'],
-    'wan-interface':  ['timeMs','connectionType','logicalState','mobileModemSignalDecibelMw'],
+    'device-info':    ['timeMs','cpuLoadPercent','totalMemoryKb','freeMemoryKb','temperature'],
+    'lan-interface':  ['timeMs','name','active','loopCounter','poePowerMilliWatt','rxDeltaBytes','txDeltaBytes'],
+    'vpn-connection': ['timeMs','peerName','active','packetLossPercent','rttAvgUs','jitterUs'],
+    'wan-interface':  ['timeMs','connectionType','logicalState','mobileModemSignalDecibelMw','backupInActiveUse'],
+    'wlan-interface': ['timeMs','clientCount','band','transmitPowerDecibelMw','noiseDecibelMw','rxErrorPermill'],
   };
   const results = {};
 
-  // Tables API for LAN / VPN / WAN
   await Promise.allSettled(Object.entries(tables).map(async ([table, cols]) => {
     try {
       const colStr = cols.map(c => `column=${encodeURIComponent(c)}`).join('&');
       const qs = `deviceId=${encodeURIComponent(deviceId)}&from=${encodeURIComponent(fromStr)}&limit=2000&sort=timeMs&order=asc&${colStr}`;
-      const data = await api('monitoring', `/api/${S.accountId}/tables/${table}?${qs}`);
+      const data = await api('monitor-frontend', `/api/${S.accountId}/tables/${table}?${qs}`);
       results[table] = (data?.data || []);
     } catch { results[table] = []; }
   }));
-
-  // Records API: device_info → cpu_load, free_memory, total_memory, temperature
-  try {
-    const data = await api('monitoring',
-      `/accounts/${S.accountId}/records/device_info?group=DEVICE&groupId=${encodeURIComponent(deviceId)}&period=HOUR1&type=table&source=NEW&name=device&latest=720`
-    );
-    results['device-info'] = paParseTableRecord(data?.items?.device);
-  } catch { results['device-info'] = []; }
 
   // WLAN time-series (Records API)
   try {
@@ -5767,10 +5761,10 @@ function paAnalyzeDevice(deviceId, raw) {
   }
 
   // ── 2. Memory leak ────────────────────────────────────────────────────────
-  // Compute utilization % from free_memory + total_memory
+  // Compute utilization % from totalMemoryKb + freeMemoryKb
   const memComputedRows = cpuRows.map(r => {
-    const total = r.total_memory || 0;
-    const free  = r.free_memory  || 0;
+    const total = r.totalMemoryKb || 0;
+    const free  = r.freeMemoryKb  || 0;
     return { ...r, _memUtil: total > 0 ? Math.round((1 - free / total) * 100) : 0 };
   });
   const memDaily = paFillNulls(paBinByDay(memComputedRows, 'timeMs', '_memUtil', 'avg'));
@@ -5869,7 +5863,9 @@ function paAnalyzeDevice(deviceId, raw) {
   }
 
   // ── 7. WLAN capacity saturation ───────────────────────────────────────────
-  const wlanVals = (raw['wlan'] || []).map(v => typeof v === 'number' ? v : (Array.isArray(v) ? v.length : 0));
+  // Sum clientCount across all radios per day
+  const wlanRows = raw['wlan-interface'] || [];
+  const wlanVals = paFillNulls(paBinByDay(wlanRows, 'timeMs', 'clientCount', 'avg'));
   if (wlanVals.length >= 5) {
     const reg = paLinReg(paEMA(wlanVals));
     const last = wlanVals[wlanVals.length - 1];
@@ -5888,11 +5884,11 @@ function paAnalyzeDevice(deviceId, raw) {
   const lastPos = arr => arr.filter(v => v !== null && !isNaN(v) && v > 0).slice(-1)[0] ?? null;
   // Latest raw values directly from last device-info row
   const lastDevRow = cpuRows.slice(-1)[0] || {};
-  const rawCpu  = lastDevRow.cpu_load    != null ? Math.round(lastDevRow.cpu_load)    : (cpuDaily.length ? Math.round(paEMA(cpuDaily).slice(-1)[0]) : null);
-  const rawTotal = lastDevRow.total_memory || 0;
-  const rawFree  = lastDevRow.free_memory  || 0;
+  const rawCpu  = lastDevRow.cpuLoadPercent != null ? Math.round(lastDevRow.cpuLoadPercent) : (cpuDaily.length ? Math.round(paEMA(cpuDaily).slice(-1)[0]) : null);
+  const rawTotal = lastDevRow.totalMemoryKb || 0;
+  const rawFree  = lastDevRow.freeMemoryKb  || 0;
   const rawMem   = rawTotal > 0 ? Math.round((1 - rawFree / rawTotal) * 100) : (memDaily.length ? Math.round(paEMA(memDaily).slice(-1)[0]) : null);
-  const rawTemp  = lastDevRow.temperature  != null ? Math.round(lastDevRow.temperature) : lastPos(tempDaily);
+  const rawTemp  = lastDevRow.temperature   != null ? Math.round(lastDevRow.temperature) : lastPos(tempDaily);
   const currentVals = {
     cpu:         rawCpu,
     mem:         rawMem,
@@ -5900,7 +5896,7 @@ function paAnalyzeDevice(deviceId, raw) {
     vpnLoss:     vpnLoss.some(v => v > 0) ? Math.round(vpnLoss.filter(v=>v>0).slice(-1)[0] * 10) / 10 : null,
     vpnRtt:      vpnRtt.some(v => v > 0)  ? Math.round(vpnRtt.filter(v=>v>0).slice(-1)[0] / 1000)      : null,
     wanSignal:   sigDaily.some(v => v < -10) ? Math.round(sigDaily.filter(v=>v<-10).slice(-1)[0])       : null,
-    wlanClients: wlanVals.length ? wlanVals[wlanVals.length - 1] : null,
+    wlanClients: wlanVals.length ? Math.round(wlanVals.filter(v=>v!==null).slice(-1)[0] ?? 0) : null,
     ports: Object.entries(portMap).map(([pname, prows]) => {
       let flaps = 0, prev = prows[0]?.active;
       prows.forEach(r => { if (r.active !== prev) { flaps++; prev = r.active; } });
