@@ -6210,15 +6210,23 @@ function renderAnomalyPage() {
       ? `<div style="padding:10px 14px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);border-radius:8px;color:var(--green);font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:10px"><i class="fa-solid fa-circle-check"></i> Keine Anomalien erkannt – alle Geräte im Normbereich.</div>`
       : ''}
     <table class="pa-risk-table">
-      <thead><tr><th>Gerät</th><th>Standort</th><th>Risk-Score</th><th>Anomalien</th><th></th></tr></thead>
+      <thead><tr><th>Gerät</th><th>Standort</th><th>CPU</th><th>RAM</th><th>Risk-Score</th><th>Anomalien</th><th></th></tr></thead>
       <tbody>
       ${deviceScores.map(d => {
         const riskCol = d.score >= 60 ? '#f87171' : d.score >= 30 ? '#fbbf24' : 'var(--green)';
         const riskLabel = d.score >= 60 ? 'Kritisch' : d.score >= 30 ? 'Warnung' : 'OK';
         const devInfo = d.dev || {};
+        const devLabel = devInfo.status?.name || devInfo.label || devInfo.name || devInfo.id?.substring(0,8) || '–';
+        const cpu = d.cv?.cpu; const mem = d.cv?.mem;
+        const cpuCol = cpu >= 70 ? '#f87171' : cpu >= 50 ? '#fbbf24' : 'var(--green)';
+        const memCol = mem >= 75 ? '#f87171' : mem >= 60 ? '#fbbf24' : 'var(--green)';
         return `<tr>
-          <td style="font-weight:600;color:var(--text)">${deviceName(devInfo)}</td>
+          <td style="font-weight:600;color:var(--text)">${devLabel}</td>
           <td style="color:var(--text2);font-size:12px">${devInfo.siteName || '–'}</td>
+          <td style="font-size:12px;font-weight:700;color:${cpu != null ? cpuCol : 'var(--text3)'}">
+            ${cpu != null ? cpu + ' %' : '–'}</td>
+          <td style="font-size:12px;font-weight:700;color:${mem != null ? memCol : 'var(--text3)'}">
+            ${mem != null ? mem + ' %' : '–'}</td>
           <td>
             <div style="display:flex;align-items:center;gap:8px">
               <div style="flex:1;background:var(--border);border-radius:4px;height:6px;min-width:60px">
@@ -6231,7 +6239,7 @@ function renderAnomalyPage() {
           <td>${d.preds.length ? d.preds.map(p => `<span style="font-size:11px;padding:2px 6px;border-radius:4px;margin-right:3px;background:${p.severity==='critical'?'rgba(239,68,68,.15)':'rgba(251,191,36,.1)'};color:${p.severity==='critical'?'#f87171':'#fbbf24'}">${p.type.replace(/_/g,' ')}</span>`).join('') : '<span style="color:var(--text3);font-size:12px">–</span>'}</td>
           <td><button onclick="paToggleDetail('${d.id}')" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 10px;cursor:pointer" title="Messwerte & Details"><i class="fa-solid fa-chevron-down"></i></button></td>
         </tr>
-        <tr id="pa-detail-${d.id}" style="display:none"><td colspan="5" style="padding:0">
+        <tr id="pa-detail-${d.id}" style="display:none"><td colspan="7" style="padding:0">
           <div class="pa-device-detail">
             <!-- Current values row -->
             <div style="padding:10px 14px 8px;border-bottom:${d.preds.length?'1px solid var(--border)':'none'}">
