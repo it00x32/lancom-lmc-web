@@ -203,6 +203,151 @@ async function snmpMacTable(host, community, version) {
   };
 }
 
+// ── LCOS-LX WDS scan ─────────────────────────────────────────────────────────
+// Decode a length-prefixed OID string from a parts array.
+// Returns [decodedString, nextOffset].
+function decodeOidStr(parts, offset) {
+  if (offset >= parts.length) return ['', offset];
+  const len = parseInt(parts[offset], 10);
+  if (isNaN(len)) return ['', offset + 1];
+  let str = '';
+  for (let i = 1; i <= len && (offset + i) < parts.length; i++) {
+    const code = parseInt(parts[offset + i], 10);
+    if (!isNaN(code)) str += String.fromCharCode(code);
+  }
+  return [str, offset + 1 + len];
+}
+
+// Parse lcosLXSetupWLANWDSLinks config table (1.3.6.1.4.1.2356.13.2.20.13.1)
+// Returns map linkName → { linkName, ssid, radio }
+function parseWdsConfig(raw) {
+  const links = {};
+  raw.split('\n').forEach(line => {
+    // OID may have .1.1.COL or .1.COL before index – try both
+    const m = line.match(/2356\.13\.2\.20\.13\.1\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/)
+           || line.match(/2356\.13\.2\.20\.13\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = parseInt(m[1], 10);
+    const idxParts = m[2].split('.');
+    const [linkName] = decodeOidStr(idxParts, 0);
+    if (!linkName) return;
+    if (!links[linkName]) links[linkName] = { linkName };
+    const val = m[3].trim().replace(/^(STRING|INTEGER):\s*/, '').replace(/^"(.*)"$/, '$1');
+    if (col === 2) links[linkName].ssid  = val;
+    if (col === 4) links[linkName].radio = parseInt(val, 10) || 0;
+  });
+  return links;
+}
+
+// Parse lcosLXStatusWLANWDSLinks status table (1.3.6.1.4.1.2356.13.1.3.101.1)
+// Index is LinkName + MACAddress (both length-prefixed OID strings)
+function parseWdsStatus(raw) {
+  const entries = {};
+  raw.split('\n').forEach(line => {
+    const m = line.match(/2356\.13\.1\.3\.101\.1\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/)
+           || line.match(/2356\.13\.1\.3\.101\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col = parseInt(m[1], 10);
+    const idxParts = m[2].split('.');
+    const [linkName, off2] = decodeOidStr(idxParts, 0);
+    const [macRaw]         = decodeOidStr(idxParts, off2);
+    const mac = macRaw.length === 6
+      ? Array.from(macRaw).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(':')
+      : macRaw;
+    const key = `${linkName}|${mac}`;
+    if (!entries[key]) entries[key] = { linkName, mac };
+    const rawVal = m[3].trim();
+    const n = parseInt((rawVal.match(/:\s*(\d+)/) || rawVal.match(/(\d+)/)|| [])[1], 10);
+    if (col === 3)  entries[key].connected   = n === 1;
+    if (col === 4)  entries[key].radio       = n;   // 1=2.4GHz 2=5GHz
+    if (col === 5)  entries[key].signal      = n;   // 0-255
+    if (col === 6)  entries[key].remoteMode  = n;   // 0=AP 1=STA 2=LegacySTA
+    if (col === 7)  entries[key].txRate      = n;
+    if (col === 8)  entries[key].rxRate      = n;
+    if (col === 13) entries[key].wpaVersion  = n;   // 0=None 1=WPA1 2=WPA2 3=WPA3
+  });
+  return Object.values(entries);
+}
+
+async function snmpWdsScan(host, community, version) {
+  const cfgRaw    = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.2.20.13.1');
+  const configMap = parseWdsConfig(cfgRaw);
+  const configured = Object.keys(configMap).length > 0;
+  if (!configured) return { configured: false, links: [] };
+
+  const staRaw       = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.3.101.1');
+  const statusEntries = parseWdsStatus(staRaw);
+  return { configured: true, configLinks: Object.values(configMap), statusEntries };
+}
+
+// ── LCOS-LX L2TPv3 scan ──────────────────────────────────────────────────────
+// Extract the actual value from an SNMP output token (handles STRING/Gauge32/INTEGER/bare quotes)
+function snmpStr(raw) {
+  const s = raw.trim();
+  let m = s.match(/STRING:\s*"(.*)"/);   // STRING: "value"
+  if (m) return m[1];
+  m = s.match(/STRING:\s*(.*)/);         // STRING: value (unquoted)
+  if (m) return m[1].trim();
+  m = s.match(/:\s*(\d+)/);             // Gauge32: n / INTEGER: n
+  if (m) return m[1];
+  m = s.match(/^"(.*)"$/);             // bare quoted: ""
+  if (m) return m[1];
+  return s;
+}
+
+// Parse lcosLXSetupL2TPEndpoints config table (1.3.6.1.4.1.2356.13.2.61.1)
+// Index: EndpointName (single length-prefixed string)
+function parseL2tpConfig(raw) {
+  const endpoints = {};
+  raw.split('\n').forEach(line => {
+    const m = line.match(/2356\.13\.2\.61\.1\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col      = parseInt(m[1], 10);
+    const [name]   = decodeOidStr(m[2].split('.'), 0);
+    if (!name) return;
+    if (!endpoints[name]) endpoints[name] = { name };
+    const val = snmpStr(m[3]);
+    if (col === 2) endpoints[name].remoteIp  = val;
+    if (col === 3) endpoints[name].port      = parseInt(val, 10) || 0;
+    if (col === 4) endpoints[name].hostname  = val;
+    if (col === 8) endpoints[name].operating = parseInt(val, 10); // 1=on, 0=off
+  });
+  return endpoints;
+}
+
+// Parse lcosLXStatusL2TPEthernet status table (1.3.6.1.4.1.2356.13.1.61.2)
+// Index: RemoteEnd + L2TPEndpoint (two length-prefixed strings)
+function parseL2tpStatus(raw) {
+  const entries = {};
+  raw.split('\n').forEach(line => {
+    const m = line.match(/2356\.13\.1\.61\.2\.1\.(\d+)\.([\d.]+)\s*=\s*(.*)/);
+    if (!m) return;
+    const col               = parseInt(m[1], 10);
+    const idxParts          = m[2].split('.');
+    const [remoteEnd, off2] = decodeOidStr(idxParts, 0);
+    const [endpointName]    = decodeOidStr(idxParts, off2);
+    const key = `${remoteEnd}|${endpointName}`;
+    if (!entries[key]) entries[key] = { remoteEnd, endpointName };
+    const val = snmpStr(m[3]);
+    if (col === 3) entries[key].state         = val;           // "UP"/"DOWN"
+    if (col === 4) entries[key].iface         = val;           // e.g. "l2tp-tun1"
+    if (col === 5) entries[key].bridgeAddr    = val;           // MAC or empty
+    if (col === 7) entries[key].connStartTime = val;           // "MM/DD/YY HH:MM:SS"
+  });
+  return Object.values(entries);
+}
+
+async function snmpL2tpScan(host, community, version) {
+  const cfgRaw    = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.2.61.1');
+  const configMap = parseL2tpConfig(cfgRaw);
+  const configured = Object.keys(configMap).length > 0;
+  if (!configured) return { configured: false };
+
+  const staRaw        = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.61.2');
+  const statusEntries = parseL2tpStatus(staRaw);
+  return { configured: true, configEndpoints: Object.values(configMap), statusEntries };
+}
+
 // ── Proxy helper ──────────────────────────────────────────────────────────────
 function proxyRequest(targetUrl, method, apiKey, body) {
   return new Promise((resolve, reject) => {
@@ -323,6 +468,10 @@ const server = http.createServer(async (req, res) => {
           const out = await runSnmpWalk(host, community, version, '1.3.6.1.2.1.1.1.0');
           const m = out.match(/STRING:\s*"?([^\n"]+)"?\s*$/m);
           result = { ok: !!m, sysDescr: m ? m[1].trim() : (out.trim().slice(0, 200) || 'Keine Antwort') };
+        } else if (type === 'wds-scan') {
+          result = await snmpWdsScan(host, community, version);
+        } else if (type === 'l2tp-scan') {
+          result = await snmpL2tpScan(host, community, version);
         } else {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Unbekannter Typ' })); return;

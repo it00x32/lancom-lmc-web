@@ -582,6 +582,30 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
 .pa-fix-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(0,29,65,.5);border:1px solid rgba(45,95,255,.3);color:#aadaf7;font-size:10px;font-weight:600;padding:3px 8px;border-radius:7px;}
 .pa-model-row{font-size:10px;color:var(--text3);margin-top:8px;display:flex;align-items:center;gap:5px;}
 
+/* ── WIFI MESH ───────────────────────────────────────── */
+.mesh-wrap{padding:20px 24px 32px;display:flex;flex-direction:column;gap:16px;}
+.mesh-ap-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.mesh-ap-header{display:flex;align-items:center;gap:12px;padding:13px 18px;background:var(--card2);border-bottom:1px solid var(--border);}
+.mesh-ap-name{font-weight:700;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mesh-ap-ip{font-size:11px;color:var(--text3);font-family:monospace;white-space:nowrap;}
+.mesh-ap-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.mesh-ap-badge.wds-yes{background:rgba(45,95,255,.18);color:var(--accent2);border:1px solid rgba(45,95,255,.35);}
+.mesh-ap-badge.wds-no{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border);}
+.mesh-link-table{width:100%;border-collapse:collapse;font-size:13px;}
+.mesh-link-table th{padding:8px 16px;text-align:left;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);background:rgba(0,29,65,.4);}
+.mesh-link-table td{padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04);}
+.mesh-link-table tr:last-child td{border-bottom:none;}
+.mesh-link-table tbody tr:hover td{background:rgba(45,95,255,.04);}
+.mesh-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+.mesh-dot-on{background:var(--green);box-shadow:0 0 5px var(--green);}
+.mesh-dot-off{background:var(--text3);}
+.mesh-no-link{padding:14px 18px;color:var(--text3);font-size:13px;display:flex;align-items:center;gap:8px;}
+.mesh-summary{display:flex;gap:28px;padding:0 4px 8px;}
+.mesh-summary-stat .ms-num{font-size:26px;font-weight:800;color:var(--accent2);}
+.mesh-summary-stat .ms-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+
+/* ── L2TPv3 (reuses .mesh-* classes, no extra CSS needed) */
+
 /* ── LIFECYCLE PLANNER ───────────────────────────────── */
 .lc-wrap{padding:0 24px 32px;display:flex;flex-direction:column;gap:20px;}
 .lc-kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
@@ -845,6 +869,16 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
         <span class="tb-icon"><i class="fa-solid fa-brain"></i></span>
         <span class="tb-label">Predictive Anomaly</span>
         <span class="tab-badge" id="badge-anomaly">–</span>
+      </button>
+      <button class="tab-btn" onclick="showTab('mesh')" id="tab-btn-mesh" data-tooltip="Wifi Mesh">
+        <span class="tb-icon"><i class="fa-solid fa-wifi"></i></span>
+        <span class="tb-label">Wifi Mesh</span>
+        <span class="tab-badge" id="badge-mesh">–</span>
+      </button>
+      <button class="tab-btn" onclick="showTab('l2tp')" id="tab-btn-l2tp" data-tooltip="L2TPv3">
+        <span class="tb-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+        <span class="tb-label">L2TPv3</span>
+        <span class="tab-badge" id="badge-l2tp">–</span>
       </button>
 
       <!-- Verwaltung -->
@@ -1439,6 +1473,38 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
     </div>
   </section>
 
+  <!-- TAB: WIFI MESH -->
+  <section class="tab-section" id="tab-mesh">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-wifi" style="color:var(--accent);margin-right:6px"></i>Wifi Mesh</span>
+      <div class="toolbar-spacer"></div>
+      <span id="mesh-status-lbl" style="color:var(--text3);font-size:12px"></span>
+      <button id="mesh-scan-btn" onclick="meshScanAll()"
+        style="background:rgba(45,95,255,.2);border:1px solid rgba(45,95,255,.4);border-radius:8px;color:var(--accent2);font-size:13px;font-weight:700;padding:7px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap">
+        <i class="fa-solid fa-radar"></i> Scan starten
+      </button>
+    </div>
+    <div class="mesh-wrap" id="mesh-wrap">
+      <div class="empty-state"><i class="fa-solid fa-wifi"></i><h3>Kein Scan</h3><p>Alle Online-Access-Points nach WDS-Verbindungen scannen.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: L2TPv3 -->
+  <section class="tab-section" id="tab-l2tp">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-arrow-right-arrow-left" style="color:var(--accent);margin-right:6px"></i>L2TPv3</span>
+      <div class="toolbar-spacer"></div>
+      <span id="l2tp-status-lbl" style="color:var(--text3);font-size:12px"></span>
+      <button id="l2tp-scan-btn" onclick="l2tpScanAll()"
+        style="background:rgba(45,95,255,.2);border:1px solid rgba(45,95,255,.4);border-radius:8px;color:var(--accent2);font-size:13px;font-weight:700;padding:7px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap">
+        <i class="fa-solid fa-radar"></i> Scan starten
+      </button>
+    </div>
+    <div class="mesh-wrap" id="l2tp-wrap">
+      <div class="empty-state"><i class="fa-solid fa-arrow-right-arrow-left"></i><h3>Kein Scan</h3><p>Alle Online-Geräte nach L2TPv3-Endpunkten scannen.</p></div>
+    </div>
+  </section>
+
   <!-- TAB: ALERTS -->
   <!-- ═══════════════════════════════ ADD-INS TAB ════════════════════════════ -->
   <section class="tab-section" id="tab-addins">
@@ -1673,6 +1739,34 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
             <span id="snmp-save-msg" style="font-size:12px;color:var(--green);display:none;">
               <i class="fa-solid fa-circle-check"></i> Gespeichert
             </span>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label"></span>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <button onclick="createSnmpAddins()" id="btn-snmp-addin" class="settings-save-btn"><i class="fa-solid fa-code"></i> SNMP Add-in erstellen</button>
+            <span id="snmp-addin-msg" style="font-size:12px;color:var(--text3);display:none"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Management VLAN -->
+      <div class="settings-card">
+        <div class="settings-card-title">
+          <i class="fa-solid fa-layer-group"></i> Management VLAN
+        </div>
+        <div class="settings-row">
+          <span class="settings-label">VLAN-ID</span>
+          <div>
+            <input id="set-mgmt-vlan" type="number" class="settings-input" min="1" max="4094" value="1" style="width:110px">
+            <div class="settings-hint">VLAN-ID für das Management-Interface (1–4094). Erzeugt je ein Add-in für alle 6 Betriebssysteme (LCOS, LCOS LX, SwOS, SDK4, XS, LCOS FX).</div>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label"></span>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <button onclick="createMgmtVlanAddins()" id="btn-mgmt-vlan-addin" class="settings-save-btn"><i class="fa-solid fa-code"></i> Management VLAN Add-in erstellen</button>
+            <span id="mgmt-vlan-msg" style="font-size:12px;color:var(--text3);display:none"></span>
           </div>
         </div>
       </div>
@@ -2034,6 +2128,8 @@ function showTab(id) {
   if(id==='energy') { loadEnergyPrice(); renderEnergy(); }
   if(id==='lifecycle') renderLifecycle();
   if(id==='anomaly') renderAnomalyPage();
+  if(id==='mesh') renderMeshPage();
+  if(id==='l2tp') renderL2tpPage();
   if(id==='firmware') renderFirmware();
   if(id==='sites') loadSites();
 }
@@ -2420,6 +2516,18 @@ function loadSettingsUI() {
   const w = document.getElementById('set-snmp-write');
   if(r) r.value = snmpReadCommunity;
   if(w) w.value = snmpWriteCommunity;
+  // Management VLAN
+  const vi = document.getElementById('set-mgmt-vlan');
+  if(vi) vi.value = localStorage.getItem('lmc_mgmtvlan_id') || '1';
+  // Status-Label aktualisieren
+  const saved = S.accountId ? JSON.parse(localStorage.getItem('lmc_mgmtvlan_addins_' + S.accountId) || 'null') : null;
+  const msg = document.getElementById('mgmt-vlan-msg');
+  if(msg && saved) {
+    const vlan = localStorage.getItem('lmc_mgmtvlan_id') || '1';
+    msg.style.display = '';
+    msg.style.color = 'var(--green)';
+    msg.textContent = `\u2713 VLAN ${vlan} – Add-ins vorhanden`;
+  }
 }
 
 function saveSnmpSettings() {
@@ -2429,6 +2537,240 @@ function saveSnmpSettings() {
   localStorage.setItem('snmpWriteCommunity', snmpWriteCommunity);
   const msg = document.getElementById('snmp-save-msg');
   if(msg){ msg.style.display=''; setTimeout(()=>{ msg.style.display='none'; }, 2500); }
+}
+
+// ─── SNMP ADD-INS ─────────────────────────────────────────────────────────────
+function _snmpHeader(readCom, os) {
+  return `// LMC-Dashboard: SNMP-Konfiguration (${os})
+// Read-Community: ${readCom}
+// Generiert: ${new Date().toLocaleString('de-DE')}
+/**
+ * @param {Config} config
+ * @param {Context} context
+ * Do not edit this comment or parameter types. Required for code suggestions
+ */`;
+}
+
+// LCOS / LCOS FX  → OID-basiert, Prefix 11.2.9
+function snmpScriptLcos(readCom) {
+  return `${_snmpHeader(readCom, 'LCOS')}
+exports.main = function(config, context) {
+  // SNMPv1+v2+v3 aktivieren (Admitted-Protocols, Bitmask 7 = Bits 29+30+31)
+  config.setScalarByOid("11.2.9.37", "7");
+  // Read-Only-Community setzen
+  config.setScalarByOid("11.2.9.15", "${readCom}");
+};`;
+}
+function snmpScriptLcosFx(readCom) {
+  return `${_snmpHeader(readCom, 'LCOS FX')}
+exports.main = function(config, context) {
+  config.setScalarByOid("11.2.9.37", "7");
+  config.setScalarByOid("11.2.9.15", "${readCom}");
+};`;
+}
+
+// LCOS LX → OID-basiert, Prefix 13.2.9
+// Communities-Tabelle (13.2.9.27): Col1=Name(Index), Col3=Security-Name, Col8=Status
+function snmpScriptLcosLx(readCom) {
+  return `${_snmpHeader(readCom, 'LCOS LX')}
+exports.main = function(config, context) {
+  // SNMPv1+v2+v3 aktivieren (Admitted-Protocols, Bitmask 7 = Bits 29+30+31)
+  config.setScalarByOid("13.2.9.37", "7");
+  // Read-Community eintragen (KB-Muster: kein addOrMerge)
+  config.getTableByOid("13.2.9.27")
+    .createNewRow()
+    .setByOids({ "1": "${readCom}", "3": "public", "8": "Active" });
+};`;
+}
+
+// LCOS SX Varianten → ScriptLine
+function snmpScriptSwos(readCom) {
+  return `${_snmpHeader(readCom, 'GS-2xxx SwOS')}
+exports.main = function(config, context) {
+  config.addScriptLine("set /Setup/SNMP/Admitted-Protocols SNMPv1,SNMPv2");
+  config.addScriptLine("set /Setup/SNMP/Read-Only-Community ${readCom}");
+};`;
+}
+function snmpScriptSdk4(readCom) {
+  return `${_snmpHeader(readCom, 'GS-3xxx SDK4')}
+exports.main = function(config, context) {
+  config.addScriptLine("set /Setup/SNMP/Admitted-Protocols SNMPv1,SNMPv2");
+  config.addScriptLine("set /Setup/SNMP/Read-Only-Community ${readCom}");
+};`;
+}
+function snmpScriptXs(readCom) {
+  return `${_snmpHeader(readCom, 'XS-5xxx')}
+exports.main = function(config, context) {
+  config.addScriptLine("set /Setup/SNMP/Admitted-Protocols SNMPv1,SNMPv2");
+  config.addScriptLine("set /Setup/SNMP/Read-Only-Community ${readCom}");
+};`;
+}
+
+async function createSnmpAddins() {
+  if (!S.accountId) { toast('warn', 'Nicht angemeldet', 'Bitte zuerst einloggen.'); return; }
+  const readCom = document.getElementById('set-snmp-read')?.value.trim() || snmpReadCommunity || 'public';
+  if (!readCom) { toast('warn', 'Keine Community', 'Bitte eine Read Community eingeben.'); return; }
+
+  const btn = document.getElementById('btn-snmp-addin');
+  const msg = document.getElementById('snmp-addin-msg');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Erstelle\u2026'; }
+  if (msg) { msg.style.display = ''; msg.style.color = 'var(--text3)'; msg.textContent = 'Add-ins werden erstellt\u2026'; }
+
+  const saved  = JSON.parse(localStorage.getItem('lmc_snmp_addins_' + S.accountId) || '{}');
+  const comment = `Automatisch generiert vom LANCOM LMC Dashboard. Aktiviert SNMPv2 und setzt Read-Community auf "${readCom}".`;
+
+  try {
+    const [idLcos, idLcosLx, idSwos, idSdk4, idXs, idFx] = await Promise.all([
+      _upsertAddin(saved.lcos,       `Dashboard-SNMP-LCOS`,        comment, snmpScriptLcos(readCom),   { lcos: true }),
+      _upsertAddin(saved.lcosLx,     `Dashboard-SNMP-LCOS-LX`,     comment, snmpScriptLcosLx(readCom), { lcosLx: true }),
+      _upsertAddin(saved.swos,       `Dashboard-SNMP-SwOS`,        comment, snmpScriptSwos(readCom),   { swos: true }),
+      _upsertAddin(saved.lcosSxSdk4, `Dashboard-SNMP-LCOS-SX-SDK4`,comment, snmpScriptSdk4(readCom),  { lcosSxSdk4: true }),
+      _upsertAddin(saved.lcosSxXs,   `Dashboard-SNMP-LCOS-SX-XS`,  comment, snmpScriptXs(readCom),    { lcosSxXs: true }),
+      _upsertAddin(saved.lcosFx,     `Dashboard-SNMP-LCOS-FX`,     comment, snmpScriptLcosFx(readCom), { lcosFx: true }),
+    ]);
+    localStorage.setItem('lmc_snmp_addins_' + S.accountId, JSON.stringify({
+      lcos: idLcos, lcosLx: idLcosLx, swos: idSwos, lcosSxSdk4: idSdk4, lcosSxXs: idXs, lcosFx: idFx,
+    }));
+    toast('ok', 'Add-ins erstellt', `6 SNMP Add-ins f\u00fcr Community "${readCom}" erstellt/aktualisiert.`);
+    if (msg) { msg.style.color = 'var(--green)'; msg.textContent = `\u2713 6 Add-ins aktiv \u2013 Community: ${readCom}`; }
+  } catch(err) {
+    toast('error', 'Fehler', 'Add-in konnte nicht erstellt werden: ' + (err.message || err));
+    if (msg) { msg.style.color = 'var(--red)'; msg.textContent = 'Fehler: ' + (err.message || err); }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-code"></i> SNMP Add-in erstellen'; }
+  }
+}
+
+// ─── MANAGEMENT VLAN ADD-INS ──────────────────────────────────────────────────
+function _mgmtVlanHeader(vlan, os) {
+  return `// LMC-Dashboard: Management VLAN ${vlan} (${os})
+// Generiert: ${new Date().toLocaleString('de-DE')}
+/**
+ * @param {Config} config
+ * @param {Context} context
+ * Do not edit this comment or parameter types. Required for code suggestions
+ */`;
+}
+function mgmtVlanScriptLcosLx(vlan) {
+  return `${_mgmtVlanHeader(vlan,'LCOS LX')}
+exports.main = function(config, context) {
+  // Tabelle 13.2.70.6 (LAN-Interfaces)
+  // Col1=Interface-Name, Col2=Interface-ID (br-lan), Col3=VLAN-ID
+  var table = config.getTableByOid("13.2.70.6");
+  var row = table.createNewRow();
+  row.setByOid("1", "INTRANET");
+  row.setByOid("2", "br-lan");
+  row.setByOid("3", "${vlan}");
+  table.addOrMerge(row);
+};`;
+}
+function mgmtVlanScriptLcos(vlan) {
+  return `${_mgmtVlanHeader(vlan,'LCOS')}
+exports.main = function(config, context) {
+  // Tabelle 11.2.7.30 (TCP-IP Network-List): Col1=Name, Col4=VLAN-ID
+  var table = config.getTableByOid("11.2.7.30");
+  var row = table.createNewRow();
+  row.setByOid("1", "INTRANET");
+  row.setByOid("4", "${vlan}");
+  table.addOrMerge(row);
+};`;
+}
+function mgmtVlanScriptSwos(vlan) {
+  return `${_mgmtVlanHeader(vlan,'GS-2xxx SwOS')}
+exports.main = function(config, context) {
+  config.addScriptLine("set /Setup/LAN/Management-VLAN-ID ${vlan}");
+};`;
+}
+function mgmtVlanScriptSdk4(vlan) {
+  return `${_mgmtVlanHeader(vlan,'GS-3xxx SDK4')}
+exports.main = function(config, context) {
+  config.addScriptLine("set /Setup/LAN/Management-VLAN-ID ${vlan}");
+};`;
+}
+function mgmtVlanScriptXs(vlan) {
+  return `${_mgmtVlanHeader(vlan,'XS-5xxx')}
+exports.main = function(config, context) {
+  config.addScriptLine("set /Setup/LAN/Management-VLAN-ID ${vlan}");
+};`;
+}
+function mgmtVlanScriptLcosFx(vlan) {
+  return `${_mgmtVlanHeader(vlan,'LCOS FX')}
+exports.main = function(config, context) {
+  // Tabelle 11.2.7.30 (TCP-IP Network-List): Col1=Name, Col4=VLAN-ID
+  var table = config.getTableByOid("11.2.7.30");
+  var row = table.createNewRow();
+  row.setByOid("1", "INTRANET");
+  row.setByOid("4", "${vlan}");
+  table.addOrMerge(row);
+};`;
+}
+
+async function _upsertAddin(savedId, name, comment, script, flags) {
+  // 1. Bekannte ID → Script aktualisieren
+  if (savedId) {
+    try {
+      await api('config', `/configapplication/accounts/${S.accountId}/applications/${savedId}/script`, 'POST', { content: script, ...flags });
+      return savedId;
+    } catch(_) { /* nicht mehr vorhanden – weiter */ }
+  }
+  // 2. Neu anlegen versuchen
+  try {
+    const res = await api('config', `/configapplication/accounts/${S.accountId}/applications`, 'POST', {
+      name, comment, type: 'SCRIPT', enabled: true,
+    });
+    const id = res?.id || res?.applicationId;
+    if (!id) throw new Error(`Keine ID für "${name}"`);
+    await api('config', `/configapplication/accounts/${S.accountId}/applications/${id}/script`, 'POST', { content: script, ...flags });
+    return id;
+  } catch(e) {
+    // 3. Name bereits vorhanden → bestehende App suchen und Script updaten
+    if (!String(e?.message || e).toLowerCase().includes('exist')) throw e;
+    const list = await api('config', `/configapplication/accounts/${S.accountId}/applications`, 'GET');
+    const apps = Array.isArray(list) ? list : (list?.applications || list?.content || []);
+    const existing = apps.find(a => a.name === name);
+    if (!existing) throw new Error(`Add-in "${name}" existiert laut API, aber nicht in der Liste gefunden.`);
+    const existId = existing.id || existing.applicationId;
+    await api('config', `/configapplication/accounts/${S.accountId}/applications/${existId}/script`, 'POST', { content: script, ...flags });
+    return existId;
+  }
+}
+
+async function createMgmtVlanAddins() {
+  if (!S.accountId) { toast('warn', 'Nicht angemeldet', 'Bitte zuerst einloggen.'); return; }
+  const vlan = parseInt(document.getElementById('set-mgmt-vlan')?.value || '1', 10);
+  if (!vlan || vlan < 1 || vlan > 4094) {
+    toast('warn', 'Ungültige VLAN-ID', 'Bitte eine Zahl zwischen 1 und 4094 eingeben.'); return;
+  }
+  localStorage.setItem('lmc_mgmtvlan_id', String(vlan));
+
+  const btn = document.getElementById('btn-mgmt-vlan-addin');
+  const msg = document.getElementById('mgmt-vlan-msg');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Erstelle…'; }
+  if (msg) { msg.style.display = ''; msg.style.color = 'var(--text3)'; msg.textContent = 'Add-ins werden erstellt…'; }
+
+  const saved  = JSON.parse(localStorage.getItem('lmc_mgmtvlan_addins_' + S.accountId) || '{}');
+  const comment = `Automatisch generiert vom LANCOM LMC Dashboard. Setzt Management-VLAN auf ID ${vlan}.`;
+
+  try {
+    const [idLcos, idLcosLx, idSwos, idSdk4, idXs, idFx] = await Promise.all([
+      _upsertAddin(saved.lcos,        `Dashboard-Management-VLAN-LCOS`,        comment, mgmtVlanScriptLcos(vlan),   { lcos: true }),
+      _upsertAddin(saved.lcosLx,      `Dashboard-Management-VLAN-LCOS-LX`,     comment, mgmtVlanScriptLcosLx(vlan), { lcosLx: true }),
+      _upsertAddin(saved.swos,        `Dashboard-Management-VLAN-SwOS`,        comment, mgmtVlanScriptSwos(vlan),   { swos: true }),
+      _upsertAddin(saved.lcosSxSdk4,  `Dashboard-Management-VLAN-LCOS-SX-SDK4`, comment, mgmtVlanScriptSdk4(vlan), { lcosSxSdk4: true }),
+      _upsertAddin(saved.lcosSxXs,    `Dashboard-Management-VLAN-LCOS-SX-XS`, comment, mgmtVlanScriptXs(vlan),    { lcosSxXs: true }),
+      _upsertAddin(saved.lcosFx,      `Dashboard-Management-VLAN-LCOS-FX`,     comment, mgmtVlanScriptLcosFx(vlan), { lcosFx: true }),
+    ]);
+    localStorage.setItem('lmc_mgmtvlan_addins_' + S.accountId, JSON.stringify({
+      lcos: idLcos, lcosLx: idLcosLx, swos: idSwos, lcosSxSdk4: idSdk4, lcosSxXs: idXs, lcosFx: idFx,
+    }));
+    toast('ok', 'Add-ins erstellt', `6 Add-ins für Management VLAN ${vlan} erstellt/aktualisiert.`);
+    if (msg) { msg.style.color = 'var(--green)'; msg.textContent = `\u2713 VLAN ${vlan} – 6 Add-ins aktiv`; }
+  } catch(err) {
+    toast('error', 'Fehler', 'Add-in konnte nicht erstellt werden: ' + (err.message || err));
+    if (msg) { msg.style.color = 'var(--red)'; msg.textContent = 'Fehler: ' + (err.message || err); }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-code"></i> Management VLAN Add-in erstellen'; }
+  }
 }
 
 // ─── SNMP CARD DEBUG ──────────────────────────────────────────────────────────
@@ -2756,27 +3098,35 @@ async function generateBlacklistAddin() {
   if(btn) { btn.disabled=true; btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Generiere…'; }
   try {
     const script=generateBlacklistScript(wlanBlacklist);
-    const savedAddin=JSON.parse(localStorage.getItem('lmc_blacklist_addin_'+S.accountId)||'null');
+    let savedAddin=JSON.parse(localStorage.getItem('lmc_blacklist_addin_'+S.accountId)||'null');
     const addinName='Dashboard-WLAN-MAC-Sperrliste';
 
     if(savedAddin?.id) {
-      // Update existing add-in script
-      await api('config',`/configapplication/accounts/${S.accountId}/applications/${savedAddin.id}/script`,'POST',{ content: script, lcosLx: true });
-      toast('ok','Add-in aktualisiert',`"${addinName}" wurde aktualisiert.`);
-    } else {
-      // Create new add-in
-      const newAddin=await api('config',`/configapplication/accounts/${S.accountId}/applications`,'POST',{
-        name: addinName,
-        comment: 'Automatisch generiert vom LANCOM LMC Dashboard. Aktiviert LEPS und setzt WLAN MAC-Sperrliste.',
-        type: 'SCRIPT',
-        enabled: true
-      });
-      const id=newAddin?.id||newAddin?.applicationId;
-      if(!id) throw new Error('Keine Add-in-ID erhalten');
-      await api('config',`/configapplication/accounts/${S.accountId}/applications/${id}/script`,'POST',{ content: script, lcosLx: true });
-      localStorage.setItem('lmc_blacklist_addin_'+S.accountId, JSON.stringify({ id, name: addinName }));
-      toast('ok','Add-in erstellt',`"${addinName}" wurde als neues Add-in erstellt.`);
+      // Update existing add-in – falls manuell gelöscht, fällt Code auf Neu-Erstellung zurück
+      try {
+        await api('config',`/configapplication/accounts/${S.accountId}/applications/${savedAddin.id}/script`,'POST',{ content: script, lcosLx: true });
+        toast('ok','Add-in aktualisiert',`"${addinName}" wurde aktualisiert.`);
+        renderBlacklist();
+        return;
+      } catch(_) {
+        // Add-in existiert nicht mehr → localStorage leeren und neu erstellen
+        localStorage.removeItem('lmc_blacklist_addin_'+S.accountId);
+        savedAddin = null;
+      }
     }
+
+    // Neues Add-in erstellen
+    const newAddin=await api('config',`/configapplication/accounts/${S.accountId}/applications`,'POST',{
+      name: addinName,
+      comment: 'Automatisch generiert vom LANCOM LMC Dashboard. Aktiviert LEPS und setzt WLAN MAC-Sperrliste.',
+      type: 'SCRIPT',
+      enabled: true
+    });
+    const id=newAddin?.id||newAddin?.applicationId;
+    if(!id) throw new Error('Keine Add-in-ID erhalten');
+    await api('config',`/configapplication/accounts/${S.accountId}/applications/${id}/script`,'POST',{ content: script, lcosLx: true });
+    localStorage.setItem('lmc_blacklist_addin_'+S.accountId, JSON.stringify({ id, name: addinName }));
+    toast('ok','Add-in erstellt',`"${addinName}" wurde als neues Add-in erstellt.`);
     renderBlacklist();
   } catch(err) {
     toast('error','Fehler','Add-in konnte nicht generiert werden: '+(err.message||err));
@@ -6611,6 +6961,265 @@ function renderLifecycle() {
       Lifecycle-Daten aus LANCOM LMC · VPN-Qualität und WLAN-Clients aus Live-Monitoring.
     </div>
   `;
+}
+
+// ─── WIFI MESH ────────────────────────────────────────────────────────────────
+const meshState = { scanning: false, results: [], lastScan: null };
+
+function renderMeshPage() {
+  const wrap = document.getElementById('mesh-wrap');
+  if (!wrap) return;
+  if (!meshState.lastScan) {
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-wifi"></i><h3>Kein Scan</h3><p>Alle Online-Access-Points nach WDS-Verbindungen scannen.</p></div>`;
+    return;
+  }
+
+  const total   = meshState.results.length;
+  const withWds = meshState.results.filter(r => r.configured).length;
+  const errors  = meshState.results.filter(r => r.error).length;
+  const noWds   = meshState.results.filter(r => !r.error && !r.configured).length;
+
+  let html = `<div style="display:flex;align-items:center;gap:24px;padding:0 4px 8px">
+    <div class="mesh-summary">
+      <div class="mesh-summary-stat"><div class="ms-num">${total}</div><div class="ms-lbl">APs gescannt</div></div>
+      <div class="mesh-summary-stat"><div class="ms-num" style="color:var(--accent)">${withWds}</div><div class="ms-lbl">Mit WDS</div></div>
+      ${noWds  ? `<div class="mesh-summary-stat"><div class="ms-num" style="color:var(--text3)">${noWds}</div><div class="ms-lbl">Ohne WDS</div></div>` : ''}
+      ${errors ? `<div class="mesh-summary-stat"><div class="ms-num" style="color:var(--red)">${errors}</div><div class="ms-lbl">Fehler</div></div>` : ''}
+    </div>
+  </div>`;
+
+  // Nur APs mit konfiguriertem WDS anzeigen
+  const wdsAps = meshState.results.filter(r => r.configured);
+
+  if (!wdsAps.length) {
+    html += `<div class="empty-state" style="padding:40px"><i class="fa-solid fa-wifi" style="opacity:.3"></i><h3>Keine WDS-Verbindungen</h3><p>Kein Online-Access-Point hat eine WDS-Verbindung konfiguriert.</p></div>`;
+    wrap.innerHTML = html;
+    return;
+  }
+
+  for (const r of wdsAps) {
+    const devName = r.dev.status?.name || r.dev.label || r.dev.name || r.dev.id?.substring(0,8) || '–';
+    const site    = r.dev.siteName && r.dev.siteName !== devName ? r.dev.siteName : '';
+    const ip      = r.ip || '–';
+
+    // Config + Status zusammenführen
+    const linkMap = {};
+    (r.configLinks || []).forEach(cl => { linkMap[cl.linkName] = { ...cl }; });
+    (r.statusEntries || []).forEach(se => {
+      if (!linkMap[se.linkName]) linkMap[se.linkName] = {};
+      Object.assign(linkMap[se.linkName], se);
+    });
+
+    html += `<div class="mesh-ap-card">
+      <div class="mesh-ap-header">
+        <div style="flex:1;min-width:0">
+          <div class="mesh-ap-name">${escHtml(devName)}</div>
+          ${site ? `<div style="font-size:11px;color:var(--text3)">${escHtml(site)}</div>` : ''}
+        </div>
+        <div class="mesh-ap-ip">${escHtml(ip)}</div>
+        <span class="mesh-ap-badge wds-yes"><i class="fa-solid fa-wifi" style="font-size:10px"></i> WDS aktiv</span>
+      </div>
+      <table class="mesh-link-table">
+        <thead><tr>
+          <th>Link</th><th>Band</th><th>Status</th><th>Rx-Phy-Signal</th>
+          <th>Peer MAC</th><th>Tx / Rx</th><th>WPA</th>
+        </tr></thead><tbody>`;
+
+    for (const [, l] of Object.entries(linkMap)) {
+      const band  = l.radio === 1 ? '2.4 GHz' : l.radio === 2 ? '5 GHz' : '–';
+      const conn  = !!l.connected;
+      const sig   = l.signal != null ? l.signal : null;
+      const sigColor = sig >= 200 ? 'var(--green)' : sig >= 100 ? 'var(--amber)' : 'var(--red)';
+      const txRx = (l.txRate != null && l.rxRate != null) ? `${l.txRate} / ${l.rxRate} Mbps` : '–';
+      const wpa  = l.wpaVersion === 3 ? 'WPA3' : l.wpaVersion === 2 ? 'WPA2' : l.wpaVersion === 1 ? 'WPA1' : l.wpaVersion === 0 ? 'Offen' : '–';
+      html += `<tr>
+        <td style="font-weight:700">${escHtml(l.linkName || '–')}</td>
+        <td>${band}</td>
+        <td><span class="mesh-dot ${conn ? 'mesh-dot-on' : 'mesh-dot-off'}"></span>${conn ? 'Verbunden' : 'Getrennt'}</td>
+        <td style="color:${conn && sig != null ? sigColor : 'var(--text3)'};font-weight:600">
+          ${conn && sig != null ? sig : '–'}</td>
+        <td style="font-family:monospace;font-size:11px">${escHtml(l.mac || '–')}</td>
+        <td>${conn ? txRx : '–'}</td>
+        <td>${conn ? wpa : '–'}</td>
+      </tr>`;
+    }
+    html += `</tbody></table></div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+async function meshScanAll() {
+  if (meshState.scanning) return;
+  const aps = Object.values(S.devices || {}).filter(d => isOnline(d));
+  if (!aps.length) { alert('Keine Online-Geräte gefunden. Zuerst Gerätedaten laden.'); return; }
+
+  meshState.scanning = true;
+  meshState.results  = [];
+
+  const btn  = document.getElementById('mesh-scan-btn');
+  const lbl  = document.getElementById('mesh-status-lbl');
+  const wrap = document.getElementById('mesh-wrap');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Scanne…'; }
+
+  const community = snmpReadCommunity || 'public';
+
+  for (let i = 0; i < aps.length; i++) {
+    const dev     = aps[i];
+    const devNm   = dev.status?.name || dev.label || dev.name || dev.id?.substring(0,8) || '?';
+    const ip      = dev.status?.ip || dev.status?.ipAddress || dev.status?.lastIp;
+    if (lbl)  lbl.textContent = `${i + 1} / ${aps.length} – ${devNm}`;
+    if (wrap) wrap.innerHTML  = `<div style="padding:24px;color:var(--text2);display:flex;align-items:center;gap:12px">
+      <i class="fa-solid fa-spinner fa-spin" style="color:var(--accent);font-size:18px"></i>
+      <span>Scanne <b>${escHtml(devNm)}</b> (${i + 1} / ${aps.length})…</span>
+    </div>`;
+
+    if (!ip) { meshState.results.push({ dev, ip: null, error: 'Keine IP-Adresse' }); continue; }
+
+    try {
+      const resp = await fetch('/snmp', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ host: ip, community, version: '2c', type: 'wds-scan' }),
+      });
+      const data = await resp.json();
+      meshState.results.push(data.error ? { dev, ip, error: data.error } : { dev, ip, ...data });
+    } catch (e) {
+      meshState.results.push({ dev, ip, error: e.message });
+    }
+  }
+
+  meshState.scanning = false;
+  meshState.lastScan = new Date();
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Neu scannen'; }
+  if (lbl) lbl.textContent = `Letzter Scan: ${meshState.lastScan.toLocaleTimeString('de-DE')}`;
+  renderMeshPage();
+}
+
+// ─── L2TPv3 ───────────────────────────────────────────────────────────────────
+const l2tpState = { scanning: false, results: [], lastScan: null };
+
+function renderL2tpPage() {
+  const wrap = document.getElementById('l2tp-wrap');
+  if (!wrap) return;
+  if (!l2tpState.lastScan) {
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-arrow-right-arrow-left"></i><h3>Kein Scan</h3><p>Alle Online-Geräte nach L2TPv3-Endpunkten scannen.</p></div>`;
+    return;
+  }
+
+  const total   = l2tpState.results.length;
+  const withL2  = l2tpState.results.filter(r => r.configured).length;
+  const errors  = l2tpState.results.filter(r => r.error).length;
+  const noL2    = l2tpState.results.filter(r => !r.error && !r.configured).length;
+
+  let html = `<div style="display:flex;align-items:center;gap:24px;padding:0 4px 8px">
+    <div class="mesh-summary">
+      <div class="mesh-summary-stat"><div class="ms-num">${total}</div><div class="ms-lbl">Geräte gescannt</div></div>
+      <div class="mesh-summary-stat"><div class="ms-num" style="color:var(--accent)">${withL2}</div><div class="ms-lbl">Mit L2TPv3</div></div>
+      ${noL2  ? `<div class="mesh-summary-stat"><div class="ms-num" style="color:var(--text3)">${noL2}</div><div class="ms-lbl">Ohne L2TPv3</div></div>` : ''}
+      ${errors ? `<div class="mesh-summary-stat"><div class="ms-num" style="color:var(--red)">${errors}</div><div class="ms-lbl">Fehler</div></div>` : ''}
+    </div>
+  </div>`;
+
+  const l2tpDevs = l2tpState.results.filter(r => r.configured);
+
+  if (!l2tpDevs.length) {
+    html += `<div class="empty-state" style="padding:40px"><i class="fa-solid fa-arrow-right-arrow-left" style="opacity:.3"></i><h3>Keine L2TPv3-Endpunkte</h3><p>Kein Online-Gerät hat einen L2TPv3-Endpunkt konfiguriert.</p></div>`;
+    wrap.innerHTML = html;
+    return;
+  }
+
+  for (const r of l2tpDevs) {
+    const devName = r.dev.status?.name || r.dev.label || r.dev.name || r.dev.id?.substring(0,8) || '–';
+    const site    = r.dev.siteName && r.dev.siteName !== devName ? r.dev.siteName : '';
+    const ip      = r.ip || '–';
+
+    // Config + Status zusammenführen, Schlüssel = Endpoint-Name
+    const epMap = {};
+    (r.configEndpoints || []).forEach(ep => { epMap[ep.name] = { ...ep }; });
+    (r.statusEntries   || []).forEach(se => {
+      const key = se.endpointName || se.remoteEnd;
+      if (!epMap[key]) epMap[key] = {};
+      Object.assign(epMap[key], se);
+    });
+
+    html += `<div class="mesh-ap-card">
+      <div class="mesh-ap-header">
+        <div style="flex:1;min-width:0">
+          <div class="mesh-ap-name">${escHtml(devName)}</div>
+          ${site ? `<div style="font-size:11px;color:var(--text3)">${escHtml(site)}</div>` : ''}
+        </div>
+        <div class="mesh-ap-ip">${escHtml(ip)}</div>
+        <span class="mesh-ap-badge wds-yes"><i class="fa-solid fa-arrow-right-arrow-left" style="font-size:10px"></i> L2TPv3 aktiv</span>
+      </div>
+      <table class="mesh-link-table">
+        <thead><tr>
+          <th>Endpoint</th><th>Gegenstelle</th><th>Remote-IP</th><th>Port</th>
+          <th>Status</th><th>Interface</th><th>Verbunden seit</th>
+        </tr></thead><tbody>`;
+
+    for (const [, ep] of Object.entries(epMap)) {
+      const up      = ep.state === 'UP';
+      const opBadge = ep.operating === 0 ? `<span style="color:var(--text3);font-size:10px">(inaktiv)</span>` : '';
+      html += `<tr>
+        <td style="font-weight:700">${escHtml(ep.name || '–')} ${opBadge}</td>
+        <td>${escHtml(ep.remoteEnd || '–')}</td>
+        <td style="font-family:monospace;font-size:11px">${escHtml(ep.remoteIp || '–')}</td>
+        <td>${ep.port || '–'}</td>
+        <td><span class="mesh-dot ${up ? 'mesh-dot-on' : 'mesh-dot-off'}"></span>${escHtml(ep.state || '–')}</td>
+        <td style="font-family:monospace;font-size:11px">${escHtml(ep.iface || '–')}</td>
+        <td style="font-size:11px;color:var(--text2)">${escHtml(ep.connStartTime || '–')}</td>
+      </tr>`;
+    }
+    html += `</tbody></table></div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+async function l2tpScanAll() {
+  if (l2tpState.scanning) return;
+  const devs = Object.values(S.devices || {}).filter(d => isOnline(d));
+  if (!devs.length) { alert('Keine Online-Geräte gefunden. Zuerst Gerätedaten laden.'); return; }
+
+  l2tpState.scanning = true;
+  l2tpState.results  = [];
+
+  const btn  = document.getElementById('l2tp-scan-btn');
+  const lbl  = document.getElementById('l2tp-status-lbl');
+  const wrap = document.getElementById('l2tp-wrap');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Scanne…'; }
+
+  const community = snmpReadCommunity || 'public';
+
+  for (let i = 0; i < devs.length; i++) {
+    const dev   = devs[i];
+    const devNm = dev.status?.name || dev.label || dev.name || dev.id?.substring(0,8) || '?';
+    const ip    = dev.status?.ip || dev.status?.ipAddress || dev.status?.lastIp;
+    if (lbl)  lbl.textContent = `${i + 1} / ${devs.length} – ${devNm}`;
+    if (wrap) wrap.innerHTML  = `<div style="padding:24px;color:var(--text2);display:flex;align-items:center;gap:12px">
+      <i class="fa-solid fa-spinner fa-spin" style="color:var(--accent);font-size:18px"></i>
+      <span>Scanne <b>${escHtml(devNm)}</b> (${i + 1} / ${devs.length})…</span>
+    </div>`;
+
+    if (!ip) { l2tpState.results.push({ dev, ip: null, error: 'Keine IP-Adresse' }); continue; }
+
+    try {
+      const resp = await fetch('/snmp', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ host: ip, community, version: '2c', type: 'l2tp-scan' }),
+      });
+      const data = await resp.json();
+      l2tpState.results.push(data.error ? { dev, ip, error: data.error } : { dev, ip, ...data });
+    } catch (e) {
+      l2tpState.results.push({ dev, ip, error: e.message });
+    }
+  }
+
+  l2tpState.scanning = false;
+  l2tpState.lastScan = new Date();
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Neu scannen'; }
+  if (lbl) lbl.textContent = `Letzter Scan: ${l2tpState.lastScan.toLocaleTimeString('de-DE')}`;
+  renderL2tpPage();
 }
 
 // ─── ENERGIE / CO₂ DASHBOARD ──────────────────────────────────────────────────
