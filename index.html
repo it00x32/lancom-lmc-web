@@ -5969,7 +5969,7 @@ async function paLoadAll() {
   paState.loading = true;
   paState.loaded  = false;
   paState.results = {};
-  const ids = Object.keys(S.devices);
+  const ids = Object.keys(S.devices).filter(id => isOnline(S.devices[id]));
   paState.progress = { total: ids.length, done: 0, current: '' };
   renderAnomalyPage();
 
@@ -6018,7 +6018,7 @@ function renderAnomalyPage() {
         <i class="fa-solid fa-brain" style="color:#2d5fff"></i>
         <h3>30-Tage Telemetry-Analyse</h3>
         <p>Analysiert CPU, RAM, Temperatur, Port-Flapping, VPN, WAN-Signal und WLAN-Kapazität<br>
-        für alle ${Object.keys(S.devices).length} Geräte mit 3 ML-Modellen.</p>
+        für ${Object.values(S.devices).filter(d=>isOnline(d)).length} online Geräte (von ${Object.keys(S.devices).length} gesamt) mit 3 ML-Modellen.</p>
         <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <div class="pa-model-row"><span class="pa-model-badge">EMA</span> Exponential Moving Average</div>
           <div class="pa-model-row"><span class="pa-model-badge" style="background:rgba(119,200,210,.15);color:#77c8d2">LinReg</span> Linear Regression</div>
@@ -6212,23 +6212,26 @@ function renderAnomalyPage() {
       ? `<div style="padding:10px 14px;background:rgba(160,237,58,.07);border:1px solid rgba(160,237,58,.25);border-radius:8px;color:#a0ed3a;font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:10px"><i class="fa-solid fa-circle-check"></i> Keine Anomalien erkannt – alle Geräte im Normbereich.</div>`
       : ''}
     <table class="pa-risk-table">
-      <thead><tr><th>Gerät</th><th>Standort</th><th>CPU</th><th>RAM</th><th>Risk-Score</th><th>Anomalien</th><th></th></tr></thead>
+      <thead><tr><th>Gerät</th><th>Standort</th><th>CPU</th><th>RAM</th><th>Temp</th><th>Risk-Score</th><th>Anomalien</th><th></th></tr></thead>
       <tbody>
       ${deviceScores.map(d => {
         const riskCol = d.score >= 60 ? '#ff004d' : d.score >= 30 ? '#2d5fff' : '#a0ed3a';
         const riskLabel = d.score >= 60 ? 'Kritisch' : d.score >= 30 ? 'Warnung' : 'OK';
         const devInfo = d.dev || {};
         const devLabel = devInfo.status?.name || devInfo.label || devInfo.name || devInfo.id?.substring(0,8) || '–';
-        const cpu = d.cv?.cpu; const mem = d.cv?.mem;
-        const cpuCol = cpu >= 70 ? '#ff004d' : cpu >= 50 ? '#2d5fff' : '#a0ed3a';
-        const memCol = mem >= 75 ? '#ff004d' : mem >= 60 ? '#2d5fff' : '#a0ed3a';
+        const cpu = d.cv?.cpu; const mem = d.cv?.mem; const temp = d.cv?.temp;
+        const cpuCol  = cpu  >= 70 ? '#ff004d' : cpu  >= 50 ? '#2d5fff' : '#a0ed3a';
+        const memCol  = mem  >= 75 ? '#ff004d' : mem  >= 60 ? '#2d5fff' : '#a0ed3a';
+        const tempCol = temp >= 65 ? '#ff004d' : temp >= 50 ? '#2d5fff' : '#a0ed3a';
         return `<tr>
           <td style="font-weight:600;color:var(--text)">${devLabel}</td>
           <td style="color:var(--text2);font-size:12px">${devInfo.siteName || '–'}</td>
-          <td style="font-size:12px;font-weight:700;color:${cpu != null ? cpuCol : 'var(--text3)'}">
-            ${cpu != null ? cpu + ' %' : '–'}</td>
-          <td style="font-size:12px;font-weight:700;color:${mem != null ? memCol : 'var(--text3)'}">
-            ${mem != null ? mem + ' %' : '–'}</td>
+          <td style="font-size:12px;font-weight:700;color:${cpu  != null ? cpuCol  : 'var(--text3)'}">
+            ${cpu  != null ? cpu  + ' %' : '–'}</td>
+          <td style="font-size:12px;font-weight:700;color:${mem  != null ? memCol  : 'var(--text3)'}">
+            ${mem  != null ? mem  + ' %' : '–'}</td>
+          <td style="font-size:12px;font-weight:700;color:${temp != null ? tempCol : 'var(--text3)'}">
+            ${temp != null ? temp + ' °C' : '–'}</td>
           <td>
             <div style="display:flex;align-items:center;gap:8px">
               <div style="flex:1;background:var(--border);border-radius:4px;height:6px;min-width:60px">
@@ -6241,7 +6244,7 @@ function renderAnomalyPage() {
           <td>${d.preds.length ? d.preds.map(p => `<span style="font-size:11px;padding:2px 6px;border-radius:4px;margin-right:3px;background:${p.severity==='critical'?'rgba(255,0,77,.15)':'rgba(45,95,255,.1)'};color:${p.severity==='critical'?'#ff004d':'#2d5fff'}">${p.type.replace(/_/g,' ')}</span>`).join('') : '<span style="color:var(--text3);font-size:12px">–</span>'}</td>
           <td><button onclick="paToggleDetail('${d.id}')" style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;padding:4px 10px;cursor:pointer" title="Messwerte & Details"><i class="fa-solid fa-chevron-down"></i></button></td>
         </tr>
-        <tr id="pa-detail-${d.id}" style="display:none"><td colspan="7" style="padding:0">
+        <tr id="pa-detail-${d.id}" style="display:none"><td colspan="8" style="padding:0">
           <div class="pa-device-detail">
             <!-- Current values row -->
             <div style="padding:10px 14px 8px;border-bottom:${d.preds.length?'1px solid var(--border)':'none'}">
