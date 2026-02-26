@@ -534,6 +534,55 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
 .log-load-more:disabled{opacity:.4;cursor:not-allowed;}
 .log-empty{text-align:center;padding:40px;color:var(--text3);}
 
+/* ── LIFECYCLE PLANNER ───────────────────────────────── */
+.lc-wrap{padding:0 24px 32px;display:flex;flex-direction:column;gap:20px;}
+.lc-kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.lc-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.lc-kpi-val{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+.lc-kpi-lbl{font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+.lc-kpi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:8px;}
+.lki-red   {background:rgba(239,68,68,.15);color:var(--red);}
+.lki-amber {background:rgba(245,158,11,.15);color:var(--amber);}
+.lki-blue  {background:rgba(56,189,248,.15);color:var(--blue);}
+.lki-green {background:rgba(34,197,94,.15); color:var(--green);}
+.lc-section-title{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.lc-section-title i{color:var(--accent2);}
+.lc-filter-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.lc-filter-btn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;}
+.lc-filter-btn:hover,.lc-filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.lc-count-badge{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:8px;font-size:9px;font-weight:700;padding:0 4px;margin-left:4px;}
+.lcb-red   {background:rgba(239,68,68,.2);  color:var(--red);}
+.lcb-amber {background:rgba(245,158,11,.2); color:var(--amber);}
+.lcb-blue  {background:rgba(56,189,248,.2); color:var(--blue);}
+.lcb-green {background:rgba(34,197,94,.2);  color:var(--green);}
+.lc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;}
+.lc-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;}
+.lc-card:hover{border-color:var(--border2);}
+.lc-card.lc-critical{border-color:rgba(239,68,68,.35);}
+.lc-card.lc-soon    {border-color:rgba(245,158,11,.3);}
+.lc-card-header{padding:12px 14px 10px;border-bottom:1px solid var(--border);}
+.lc-card-name{font-size:13px;font-weight:700;margin-bottom:4px;}
+.lc-card-meta{font-size:11px;color:var(--text2);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.lc-risks{padding:10px 14px;display:flex;flex-direction:column;gap:6px;}
+.lc-risk{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:7px;background:var(--bg2);}
+.lc-risk-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;}
+.lri-red   {background:rgba(239,68,68,.15);color:var(--red);}
+.lri-amber {background:rgba(245,158,11,.15);color:var(--amber);}
+.lri-blue  {background:rgba(56,189,248,.15);color:var(--blue);}
+.lri-purple{background:rgba(168,85,247,.15);color:var(--purple);}
+.lc-risk-body{flex:1;min-width:0;}
+.lc-risk-title{font-size:12px;font-weight:700;}
+.lc-risk-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.45;}
+.lc-cap-bar-wrap{background:var(--bg);border-radius:3px;height:4px;margin-top:5px;}
+.lc-cap-bar{height:100%;border-radius:3px;}
+.lc-risk-months{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;align-self:flex-start;flex-shrink:0;white-space:nowrap;border:1px solid transparent;}
+.lrm-critical{background:rgba(239,68,68,.15);color:var(--red);  border-color:rgba(239,68,68,.3);}
+.lrm-soon    {background:rgba(245,158,11,.15);color:var(--amber);border-color:rgba(245,158,11,.3);}
+.lrm-medium  {background:rgba(56,189,248,.12);color:var(--blue); border-color:rgba(56,189,248,.25);}
+.lc-upgrade{margin:0 14px 12px;padding:9px 12px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:8px;font-size:11.5px;color:var(--text2);line-height:1.6;}
+.lc-upgrade strong{color:var(--accent2);}
+.lc-ok-state{padding:12px 14px;font-size:12px;color:var(--green);display:flex;align-items:center;gap:6px;}
+
 /* ── ENERGIE DASHBOARD ───────────────────────────────── */
 .energy-wrap{padding:0 24px 32px;display:flex;flex-direction:column;gap:20px;}
 .energy-kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
@@ -738,6 +787,11 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
         <span class="tb-icon"><i class="fa-solid fa-magnifying-glass-location"></i></span>
         <span class="tb-label">Client Explorer</span>
         <span class="tab-badge" id="badge-client-explorer">–</span>
+      </button>
+      <button class="tab-btn" onclick="showTab('lifecycle')" id="tab-btn-lifecycle" data-tooltip="Lifecycle-Planner">
+        <span class="tb-icon"><i class="fa-solid fa-timeline"></i></span>
+        <span class="tb-label">Lifecycle-Planner</span>
+        <span class="tab-badge" id="badge-lifecycle">–</span>
       </button>
 
       <!-- Verwaltung -->
@@ -1306,6 +1360,18 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 80% 60% at 10
       </div>
     </div>
   </div>
+
+  <!-- TAB: LIFECYCLE PLANNER -->
+  <section class="tab-section" id="tab-lifecycle">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-timeline" style="color:var(--accent2);margin-right:6px"></i>Lifecycle-Planner</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="renderLifecycle()" title="Neu analysieren"><i class="fa-solid fa-arrows-rotate"></i></button>
+    </div>
+    <div class="lc-wrap" id="lc-wrap">
+      <div class="empty-state"><i class="fa-solid fa-timeline"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
 
   <!-- TAB: ALERTS -->
   <!-- ═══════════════════════════════ ADD-INS TAB ════════════════════════════ -->
@@ -1900,6 +1966,7 @@ function showTab(id) {
   if(id==='client-explorer') ceInitDevices();
   if(id==='settings') loadSettingsUI();
   if(id==='energy') { loadEnergyPrice(); renderEnergy(); }
+  if(id==='lifecycle') renderLifecycle();
   if(id==='firmware') renderFirmware();
   if(id==='sites') loadSites();
 }
@@ -1968,6 +2035,7 @@ function renderCurrentTab() {
   renderLldp();
   buildTopoSelector();
   renderEnergy();
+  renderLifecycle();
   if(S.activeTab==='topology') setTimeout(()=>{renderTopology();setTimeout(topoFit,80);},30);
   if(S.activeTab==='addins') loadAddins();
 }
@@ -5442,6 +5510,274 @@ function topoExportSvg() {
   a.click();
   URL.revokeObjectURL(a.href);
   toast('success', 'SVG exportiert', 'Netzwerkplan als SVG gespeichert.');
+}
+
+// ─── LIFECYCLE PLANNER ────────────────────────────────────────────────────────
+const LC_AP_MAX_CLIENTS = 40;   // Max. WLAN-Clients pro AP (konservativ)
+const LC_GROWTH_RATE    = 0.08; // Angenommenes Wachstum 8 %/Monat
+
+let lcFilter = 'all';
+
+function lcMonthsToFull(current, max) {
+  if (current <= 0) return Infinity;
+  if (current >= max) return 0;
+  return Math.log(max / current) / Math.log(1 + LC_GROWTH_RATE);
+}
+
+function lcRiskBadge(months) {
+  if (months <= 3)  return { cls:'lrm-critical', label: months <= 0 ? 'Jetzt kritisch' : `In ${Math.round(months)} Mon.` };
+  if (months <= 7)  return { cls:'lrm-soon',     label: `In ~${Math.round(months)} Monaten` };
+  if (months <= 12) return { cls:'lrm-medium',   label: `In ~${Math.round(months)} Monaten` };
+  return null;
+}
+
+function lcSetFilter(f, btn) {
+  lcFilter = f;
+  document.querySelectorAll('.lc-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLifecycle();
+}
+
+function renderLifecycle() {
+  const wrap = document.getElementById('lc-wrap');
+  if (!wrap) return;
+  const devs = Object.values(S.devices);
+  if (!devs.length) {
+    wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-timeline"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>';
+    return;
+  }
+
+  // ── Jedes Gerät analysieren ───────────────────────────────────────
+  const deviceRows = devs.map(d => {
+    const risks  = [];
+    const online = isOnline(d);
+    const type   = energyDeviceType(d);
+
+    // 1. Lifecycle-Status (EOL / EOS)
+    const lcStat = (d.status?.lifecycle?.status || '').toUpperCase();
+    if (/END.OF.LIFE|EOL/.test(lcStat)) {
+      risks.push({
+        icon:'fa-skull', icls:'lri-red', level:'critical', months:0,
+        title:'End-of-Life erreicht',
+        desc:'Kein Hersteller-Support mehr – Sicherheitslücken werden nicht mehr gepatcht.',
+        upgrade:'Sofortiger Geräteersatz empfohlen – aktuelle LANCOM-Generation evaluieren.',
+      });
+    } else if (/END.OF.SALE|EOS|END.OF.SUPPORT/.test(lcStat)) {
+      risks.push({
+        icon:'fa-cart-flatbed', icls:'lri-amber', level:'soon', months:6,
+        title:'End-of-Sale / End-of-Support',
+        desc:'Gerät wird nicht mehr aktiv verkauft oder ist außerhalb des regulären Supports.',
+        upgrade:'Nachfolgemodell evaluieren und Migrationstermin mittelfristig planen.',
+      });
+    }
+
+    // 2. Firmware OBSOLETE
+    if (d.firmwareState === 'OBSOLETE' && online) {
+      risks.push({
+        icon:'fa-microchip', icls:'lri-amber', level:'soon', months:3,
+        title:'Firmware veraltet (OBSOLETE)',
+        desc:'Veraltete Firmware: Sicherheitsrisiken, fehlende Bugfixes und Power-Management-Verbesserungen.',
+        upgrade:'Firmware-Update sofort über LMC → Verwaltung → Firmware durchführen.',
+      });
+    }
+
+    // 3. WLAN-Kapazität (nur APs)
+    if (type === 'ap' && online) {
+      const clients = S.wlanClients[d.id] || 0;
+      const pct = clients / LC_AP_MAX_CLIENTS;
+      if (pct >= 0.4) {
+        const months = lcMonthsToFull(clients, LC_AP_MAX_CLIENTS);
+        const level  = pct >= 0.8 ? 'critical' : pct >= 0.6 ? 'soon' : 'medium';
+        const iCls   = pct >= 0.8 ? 'lri-red'  : pct >= 0.6 ? 'lri-amber' : 'lri-blue';
+        risks.push({
+          icon:'fa-wifi', icls:iCls, level, months, pct,
+          title:`WLAN-Kapazität: ${clients}/${LC_AP_MAX_CLIENTS} Clients (${Math.round(pct*100)} %)`,
+          desc: pct >= 0.8
+            ? `AP nahezu ausgelastet – Verbindungsabbrüche und Performanceverlust können jederzeit auftreten.`
+            : `Bei ${Math.round(LC_GROWTH_RATE*100)} % monatlichem Wachstum: Überlast in ~${Math.max(0,Math.round(months))} Monaten.`,
+          upgrade:'Weiteren Access Point installieren oder Zellenplanung überarbeiten (TX-Power reduzieren, Clients auf 5/6 GHz steuern).',
+        });
+      }
+    }
+
+    // 4. VPN-Qualität (Paketverlust / Latenz)
+    const devVpn = (S.vpnConnections||[]).filter(v => (v._deviceId||v.deviceId)===d.id && v.active);
+    for (const vpn of devVpn) {
+      const loss = parseFloat(vpn.packetLossPercent) || 0;
+      const rtt  = parseFloat(vpn.rttAvgUs) || 0;
+      const peer = vpn.peerName || vpn.networkName || '–';
+      if (loss > 5) {
+        risks.push({
+          icon:'fa-shield-halved', icls:'lri-red', level:'critical', months:0,
+          title:`VPN-Paketverlust kritisch: ${loss.toFixed(1)} %`,
+          desc:`Tunnel „${peer}": Hoher Paketverlust – Verbindungsqualität gefährdet produktiven Betrieb.`,
+          upgrade:'ISP-Leitungsqualität prüfen, MTU/MSS anpassen oder redundanten WAN-Anschluss ergänzen.',
+        });
+      } else if (loss > 2) {
+        risks.push({
+          icon:'fa-shield-halved', icls:'lri-amber', level:'soon', months:2,
+          title:`VPN-Paketverlust erhöht: ${loss.toFixed(1)} %`,
+          desc:`Tunnel „${peer}": Erhöhter Paketverlust – Trend beobachten, Ursache klären.`,
+          upgrade:'WAN-Verbindungsqualität überwachen, QoS-Konfiguration und ISP-Vertrag prüfen.',
+        });
+      } else if (rtt > 100000) {
+        risks.push({
+          icon:'fa-network-wired', icls:'lri-blue', level:'medium', months:6,
+          title:`VPN-Latenz hoch: ${(rtt/1000).toFixed(0)} ms`,
+          desc:`Tunnel „${peer}": Hohe Latenz beeinträchtigt Echtzeitanwendungen (VoIP, Video, RDP).`,
+          upgrade:'ISP-Wechsel prüfen oder QoS-Priorisierung für Echtzeit-Traffic einrichten.',
+        });
+      }
+    }
+
+    // 5. WAN: Mobile-Backup als primäre Leitung
+    const devWan = (S.wanInterfaces||[]).filter(w => (w._deviceId||w.deviceId)===d.id);
+    const primaryMobile = devWan.filter(w =>
+      w.mobileModemSignalDecibelMw != null ||
+      /mobile|lte|4g|5g|umts/i.test(w.connectionType||''));
+    if (primaryMobile.length && online) {
+      risks.push({
+        icon:'fa-signal', icls:'lri-blue', level:'medium', months:12,
+        title:`Mobiles WAN aktiv (${primaryMobile.length} Interface${primaryMobile.length>1?'s':''})`,
+        desc:'LTE/5G-Verbindungen sind teurer, weniger stabil und haben höhere Latenz als kabelgebundene Anschlüsse.',
+        upgrade:'Kabelgebundenen Anschluss (DSL/Glasfaser) als primäre Leitung evaluieren, Mobilfunk als Backup.',
+      });
+    }
+
+    // 6. Aktive Alerts
+    if (d.alerting?.hasAlert && online) {
+      risks.push({
+        icon:'fa-bell', icls:'lri-red', level:'critical', months:0,
+        title:'Aktive Meldungen in LMC',
+        desc:'Dieses Gerät hat aktive Alarme – mögliche Hardware-, Konfigurations- oder Verbindungsprobleme.',
+        upgrade:'Meldungen unter Verwaltung → Alerts prüfen und beheben.',
+      });
+    }
+
+    // Gesamt-Dringlichkeit
+    let urgency = 'ok';
+    if (risks.some(r => r.level==='critical')) urgency = 'critical';
+    else if (risks.some(r => r.level==='soon'))   urgency = 'soon';
+    else if (risks.some(r => r.level==='medium'))  urgency = 'medium';
+
+    return { d, risks, urgency, online, type };
+  });
+
+  // ── Zähler ────────────────────────────────────────────────────────
+  const nCritical = deviceRows.filter(r => r.urgency==='critical').length;
+  const nSoon     = deviceRows.filter(r => r.urgency==='soon').length;
+  const nMedium   = deviceRows.filter(r => r.urgency==='medium').length;
+  const nOk       = deviceRows.filter(r => r.urgency==='ok').length;
+
+  // Badge in Sidebar updaten
+  const lcBadge = document.getElementById('badge-lifecycle');
+  if (lcBadge) lcBadge.textContent = (nCritical + nSoon) || '–';
+
+  // ── Filter anwenden ───────────────────────────────────────────────
+  const urgOrder = {critical:0, soon:1, medium:2, ok:3};
+  const filtered = deviceRows
+    .filter(r => {
+      if (lcFilter==='critical') return r.urgency==='critical';
+      if (lcFilter==='soon')     return r.urgency==='critical' || r.urgency==='soon';
+      if (lcFilter==='medium')   return r.urgency !== 'ok';
+      return true;
+    })
+    .sort((a,b) => urgOrder[a.urgency]-urgOrder[b.urgency] || deviceName(a.d).localeCompare(deviceName(b.d)));
+
+  // ── Rendern ───────────────────────────────────────────────────────
+  wrap.innerHTML = `
+
+    <!-- KPIs -->
+    <div class="lc-kpi-row">
+      <div class="lc-kpi">
+        <div class="lc-kpi-icon lki-red"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <div class="lc-kpi-val" style="color:var(--red)">${nCritical}</div>
+        <div class="lc-kpi-lbl">Sofort handeln</div>
+      </div>
+      <div class="lc-kpi">
+        <div class="lc-kpi-icon lki-amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="lc-kpi-val" style="color:var(--amber)">${nSoon}</div>
+        <div class="lc-kpi-lbl">≤ 6 Monate</div>
+      </div>
+      <div class="lc-kpi">
+        <div class="lc-kpi-icon lki-blue"><i class="fa-solid fa-clock"></i></div>
+        <div class="lc-kpi-val" style="color:var(--blue)">${nMedium}</div>
+        <div class="lc-kpi-lbl">≤ 12 Monate</div>
+      </div>
+      <div class="lc-kpi">
+        <div class="lc-kpi-icon lki-green"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="lc-kpi-val" style="color:var(--green)">${nOk}</div>
+        <div class="lc-kpi-lbl">Kein Handlungsbedarf</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="lc-filter-row">
+      <button class="lc-filter-btn${lcFilter==='all'?' active':''}" onclick="lcSetFilter('all',this)">
+        Alle <span class="lc-count-badge lcb-green">${deviceRows.length}</span>
+      </button>
+      <button class="lc-filter-btn${lcFilter==='critical'?' active':''}" onclick="lcSetFilter('critical',this)">
+        Kritisch <span class="lc-count-badge lcb-red">${nCritical}</span>
+      </button>
+      <button class="lc-filter-btn${lcFilter==='soon'?' active':''}" onclick="lcSetFilter('soon',this)">
+        ≤ 6 Monate <span class="lc-count-badge lcb-amber">${nSoon}</span>
+      </button>
+      <button class="lc-filter-btn${lcFilter==='medium'?' active':''}" onclick="lcSetFilter('medium',this)">
+        ≤ 12 Monate <span class="lc-count-badge lcb-blue">${nMedium}</span>
+      </button>
+    </div>
+
+    <!-- Gerätekarten -->
+    <div class="lc-grid">
+      ${filtered.length ? filtered.map(r => {
+        const cardCls = r.urgency==='critical'?'lc-critical':r.urgency==='soon'?'lc-soon':'';
+        const upgrades = [...new Set(r.risks.map(rx=>rx.upgrade).filter(Boolean))];
+        return `<div class="lc-card ${cardCls}">
+          <div class="lc-card-header">
+            <div class="lc-card-name">${escHtml(deviceName(r.d))}</div>
+            <div class="lc-card-meta">
+              ${r.d.siteName?`<span><i class="fa-solid fa-location-dot" style="color:var(--accent);font-size:10px"></i> ${escHtml(r.d.siteName)}</span>`:''}
+              ${energyTypeBadge(r.type)}
+              ${r.online?'<span class="sdot sdot-green">Online</span>':'<span class="sdot sdot-red">Offline</span>'}
+              ${r.d.status?.model?`<span style="color:var(--text3);font-family:monospace;font-size:10px">${escHtml(r.d.status.model)}</span>`:''}
+            </div>
+          </div>
+          ${r.risks.length ? `
+          <div class="lc-risks">
+            ${r.risks.map(risk => {
+              const badge = lcRiskBadge(risk.months);
+              const barColor = risk.pct>=0.8?'var(--red)':risk.pct>=0.6?'var(--amber)':'var(--blue)';
+              return `<div class="lc-risk">
+                <div class="lc-risk-icon ${risk.icls}"><i class="fa-solid ${risk.icon}"></i></div>
+                <div class="lc-risk-body">
+                  <div class="lc-risk-title">${risk.title}</div>
+                  <div class="lc-risk-desc">${risk.desc}</div>
+                  ${risk.pct !== undefined ? `<div class="lc-cap-bar-wrap"><div class="lc-cap-bar" style="width:${Math.min(100,Math.round(risk.pct*100))}%;background:${barColor}"></div></div>` : ''}
+                </div>
+                ${badge ? `<div class="lc-risk-months ${badge.cls}">${badge.label}</div>` : ''}
+              </div>`;
+            }).join('')}
+          </div>
+          ${upgrades.length ? `<div class="lc-upgrade">
+            <i class="fa-solid fa-lightbulb" style="color:var(--accent2)"></i>
+            <strong>Empfehlung:</strong> ${escHtml(upgrades[0])}
+            ${upgrades.slice(1).map(u=>`<br><i class="fa-solid fa-arrow-right" style="color:var(--accent2);margin-right:3px"></i>${escHtml(u)}`).join('')}
+          </div>` : ''}
+          ` : `<div class="lc-ok-state"><i class="fa-solid fa-circle-check"></i> Kein Handlungsbedarf</div>`}
+        </div>`;
+      }).join('')
+      : `<div class="empty-state" style="grid-column:1/-1">
+          <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
+          <h3>Keine Geräte in dieser Kategorie</h3>
+          <p>Wähle einen anderen Filter.</p>
+        </div>`}
+    </div>
+
+    <div class="energy-note" style="text-align:center;padding-bottom:8px">
+      Kapazitätsprognose: Max. ${LC_AP_MAX_CLIENTS} Clients/AP · Wachstumsannahme: ${Math.round(LC_GROWTH_RATE*100)} %/Monat.
+      Lifecycle-Daten aus LANCOM LMC · VPN-Qualität und WLAN-Clients aus Live-Monitoring.
+    </div>
+  `;
 }
 
 // ─── ENERGIE / CO₂ DASHBOARD ──────────────────────────────────────────────────
