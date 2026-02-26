@@ -5727,6 +5727,74 @@ function renderLifecycle() {
       </button>
     </div>
 
+    <!-- Kriterien-Info -->
+    <details style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+      <summary style="padding:11px 16px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:8px;list-style:none;user-select:none;">
+        <i class="fa-solid fa-circle-info" style="color:var(--accent2)"></i>
+        Analysekriterien &amp; Schwellenwerte
+        <i class="fa-solid fa-chevron-down" style="margin-left:auto;font-size:10px;opacity:.5"></i>
+      </summary>
+      <div style="padding:0 16px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:4px;">
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-skull" style="color:var(--red)"></i> Lifecycle-Status
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="lc-risk-months lrm-critical">Kritisch</span> Status <code style="font-size:10px;color:var(--accent2)">END_OF_LIFE</code><br>
+            <span class="lc-risk-months lrm-soon">≤ 6 Mon.</span> Status <code style="font-size:10px;color:var(--accent2)">END_OF_SALE / END_OF_SUPPORT</code>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-microchip" style="color:var(--amber)"></i> Firmware
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="lc-risk-months lrm-soon">≤ 6 Mon.</span> <code style="font-size:10px;color:var(--accent2)">firmwareState = OBSOLETE</code><br>
+            <span style="opacity:.4;font-size:11px">kein Risiko bei CURRENT</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-wifi" style="color:var(--blue)"></i> WLAN-Kapazität
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            Max. <strong style="color:var(--text)">${LC_AP_MAX_CLIENTS} Clients/AP</strong> · Wachstum <strong style="color:var(--text)">${Math.round(LC_GROWTH_RATE*100)} %/Mon.</strong><br>
+            <span class="lc-risk-months lrm-critical">Kritisch</span> ≥ 80 % Auslastung (≥ ${Math.round(LC_AP_MAX_CLIENTS*0.8)} Clients)<br>
+            <span class="lc-risk-months lrm-soon">≤ 6 Mon.</span> ≥ 60 % (≥ ${Math.round(LC_AP_MAX_CLIENTS*0.6)} Clients)<br>
+            <span class="lc-risk-months lrm-medium">≤ 12 Mon.</span> ≥ 40 % (≥ ${Math.round(LC_AP_MAX_CLIENTS*0.4)} Clients)
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-shield-halved" style="color:var(--red)"></i> VPN-Qualität
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="lc-risk-months lrm-critical">Kritisch</span> Paketverlust &gt; <strong style="color:var(--text)">5 %</strong><br>
+            <span class="lc-risk-months lrm-soon">≤ 6 Mon.</span> Paketverlust &gt; <strong style="color:var(--text)">2 %</strong><br>
+            <span class="lc-risk-months lrm-medium">≤ 12 Mon.</span> Latenz &gt; <strong style="color:var(--text)">100 ms</strong>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-signal" style="color:var(--blue)"></i> Mobiles WAN
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="lc-risk-months lrm-medium">≤ 12 Mon.</span> LTE/5G als aktive WAN-Verbindung<br>
+            <span style="opacity:.4;font-size:11px">erkannt via mobileModemSignal oder connectionType</span>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px 12px;font-size:11.5px;">
+          <div style="font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;color:var(--text)">
+            <i class="fa-solid fa-bell" style="color:var(--red)"></i> Aktive Alerts
+          </div>
+          <div style="color:var(--text2);line-height:1.8">
+            <span class="lc-risk-months lrm-critical">Kritisch</span> <code style="font-size:10px;color:var(--accent2)">alerting.hasAlert = true</code><br>
+            <span style="opacity:.4;font-size:11px">Details unter Verwaltung → Alerts</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
     <!-- Gerätekarten -->
     <div class="lc-grid">
       ${filtered.length ? filtered.map(r => {
