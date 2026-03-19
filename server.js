@@ -13,7 +13,6 @@ const url    = require('url');
 const { spawn } = require('child_process');
 
 const PORT = parseInt(process.argv[2] || process.env.PORT || '3001', 10);
-const APP_VERSION = 'v' + require('./package.json').version;
 
 const DEFAULT_BASE = 'cloud.lancom.de';
 const SERVICE_NAMES = ['devices','monitoring','monitor-frontend','useragent','auth','config','notification','devicetunnel','siem','logging'];
@@ -552,13 +551,11 @@ const server = http.createServer(async (req, res) => {
       res.end('Not found');
       return;
     }
-    let content = data;
-    if (ext === '.html') content = Buffer.from(data.toString().replace('__APP_VERSION__', APP_VERSION));
     res.writeHead(200, {
       'Content-Type': MIME[ext] || 'text/plain',
       'Cache-Control': 'no-cache, no-store, must-revalidate',
     });
-    res.end(content);
+    res.end(data);
   });
 });
 

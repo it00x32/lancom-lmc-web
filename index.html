@@ -798,7 +798,7 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
     <button class="btn-primary" id="login-btn" onclick="doLogin()">
       <i class="fa-solid fa-right-to-bracket"></i>&nbsp; Anmelden
     </button>
-    <div style="text-align:center;margin-top:24px;font-size:10px;color:var(--text3);letter-spacing:.3px;font-family:var(--mono)">__APP_VERSION__</div>
+    <div id="app-version" style="text-align:center;margin-top:24px;font-size:10px;color:var(--text3);letter-spacing:.3px;font-family:var(--mono)"></div>
   </div>
 </div>
 
@@ -2052,6 +2052,9 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
 <div id="toast-container"></div>
 
 <script>
+const APP_VERSION = 'v1.4.0';
+document.getElementById('app-version').textContent = APP_VERSION;
+
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const S = {
   apiKey:'', apiBase:'', accountId:'', accountName:'',
