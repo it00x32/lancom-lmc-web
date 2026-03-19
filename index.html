@@ -142,7 +142,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
 .sidebar-nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 8px 8px;}
 .sidebar-nav::-webkit-scrollbar{width:0;}
 .sidebar-group{margin-bottom:2px;}
-.sidebar-group>summary{font-family:var(--mono);font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;padding:12px 10px 4px;white-space:nowrap;overflow:hidden;cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:5px;opacity:.55;transition:opacity .15s;}
+.sidebar-group>summary{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;padding:14px 10px 5px;white-space:nowrap;overflow:hidden;cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:5px;opacity:.7;transition:opacity .15s;}
 .sidebar-group>summary:hover{opacity:.85;}
 .sidebar-group>summary::-webkit-details-marker{display:none;}
 .sidebar-group>summary::before{content:'\f054';font-family:'Font Awesome 6 Free';font-weight:900;font-size:7px;transition:transform .2s;flex-shrink:0;}
@@ -381,7 +381,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
 [data-theme="light"] .tab-btn{color:var(--text3);}
 [data-theme="light"] .tab-btn:hover{color:var(--text2);background:var(--card2);}
 [data-theme="light"] .tab-btn.active{color:var(--accent);border-left-color:var(--accent);background:rgba(0,76,151,.07);}
-[data-theme="light"] .sidebar-group>summary{color:var(--text3);}
+[data-theme="light"] .sidebar-group>summary{color:var(--text);opacity:.75;}
 [data-theme="light"] .mesh-dot-on{background:var(--green);box-shadow:0 0 5px var(--green);}
 [data-theme="light"] .si-online{color:#1a8a3e;background:rgba(26,138,62,.1);}
 [data-theme="light"] .si-offline{color:#d32f2f;background:rgba(211,47,47,.1);}
@@ -2068,7 +2068,7 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
 <div id="toast-container"></div>
 
 <script>
-const APP_VERSION = 'v1.6.1';
+const APP_VERSION = 'v1.6.2';
 document.getElementById('app-version').textContent = APP_VERSION;
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
