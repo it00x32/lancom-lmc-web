@@ -2,18 +2,15 @@
 const https = require('https');
 const url   = require('url');
 
-const SERVICES = {
-  devices:          'https://cloud.lancom.de/cloud-service-devices',
-  monitoring:       'https://cloud.lancom.de/cloud-service-monitoring',
-  'monitor-frontend': 'https://cloud.lancom.de/cloud-service-monitor-frontend',
-  useragent:        'https://cloud.lancom.de/cloud-service-useragent',
-  auth:             'https://cloud.lancom.de/cloud-service-auth',
-  config:           'https://cloud.lancom.de/cloud-service-config',
-  notification:     'https://cloud.lancom.de/cloud-service-notification',
-  devicetunnel:     'https://cloud.lancom.de/cloud-service-devicetunnel',
-  siem:             'https://cloud.lancom.de/cloud-service-siem',
-  logging:          'https://cloud.lancom.de/cloud-service-logging',
-};
+const DEFAULT_BASE = 'cloud.lancom.de';
+const SERVICE_NAMES = ['devices','monitoring','monitor-frontend','useragent','auth','config','notification','devicetunnel','siem','logging'];
+
+function buildServices(base) {
+  const host = base || DEFAULT_BASE;
+  const obj = {};
+  SERVICE_NAMES.forEach(s => { obj[s] = `https://${host}/cloud-service-${s}`; });
+  return obj;
+}
 
 function proxyRequest(targetUrl, method, apiKey, body) {
   return new Promise((resolve, reject) => {
@@ -75,14 +72,15 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { api_key, service, path: apiPath, method = 'GET', body: reqBody } = input;
+  const { api_key, service, path: apiPath, method = 'GET', body: reqBody, base_url } = input;
+  const services = buildServices(base_url);
 
-  if (!api_key || !service || !apiPath || !SERVICES[service]) {
+  if (!api_key || !service || !apiPath || !services[service]) {
     res.status(400).json({ error: 'Missing api_key, service or path' });
     return;
   }
 
-  const targetUrl = SERVICES[service] + apiPath;
+  const targetUrl = services[service] + apiPath;
   try {
     const result = await proxyRequest(targetUrl, method.toUpperCase(), api_key, reqBody ?? null);
     res.status(result.status).setHeader('Content-Type', 'application/json').send(result.body);

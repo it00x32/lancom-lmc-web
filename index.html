@@ -785,6 +785,16 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
       </label>
       <span class="save-token-label" onclick="document.getElementById('save-token-cb').click()">API-Token speichern</span>
     </div>
+    <details id="login-advanced" style="margin-bottom:20px">
+      <summary style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;cursor:pointer;font-family:var(--font);user-select:none"><i class="fa-solid fa-gear" style="margin-right:4px;opacity:.6"></i>Erweitert</summary>
+      <div style="margin-top:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label>API-Endpunkt</label>
+          <input type="text" id="api-base-input" placeholder="cloud.lancom.de" value="" autocomplete="off" style="font-family:var(--mono);font-size:12px">
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">Standard: <span style="font-family:var(--mono);color:var(--text2)">cloud.lancom.de</span></div>
+        </div>
+      </div>
+    </details>
     <button class="btn-primary" id="login-btn" onclick="doLogin()">
       <i class="fa-solid fa-right-to-bracket"></i>&nbsp; Anmelden
     </button>
@@ -2044,7 +2054,7 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const S = {
-  apiKey:'', accountId:'', accountName:'',
+  apiKey:'', apiBase:'', accountId:'', accountName:'',
   devices:{}, statistics:{},
   wlanClients:{},      // {deviceId: count}
   wlanStations:[],     // full station objects
@@ -2122,10 +2132,12 @@ function deviceName(d) {
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 async function api(service, path, method='GET', body=null) {
+  const payload={api_key:S.apiKey, service, path, method, body};
+  if(S.apiBase) payload.base_url=S.apiBase;
   const r = await fetch('/api', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({api_key:S.apiKey, service, path, method, body}),
+    body:JSON.stringify(payload),
   });
   const text = await r.text();
   if(!r.ok) {
@@ -2143,24 +2155,31 @@ async function api(service, path, method='GET', body=null) {
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 document.getElementById('api-key-input').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+document.getElementById('api-base-input').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 (function(){
   const saved=localStorage.getItem('lmc_api_key');
   if(saved){ document.getElementById('api-key-input').value=saved; document.getElementById('save-token-cb').checked=true; }
+  const savedBase=localStorage.getItem('lmc_api_base');
+  if(savedBase){ document.getElementById('api-base-input').value=savedBase; document.getElementById('login-advanced').open=true; }
 })();
 
 async function doLogin() {
   const key=document.getElementById('api-key-input').value.trim();
   if(!key) return;
+  const customBase=document.getElementById('api-base-input').value.trim();
   const btn=document.getElementById('login-btn');
   const errEl=document.getElementById('login-error');
   btn.disabled=true; btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i>&nbsp; Verbinde…';
   errEl.style.display='none';
   S.apiKey=key;
+  S.apiBase=customBase;
   try {
     const accounts=await api('auth','/accounts');
     if(!accounts||!accounts.length) throw new Error('Keine Accounts für diesen API-Key gefunden.');
     if(document.getElementById('save-token-cb').checked) localStorage.setItem('lmc_api_key',key);
     else localStorage.removeItem('lmc_api_key');
+    if(customBase) localStorage.setItem('lmc_api_base',customBase);
+    else localStorage.removeItem('lmc_api_base');
     if(accounts.length===1) { await selectAccount(accounts[0].id); }
     else { showAccountPicker(accounts); }
   } catch(e) {
@@ -2225,7 +2244,7 @@ async function selectAccount(accountId, knownName) {
 
 function doLogout() {
   clearInterval(S.timer);
-  S.apiKey=S.accountId=S.accountName='';
+  S.apiKey=S.accountId=S.accountName=S.apiBase='';
   S.devices={}; S.statistics={}; S.wlanClients={}; S.wlanStations=[]; S.wlanNeighbors=[]; S.wlanNetworkMap={}; S.accountNetworks=[];
   S.vpnConnections=[]; S.wanInterfaces=[]; S.lldpNeighbors=[]; S.lldpTable=[]; S.configStates={};
   siteFilter='all'; devFilter='all'; topoRootId=''; topoSiteFilter='';
