@@ -235,6 +235,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
 .action-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:var(--r);font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;border:1px solid;cursor:pointer;transition:all .15s;flex:1;min-width:0;justify-content:center;}
 .action-btn.icon-only{flex:0 0 auto;padding:5px 11px;}
 .action-btn:disabled{opacity:.35;cursor:not-allowed;}
+.action-btn.btn-sm{padding:3px 7px;font-size:10px;flex:0 0 auto;min-width:0;}
 .btn-reboot{background:transparent;border-color:rgba(240,85,104,.2);color:var(--text3);}
 .btn-reboot:hover:not(:disabled){border-color:var(--red);color:var(--red);background:rgba(240,85,104,.07);}
 .btn-fw{background:transparent;border-color:rgba(77,166,255,.2);color:var(--text3);}
@@ -485,6 +486,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
 .bulk-mode .card-select{display:flex;align-items:center;justify-content:center;}
 .bulk-mode .device-card{cursor:pointer;user-select:none;}
 .device-card.bulk-selected{border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(77,166,255,.25);}
+tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
 .device-card .card-header{position:relative;}
 
 /* ── ACTION STATUS MODAL ─────────────────────────── */
@@ -786,6 +788,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
     <button class="btn-primary" id="login-btn" onclick="doLogin()">
       <i class="fa-solid fa-right-to-bracket"></i>&nbsp; Anmelden
     </button>
+    <div style="text-align:center;margin-top:24px;font-size:10px;color:var(--text3);letter-spacing:.3px;font-family:var(--mono)">v1.4.0</div>
   </div>
 </div>
 
@@ -865,8 +868,8 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
         <span class="tab-badge" id="badge-devices">–</span>
       </button>
 
-      <!-- Monitoring -->
-      <div class="sidebar-group-label">Monitoring</div>
+      <!-- Cloud Monitoring -->
+      <div class="sidebar-group-label">Cloud Monitoring</div>
       <button class="tab-btn" onclick="showTab('wlan')" id="tab-btn-wlan" data-tooltip="WLAN Clients">
         <span class="tb-icon"><i class="fa-solid fa-wifi"></i></span>
         <span class="tb-label">WLAN Clients</span>
@@ -887,13 +890,6 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
         <span class="tb-label">Traffic</span>
         <span class="tab-badge" id="badge-traffic">–</span>
       </button>
-      <button class="tab-btn" onclick="showTab('energy')" id="tab-btn-energy" data-tooltip="Energie / CO₂">
-        <span class="tb-icon"><i class="fa-solid fa-leaf"></i></span>
-        <span class="tb-label">Energie / CO₂</span>
-      </button>
-
-      <!-- Analyse -->
-      <div class="sidebar-group-label">Analyse</div>
       <button class="tab-btn" onclick="showTab('neighbors')" id="tab-btn-neighbors" data-tooltip="Nachbarschaft">
         <span class="tb-icon"><i class="fa-solid fa-satellite-dish"></i></span>
         <span class="tb-label">Nachbarschaft</span>
@@ -904,28 +900,38 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
         <span class="tb-label">LLDP / Switches</span>
         <span class="tab-badge" id="badge-lldp">–</span>
       </button>
+
+      <!-- Cloud Analyse -->
+      <div class="sidebar-group-label">Analyse</div>
       <button class="tab-btn" onclick="showTab('topology')" id="tab-btn-topology" data-tooltip="Netzwerkplan">
         <span class="tb-icon"><i class="fa-solid fa-sitemap"></i></span>
         <span class="tb-label">Netzwerkplan</span>
-      </button>
-      <button class="tab-btn" onclick="showTab('client-explorer')" id="tab-btn-client-explorer" data-tooltip="Client Explorer">
-        <span class="tb-icon"><i class="fa-solid fa-magnifying-glass-location"></i></span>
-        <span class="tb-label">Client Explorer</span>
-        <span class="tab-badge" id="badge-client-explorer">–</span>
       </button>
       <button class="tab-btn" onclick="showTab('lifecycle')" id="tab-btn-lifecycle" data-tooltip="Lifecycle-Planner">
         <span class="tb-icon"><i class="fa-solid fa-timeline"></i></span>
         <span class="tb-label">Lifecycle-Planner</span>
         <span class="tab-badge" id="badge-lifecycle">–</span>
       </button>
+      <button class="tab-btn" onclick="showTab('energy')" id="tab-btn-energy" data-tooltip="Energie / CO₂">
+        <span class="tb-icon"><i class="fa-solid fa-leaf"></i></span>
+        <span class="tb-label">Energie / CO₂</span>
+      </button>
       <button class="tab-btn" onclick="showTab('anomaly')" id="tab-btn-anomaly" data-tooltip="Predictive Anomaly">
         <span class="tb-icon"><i class="fa-solid fa-brain"></i></span>
         <span class="tb-label">Predictive Anomaly</span>
         <span class="tab-badge" id="badge-anomaly">–</span>
       </button>
-      <button class="tab-btn" onclick="showTab('mesh')" id="tab-btn-mesh" data-tooltip="Wifi Mesh">
+
+      <!-- SNMP Lokal -->
+      <div class="sidebar-group-label">SNMP (Lokal)</div>
+      <button class="tab-btn" onclick="showTab('client-explorer')" id="tab-btn-client-explorer" data-tooltip="Client Explorer">
+        <span class="tb-icon"><i class="fa-solid fa-magnifying-glass-location"></i></span>
+        <span class="tb-label">Client Explorer</span>
+        <span class="tab-badge" id="badge-client-explorer">–</span>
+      </button>
+      <button class="tab-btn" onclick="showTab('mesh')" id="tab-btn-mesh" data-tooltip="WiFi WDS">
         <span class="tb-icon"><i class="fa-solid fa-wifi"></i></span>
-        <span class="tb-label">Wifi Mesh</span>
+        <span class="tb-label">WiFi WDS</span>
         <span class="tab-badge" id="badge-mesh">–</span>
       </button>
       <button class="tab-btn" onclick="showTab('l2tp')" id="tab-btn-l2tp" data-tooltip="L2TPv3">
@@ -951,9 +957,6 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
         <span class="tb-label">Standorte</span>
         <span class="tab-badge" id="badge-sites">–</span>
       </button>
-
-      <!-- System -->
-      <div class="sidebar-sep"></div>
       <button class="tab-btn" onclick="showTab('alerts')" id="tab-btn-alerts" data-tooltip="Alerts">
         <span class="tb-icon"><i class="fa-solid fa-bell"></i></span>
         <span class="tb-label">Alerts</span>
@@ -1009,7 +1012,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
       <i class="fa-solid fa-map-marker-alt" style="color:var(--text3);font-size:12px;margin-right:2px;flex-shrink:0"></i>
       <div class="filter-group" id="site-filter-group" style="flex-wrap:wrap;"></div>
     </div>
-    <div class="device-grid" id="device-grid"></div>
+    <div class="table-wrap" id="device-grid"></div>
     <div class="sync-bar" id="sync-bar">Letzte Aktualisierung: –</div>
   </section>
 
@@ -3151,15 +3154,14 @@ function renderDevices() {
     if(devFilter==='alert'&&!d.alerting?.hasAlert) return false;
     if(siteFilter!=='all'&&(d.siteName||'')!==siteFilter) return false;
     if(q){
-      const f=[d.label,d.name,d.siteName,d.status?.deviceLabel,d.status?.model,d.status?.serial,d.status?.ip,d.id];
+      const f=[d.label,d.name,d.siteName,d.status?.deviceLabel,d.status?.model,d.status?.serial,d.status?.mac,d.status?.ip,d.id];
       if(!f.some(x=>x&&x.toLowerCase().includes(q))) return false;
     }
     return true;
   });
   document.getElementById('device-count').textContent=visible.length;
-  if(!visible.length){ grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-satellite-dish"></i><h3>Keine Geräte gefunden</h3><p>Anderer Filter oder Suchbegriff?</p></div>`; return; }
+  if(!visible.length){ grid.innerHTML=`<div style="text-align:center;padding:48px 20px;color:var(--text3);font-family:var(--mono)"><div style="font-size:28px;margin-bottom:10px;opacity:.3"><i class="fa-solid fa-satellite-dish"></i></div>Keine Geräte gefunden</div>`; return; }
 
-  // Sortierung: Standort → Alert → Online → Name
   visible.sort((a,b)=>{
     const sA=(a.siteName||'').localeCompare(b.siteName||'');
     if(sA!==0) return sA;
@@ -3170,19 +3172,32 @@ function renderDevices() {
     return deviceName(a).localeCompare(deviceName(b));
   });
 
-  // Gruppenheader nur wenn kein Standortfilter aktiv und mehrere Standorte vorhanden
+  const wlanLoaded=Object.keys(S.wlanClients).length>0;
   const multiSite=siteFilter==='all'&&new Set(visible.map(d=>d.siteName||'')).size>1;
-  let html='', lastSite=null;
+  let rows='', lastSite=null;
   for(const d of visible) {
     const site=d.siteName||'(kein Standort)';
     if(multiSite&&site!==lastSite) {
       const siteCount=visible.filter(x=>(x.siteName||'(kein Standort)')===site).length;
-      html+=`<div class="site-header"><span class="site-header-name"><i class="fa-solid fa-map-marker-alt" style="margin-right:5px;opacity:.6"></i>${escHtml(site)}</span><div class="site-header-line"></div><span class="site-header-count">${siteCount}</span></div>`;
+      const cols=wlanLoaded?11:10;
+      rows+=`<tr><td colspan="${cols}" style="background:var(--card2);padding:8px 14px;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text2)"><i class="fa-solid fa-location-dot" style="margin-right:5px;opacity:.5"></i>${escHtml(site)} <span style="color:var(--accent);font-family:var(--mono);font-weight:400;margin-left:6px">${siteCount}</span></td></tr>`;
       lastSite=site;
     }
-    html+=deviceCard(d);
+    rows+=deviceRow(d,wlanLoaded);
   }
-  grid.innerHTML=html;
+  grid.innerHTML=`<div class="table-section"><table class="data-table"><thead><tr>
+    <th style="width:32px"></th>
+    <th>Gerät</th>
+    <th>Standort</th>
+    <th>Modell</th>
+    <th>MAC</th>
+    <th>IP</th>
+    <th>Firmware</th>
+    <th>FW</th>
+    <th>CFG</th>
+    ${wlanLoaded?'<th>WLAN</th>':''}
+    <th>Aktionen</th>
+  </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function fmtRelTime(ts) {
@@ -3197,80 +3212,55 @@ function fmtRelTime(ts) {
   return 'gerade eben';
 }
 
-function deviceCard(d) {
+function deviceRow(d, wlanLoaded) {
   const id=d.id, online=isOnline(d), hasAlert=d.alerting?.hasAlert===true;
   const fwState=d.firmwareState||'', cfgCat=S.configStates[id]?.category||'';
   const wlan=S.wlanClients[id];
   const name=deviceName(d);
-  const site=d.siteName&&d.siteName!==name?d.siteName:'';
+  const site=d.siteName||'';
+  const mac=d.status?.mac||'–';
   const model=d.status?.model||'–', ip=d.status?.ip||'–';
-  const serial=d.status?.serial||'–', fw=d.status?.fwLabel||'–';
-  const life=d.status?.lifecycle?.status||'–';
+  const fw=d.status?.fwLabel||'–';
   const fwOld=fwState==='OBSOLETE', cfgOld=['OUTDATED','ROLLOUT_PENDING'].includes(cfgCat);
-  const cardClass=hasAlert?'alert':(!online?'offline':'');
-  const fwBadge=fwOld?`<span class="badge badge-fw-old"><i class="fa-solid fa-arrow-up-from-bracket"></i>${fwState}</span>`:(fwState==='CURRENT'?`<span class="badge badge-fw-ok"><i class="fa-solid fa-check"></i>FW OK</span>`:'');
-  const cfgBadge=cfgOld?`<span class="badge badge-cfg-old"><i class="fa-solid fa-gear"></i>${cfgCat}</span>`:(cfgCat==='CURRENT'?`<span class="badge badge-cfg-ok"><i class="fa-solid fa-check"></i>CFG OK</span>`:'');
-  const alertBadge=hasAlert?`<span class="badge badge-alert"><i class="fa-solid fa-triangle-exclamation"></i>ALERT</span>`:'';
-  const onlineBadge=online?`<span class="badge badge-online"><i class="fa-solid fa-circle"></i>ONLINE</span>`:`<span class="badge badge-offline"><i class="fa-solid fa-circle"></i>OFFLINE</span>`;
-  const wlanLoaded=Object.keys(S.wlanClients).length>0;
-  const wlanRow=wlanLoaded?`<div class="info-row"><div class="info-lbl">WLAN Clients</div><div class="info-val">${wlan!==undefined?`<span style="${wlan>0?'color:var(--teal);font-weight:700':''}">${wlan}</span>`:'–'}</div></div>`:'';
-  const lifecycleColor=life==='ACTIVE'?'color:var(--green)':(life!=='–'?'color:var(--amber)':'');
-  const offlineTs = !online ? fmtRelTime(d.status?.lastHeartbeatDate) : '';
-  const isBulkSel = bulkSelected.has(id);
-  return `<div class="device-card ${cardClass}${isBulkSel?' bulk-selected':''}" id="card-${id}" onclick="if(bulkMode)bulkToggleDevice('${id}',event)">
-  <div class="card-header">
-    <div class="device-icon ${online?'online':'offline'}"><i class="fa-solid ${online?'fa-tower-broadcast':'fa-plug-circle-xmark'}"></i></div>
-    <div class="card-header-info">
-      <div class="device-name" title="${escHtml(name)}">${escHtml(name)}</div>
-      ${site?`<div class="device-site"><i class="fa-solid fa-location-dot" style="margin-right:3px;color:var(--text3)"></i>${escHtml(site)}</div>`:''}
-      ${offlineTs?`<div class="offline-since"><i class="fa-solid fa-clock" style="margin-right:3px;opacity:.5"></i>${offlineTs}</div>`:''}
-    </div>
-    <div class="card-badges">${onlineBadge}${alertBadge}</div>
-    <div class="card-select" onclick="event.stopPropagation();bulkToggleDevice('${id}',event)">
-      <input type="checkbox" ${isBulkSel?'checked':''} onclick="event.stopPropagation()" onchange="bulkToggleDevice('${id}',event)" style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent)">
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="info-grid">
-      <div class="info-row"><div class="info-lbl">Modell</div><div class="info-val">${escHtml(model)}</div></div>
-      <div class="info-row"><div class="info-lbl">IP-Adresse</div><div class="info-val mono">${ip}</div></div>
-      <div class="info-row"><div class="info-lbl">Seriennummer</div><div class="info-val mono">${serial}</div></div>
-      <div class="info-row"><div class="info-lbl">Firmware</div><div class="info-val mono" style="font-size:10px">${escHtml(fw)}</div></div>
-      <div class="info-row"><div class="info-lbl">FW Status</div><div class="info-val">${fwBadge||`<span style="color:var(--text2)">${fwState||'–'}</span>`}</div></div>
-      <div class="info-row"><div class="info-lbl">CFG Status</div><div class="info-val">${cfgBadge||`<span style="color:var(--text2)">${cfgCat||'–'}</span>`}</div></div>
-      <div class="info-row"><div class="info-lbl">Lifecycle</div><div class="info-val" style="${lifecycleColor}">${life}</div></div>
-      ${wlanRow}
-    </div>
-  </div>
-  <div class="card-footer">
-    <div class="card-footer-primary">
-      <button class="action-btn btn-reboot" onclick="actionReboot('${id}','${escHtml(name)}')" title="Neu starten">
-        <i class="fa-solid fa-power-off"></i> Neustart
-      </button>
-      <button class="action-btn btn-fw" ${!fwOld?'disabled':''} onclick="actionFirmwareUpdate('${id}','${escHtml(name)}')" title="${fwOld?'Firmware aktualisieren':'Firmware aktuell'}">
-        <i class="fa-solid fa-microchip"></i> FW Update
-      </button>
-      <button class="action-btn btn-cfg" ${!cfgOld?'disabled':''} onclick="actionConfigRollout('${id}','${escHtml(name)}')" title="${cfgOld?'Konfig ausrollen':'Konfig aktuell'}">
-        <i class="fa-solid fa-rotate"></i> Rollout
-      </button>
-    </div>
-    <div class="card-footer-secondary">
-      <button class="action-btn icon-only btn-snmp" id="snmp-btn-${id}" ${!online||ip==='–'?'disabled':''} onclick="snmpCardTest('${id}','${ip}')" title="${online&&ip!=='–'?'SNMP testen':'Gerät offline oder keine IP'}">
-        <i class="fa-solid fa-network-wired"></i>
-      </button>
-      <button class="action-btn icon-only btn-web" ${!online?'disabled':''} onclick="openWebconfig('${id}','${escHtml(name)}')" title="${online?'WEBconfig öffnen':'Gerät offline'}">
-        <i class="fa-solid fa-display"></i>
-      </button>
-      <button class="action-btn icon-only btn-preview" onclick="openCfgPreview('${id}','${escHtml(name)}')" title="Konfig-Vorschau">
-        <i class="fa-solid fa-eye"></i>
-      </button>
-      <button class="action-btn icon-only" style="background:rgba(77,166,255,.08);border-color:rgba(77,166,255,.25);color:var(--purple)" onclick="openLogModal('${id}','${escHtml(name)}')" title="Gerätelog anzeigen">
-        <i class="fa-solid fa-file-lines"></i>
-      </button>
-    </div>
-  </div>
-  <div class="snmp-card-debug" id="snmp-debug-${id}"></div>
-</div>`;
+  const offlineTs=!online?fmtRelTime(d.status?.lastHeartbeatDate):'';
+  const isBulkSel=bulkSelected.has(id);
+
+  const statusDot=online
+    ?`<span class="sdot sdot-green" style="font-size:0"></span>`
+    :`<span class="sdot sdot-red" style="font-size:0"></span>`;
+
+  const fwBadge=fwOld?`<span class="badge badge-fw-old" style="font-size:9px"><i class="fa-solid fa-arrow-up"></i> ${fwState}</span>`
+    :(fwState==='CURRENT'?`<span class="badge badge-fw-ok" style="font-size:9px"><i class="fa-solid fa-check"></i> OK</span>`
+    :`<span style="color:var(--text3);font-size:11px">${fwState||'–'}</span>`);
+
+  const cfgBadge=cfgOld?`<span class="badge badge-cfg-old" style="font-size:9px"><i class="fa-solid fa-gear"></i> ${cfgCat}</span>`
+    :(cfgCat==='CURRENT'?`<span class="badge badge-cfg-ok" style="font-size:9px"><i class="fa-solid fa-check"></i> OK</span>`
+    :`<span style="color:var(--text3);font-size:11px">${cfgCat||'–'}</span>`);
+
+  const wlanCell=wlanLoaded?`<td style="font-family:var(--mono);font-size:12px${wlan>0?';color:var(--teal);font-weight:600':''}">${wlan!==undefined?wlan:'–'}</td>`:'';
+  const alertIcon=hasAlert?` <i class="fa-solid fa-triangle-exclamation" style="color:var(--amber);font-size:10px;margin-left:4px" title="Alert"></i>`:'';
+
+  return `<tr id="card-${id}" class="${!online?'dev-row-offline':''}" onclick="if(bulkMode){bulkToggleDevice('${id}',event)}" style="${!online?'opacity:.65':''}">
+    <td style="text-align:center;width:32px">${bulkMode?`<input type="checkbox" ${isBulkSel?'checked':''} onclick="event.stopPropagation()" onchange="bulkToggleDevice('${id}',event)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)">`:statusDot}</td>
+    <td><span style="font-weight:600">${escHtml(name)}</span>${alertIcon}${offlineTs?`<div style="font-size:10px;color:var(--text3);margin-top:1px"><i class="fa-solid fa-clock" style="margin-right:2px;opacity:.5"></i>${offlineTs}</div>`:''}</td>
+    <td style="color:var(--text2);font-size:12px">${escHtml(site)||'–'}</td>
+    <td style="font-size:12px">${escHtml(model)}</td>
+    <td class="mono" style="font-size:11px">${mac}</td>
+    <td class="mono" style="font-size:11.5px">${ip}</td>
+    <td class="mono" style="font-size:10.5px">${escHtml(fw)}</td>
+    <td>${fwBadge}</td>
+    <td>${cfgBadge}</td>
+    ${wlanCell}
+    <td style="white-space:nowrap">
+      <button class="action-btn btn-reboot btn-sm" onclick="event.stopPropagation();actionReboot('${id}','${escHtml(name)}')" title="Neustart" style="padding:3px 7px;font-size:10px"><i class="fa-solid fa-power-off"></i></button>
+      <button class="action-btn btn-fw btn-sm" ${!fwOld?'disabled':''} onclick="event.stopPropagation();actionFirmwareUpdate('${id}','${escHtml(name)}')" title="FW Update" style="padding:3px 7px;font-size:10px"><i class="fa-solid fa-microchip"></i></button>
+      <button class="action-btn btn-cfg btn-sm" ${!cfgOld?'disabled':''} onclick="event.stopPropagation();actionConfigRollout('${id}','${escHtml(name)}')" title="Rollout" style="padding:3px 7px;font-size:10px"><i class="fa-solid fa-rotate"></i></button>
+      <button class="action-btn btn-snmp btn-sm" id="snmp-btn-${id}" ${!online||ip==='–'?'disabled':''} onclick="event.stopPropagation();snmpCardTest('${id}','${ip}')" title="SNMP" style="padding:3px 7px;font-size:10px"><i class="fa-solid fa-network-wired"></i></button>
+      <button class="action-btn btn-fw btn-sm" ${!online?'disabled':''} onclick="event.stopPropagation();openWebconfig('${id}','${escHtml(name)}')" title="WEBconfig" style="padding:3px 7px;font-size:10px"><i class="fa-solid fa-display"></i></button>
+      <button class="action-btn btn-cfg btn-sm" onclick="event.stopPropagation();openCfgPreview('${id}','${escHtml(name)}')" title="Konfig" style="padding:3px 7px;font-size:10px"><i class="fa-solid fa-file-lines"></i></button>
+      <button class="action-btn btn-sm" style="padding:3px 7px;font-size:10px;background:transparent;border-color:rgba(77,166,255,.2);color:var(--text3)" onclick="event.stopPropagation();openLogModal('${id}','${escHtml(name)}')" title="Log"><i class="fa-solid fa-scroll"></i></button>
+    </td>
+  </tr>`;
 }
 
 // ─── WLAN TABLE ───────────────────────────────────────────────────────────────
@@ -3934,13 +3924,27 @@ const NW=190, NH=66, HG=220, VG=140;
 function buildTopoGraph() {
   const topoDevName=d=>d.status?.name||d.label||d.name||d.id?.substring(0,8)||'–';
 
-  // Build name → device-id map (multiple name fields)
-  const nameToId={};
+  // Build lookup maps: name → id, ip → id, mac → id
+  const nameToId={}, ipToId={}, macToId={};
   Object.values(S.devices).forEach(d=>{
     [d.status?.name, d.label, d.name, topoDevName(d)].filter(Boolean).forEach(n=>{
       if(n&&n!=='–') nameToId[n.toLowerCase()]=d.id;
     });
+    if(d.status?.ip) ipToId[d.status.ip]=d.id;
+    if(d.status?.mac) macToId[d.status.mac.toLowerCase()]=d.id;
   });
+
+  function resolveName(lldpName) {
+    if(!lldpName) return null;
+    const lc=lldpName.toLowerCase();
+    if(nameToId[lc]) return nameToId[lc];
+    if(macToId[lc]) return macToId[lc];
+    // partial match: LLDP name might contain the device name or vice versa
+    for(const [n,id] of Object.entries(nameToId)){
+      if(n.length>3 && (lc.includes(n) || n.includes(lc))) return id;
+    }
+    return null;
+  }
 
   // Nodes: devices of selected site (or all)
   const nodes={};
@@ -3958,44 +3962,48 @@ function buildTopoGraph() {
     };
   });
 
-  // Edges from LLDP port data — store port name per device side + bandwidth
-  // Unknown neighbors → ghost nodes (unmanaged, shown as dashed gray boxes)
   const edgeMap={};
+  function addEdge(fromId, toId, portName, bps) {
+    if(!fromId||!toId||fromId===toId) return;
+    if(!nodes[fromId]||!nodes[toId]) return;
+    const key=[fromId,toId].sort().join('|');
+    if(!edgeMap[key]) edgeMap[key]={from:fromId,to:toId,ports:{},maxBps:0};
+    if(portName) {
+      if(!edgeMap[key].ports[fromId]) edgeMap[key].ports[fromId]=[];
+      if(!edgeMap[key].ports[fromId].includes(portName))
+        edgeMap[key].ports[fromId].push(portName);
+    }
+    if(bps>edgeMap[key].maxBps) edgeMap[key].maxBps=bps;
+  }
+
+  // 1) Edges from LLDP port data
   S.lldpNeighbors.forEach(port=>{
     const fromId=port._deviceId;
-    if(!nodes[fromId]) return; // switch filtered out by site
+    if(!nodes[fromId]) return;
     nodes[fromId].isSwitch=true;
     port.lldpNames.forEach(lldpName=>{
-      let toId=nameToId[lldpName.toLowerCase()];
+      let toId=resolveName(lldpName);
       if(toId===fromId) return;
       if(!toId) {
-        // Create ghost node for unmanaged / unresolved LLDP neighbor
         toId='ghost:'+lldpName;
         if(!nodes[toId]) nodes[toId]={
           id:toId, name:lldpName, model:'', siteName:'',
           online:false, hasAlert:false, isSwitch:false, wlanClients:0, isGhost:true,
         };
       }
-      const key=[fromId,toId].sort().join('|');
-      if(!edgeMap[key]) edgeMap[key]={from:fromId,to:toId,ports:{},maxBps:0};
-      if(!edgeMap[key].ports[fromId]) edgeMap[key].ports[fromId]=[];
-      if(!edgeMap[key].ports[fromId].includes(port.portName))
-        edgeMap[key].ports[fromId].push(port.portName);
-      const bps=(port.rxBitPerSec||0)+(port.txBitPerSec||0);
-      if(bps>edgeMap[key].maxBps) edgeMap[key].maxBps=bps;
+      addEdge(fromId,toId,port.portName,(port.rxBitPerSec||0)+(port.txBitPerSec||0));
     });
   });
-  // Supplement from lan-interface table: fills in port names that lldpNeighbors (JSON blob) may miss.
-  // Each row: {deviceId, name (port name), lldpName (remote system name)}.
+
+  // 2) Supplement from lan-interface table
   S.lldpTable.forEach(row=>{
     const lldpName=(row.lldpName||'').trim();
     if(!lldpName) return;
     const fromId=row.deviceId||row._deviceId;
     if(!nodes[fromId]) return;
     nodes[fromId].isSwitch=true;
-    const portName=row.name||'';
 
-    let toId=nameToId[lldpName.toLowerCase()];
+    let toId=resolveName(lldpName);
     if(!toId) {
       toId='ghost:'+lldpName;
       if(!nodes[toId]) nodes[toId]={
@@ -4003,14 +4011,9 @@ function buildTopoGraph() {
         online:false, hasAlert:false, isSwitch:false, wlanClients:0, isGhost:true,
       };
     }
-    if(toId===fromId) return;
-
-    const key=[fromId,toId].sort().join('|');
-    if(!edgeMap[key]) edgeMap[key]={from:fromId,to:toId,ports:{},maxBps:0};
-    if(!edgeMap[key].ports[fromId]) edgeMap[key].ports[fromId]=[];
-    if(portName && !edgeMap[key].ports[fromId].includes(portName))
-      edgeMap[key].ports[fromId].push(portName);
+    addEdge(fromId,toId,row.name||'',0);
   });
+
 
   const edges=Object.values(edgeMap);
 
@@ -4168,7 +4171,6 @@ function renderTopology() {
     const fs=borderPt(f.x,f.y,t.x,t.y);
     const te=borderPt(t.x,t.y,f.x,f.y);
 
-    // Bandwidth-based coloring
     const bps=e.maxBps||0;
     let color, w;
     if(!bothOnline){
