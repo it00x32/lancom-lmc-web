@@ -55,7 +55,7 @@ function parseInput(req) {
   return readBody(req).then(raw => JSON.parse(raw));
 }
 
-const PKG_VERSION = '1.5.0';
+const PKG_VERSION = '1.6.0';
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');

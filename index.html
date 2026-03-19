@@ -133,7 +133,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
 
 /* ── SIDEBAR LAYOUT ──────────────────────────────── */
 .app-body{display:flex;flex:1;overflow:hidden;}
-.sidebar{width:195px;flex-shrink:0;background:rgba(15,31,56,.98);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .22s ease;}
+.sidebar{width:220px;flex-shrink:0;background:rgba(15,31,56,.98);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .22s ease;}
 .sidebar.collapsed{width:54px;}
 .sidebar-header{display:flex;align-items:center;justify-content:flex-end;padding:10px 10px 6px;flex-shrink:0;}
 .sidebar.collapsed .sidebar-header{justify-content:center;}
@@ -871,8 +871,14 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
     </div>
     <nav class="sidebar-nav">
 
-      <!-- Übersicht -->
-      <button class="tab-btn active" onclick="showTab('devices')" id="tab-btn-devices" data-tooltip="Geräte">
+      <!-- Dashboard -->
+      <button class="tab-btn active" onclick="showTab('dashboard')" id="tab-btn-dashboard" data-tooltip="Dashboard">
+        <span class="tb-icon"><i class="fa-solid fa-gauge-high"></i></span>
+        <span class="tb-label">Dashboard</span>
+      </button>
+
+      <!-- Geräte -->
+      <button class="tab-btn" onclick="showTab('devices')" id="tab-btn-devices" data-tooltip="Geräte">
         <span class="tb-icon"><i class="fa-solid fa-server"></i></span>
         <span class="tb-label">Geräte</span>
         <span class="tab-badge" id="badge-devices">–</span>
@@ -985,8 +991,8 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
   <!-- CONTENT AREA -->
   <div class="content-area">
 
-  <!-- TAB: GERÄTE -->
-  <section class="tab-section active" id="tab-devices">
+  <!-- TAB: DASHBOARD -->
+  <section class="tab-section active" id="tab-dashboard">
     <div class="stats-bar">
       <div class="stat-card"><div class="stat-icon si-total"><i class="fa-solid fa-server"></i></div><div><div class="stat-val sv-total" id="s-total">–</div><div class="stat-lbl">Geräte</div></div></div>
       <div class="stat-card"><div class="stat-icon si-online"><i class="fa-solid fa-circle-check"></i></div><div><div class="stat-val sv-online" id="s-online">–</div><div class="stat-lbl">Online</div></div></div>
@@ -997,6 +1003,10 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
       <div class="stat-card"><div class="stat-icon si-wlan"><i class="fa-solid fa-wifi"></i></div><div><div class="stat-val sv-wlan" id="s-wlan">–</div><div class="stat-lbl">WLAN Clients</div></div></div>
     </div>
     <div id="site-tiles" class="site-tiles" style="display:none"></div>
+  </section>
+
+  <!-- TAB: GERÄTE -->
+  <section class="tab-section" id="tab-devices">
     <div class="toolbar">
       <span class="toolbar-title">Geräte</span>
       <span class="toolbar-count" id="device-count">0</span>
@@ -1884,7 +1894,6 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
           <span class="settings-label"></span>
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
             <button onclick="createSnmpAddins()" id="btn-snmp-addin" class="settings-save-btn"><i class="fa-solid fa-code"></i> SNMP Add-in erstellen</button>
-            <button id="btn-snmp-addin-list" class="settings-save-btn" onclick="toggleAddinList('snmp-addin-list','lmc_snmp_addins_',SNMP_ADDIN_LABELS,this)"><i class="fa-solid fa-list"></i> Add-ins verwalten</button>
             <span id="snmp-addin-msg" style="font-size:12px;color:var(--text3);display:none"></span>
           </div>
         </div>
@@ -1910,7 +1919,6 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
           <span class="settings-label"></span>
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
             <button onclick="createMgmtVlanAddins()" id="btn-mgmt-vlan-addin" class="settings-save-btn"><i class="fa-solid fa-code"></i> Management VLAN Add-in erstellen</button>
-            <button id="btn-vlan-addin-list" class="settings-save-btn" onclick="toggleAddinList('vlan-addin-list','lmc_mgmtvlan_addins_',VLAN_ADDIN_LABELS,this)"><i class="fa-solid fa-list"></i> Add-ins verwalten</button>
             <span id="mgmt-vlan-msg" style="font-size:12px;color:var(--text3);display:none"></span>
           </div>
         </div>
@@ -2052,7 +2060,7 @@ tr.bulk-selected td{background:rgba(77,166,255,.08)!important;}
 <div id="toast-container"></div>
 
 <script>
-const APP_VERSION = 'v1.5.0';
+const APP_VERSION = 'v1.6.0';
 document.getElementById('app-version').textContent = APP_VERSION;
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -2067,7 +2075,7 @@ const S = {
   vpnConnections:[], wanInterfaces:[], lldpNeighbors:[], lldpTable:[],
   configStates:{},
   lastSync:null, filter:'all', wlanFilter:'all', nbFilter:'all',
-  activeTab:'devices',
+  activeTab:'dashboard',
   timer:null, countdown:0, refreshInterval:0,
 };
 
@@ -2400,6 +2408,7 @@ function renderCurrentTab() {
     case 'sites':     _dirtyTabs.delete('sites');      loadSites(); break;
     case 'topology':  _dirtyTabs.delete('topology');   setTimeout(()=>{renderTopology();setTimeout(topoFit,80);},30); break;
     case 'addins':    loadAddins(); break;
+    case 'dashboard': renderSiteTiles(); break;
     default:          _dirtyTabs.delete('devices');    renderDevices(); break;
   }
 }
