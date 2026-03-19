@@ -49,6 +49,12 @@ function readBody(req) {
   });
 }
 
+function parseInput(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
+  if (req.body && typeof req.body === 'string') return JSON.parse(req.body);
+  return readBody(req).then(raw => JSON.parse(raw));
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -65,8 +71,7 @@ module.exports = async (req, res) => {
 
   let input;
   try {
-    const raw = await readBody(req);
-    input = JSON.parse(raw);
+    input = await parseInput(req);
   } catch {
     res.status(400).json({ error: 'Invalid JSON' });
     return;
