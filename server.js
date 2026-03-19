@@ -37,10 +37,23 @@ const MIME = {
 };
 
 // ── SNMP helpers ──────────────────────────────────────────────────────────────
-function runSnmpWalk(host, community, version, oid) {
+function runSnmpWalk(host, community, version, oid, v3 = {}) {
   return new Promise((resolve) => {
-    const cmd  = version === '1' ? 'snmpwalk' : 'snmpbulkwalk';
-    const args = ['-v', version, '-c', community, '-On', '-t', '5', '-r', '1', host, oid];
+    const cmd = version === '1' ? 'snmpwalk' : 'snmpbulkwalk';
+    let args;
+    if (version === '3') {
+      const { username, secLevel = 'noAuthNoPriv', authProto = 'SHA', authPass = '', privProto = 'AES', privPass = '' } = v3;
+      args = ['-v', '3', '-u', username, '-l', secLevel];
+      if (secLevel === 'authNoPriv' || secLevel === 'authPriv') {
+        args.push('-a', authProto, '-A', authPass);
+      }
+      if (secLevel === 'authPriv') {
+        args.push('-x', privProto, '-X', privPass);
+      }
+      args.push('-On', '-t', '5', '-r', '1', host, oid);
+    } else {
+      args = ['-v', version, '-c', community, '-On', '-t', '5', '-r', '1', host, oid];
+    }
     const proc = spawn(cmd, args);
     let out = '';
     proc.stdout.on('data', d => (out += d));
@@ -65,11 +78,11 @@ function macFromHexStr(str) {
 // ── LANCOM enterprise WLAN client table (LCOS-LX APs) ────────────────────────
 // OID: 1.3.6.1.4.1.2356.13.1.3.4.1.1.{col}.{mac6bytes} – indexed by client MAC
 // SSID: 1.3.6.1.4.1.2356.13.1.3.32.1.3.{mac6bytes}
-async function snmpLancomWlanClients(host, community, version) {
+async function snmpLancomWlanClients(host, community, version, v3 = {}) {
   const [clientOut, ssidOut, arpOut] = await Promise.all([
-    runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.3.4.1.1'),  // WLAN client table
-    runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.3.32.1.3'), // SSID per client
-    runSnmpWalk(host, community, version, '1.3.6.1.2.1.4.22.1.2'),           // ARP: ip → mac
+    runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.3.4.1.1',  v3), // WLAN client table
+    runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.3.32.1.3', v3), // SSID per client
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.4.22.1.2',           v3), // ARP: ip → mac
   ]);
 
   // ARP: MAC → IP
@@ -126,13 +139,13 @@ async function snmpLancomWlanClients(host, community, version) {
   };
 }
 
-async function snmpMacTable(host, community, version) {
+async function snmpMacTable(host, community, version, v3 = {}) {
   const [fdbOut, qfdbOut, bpOut, ifNameOut, arpOut] = await Promise.all([
-    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.4.3.1.2'), // dot1dTpFdbPort (classic Bridge MIB)
-    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.7.1.2.2.1.2'), // dot1qTpFdbPort (Q-Bridge MIB)
-    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.1.4.1.2'), // dot1dBasePortIfIndex
-    runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1'), // ifName
-    runSnmpWalk(host, community, version, '1.3.6.1.2.1.4.22.1.2'),   // ARP: ipNetToMediaPhysAddress
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.4.3.1.2',     v3), // dot1dTpFdbPort (classic Bridge MIB)
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.7.1.2.2.1.2', v3), // dot1qTpFdbPort (Q-Bridge MIB)
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.17.1.4.1.2',     v3), // dot1dBasePortIfIndex
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.31.1.1.1.1',     v3), // ifName
+    runSnmpWalk(host, community, version, '1.3.6.1.2.1.4.22.1.2',       v3), // ARP: ipNetToMediaPhysAddress
   ]);
 
   // MAC → bridge port number — try classic Bridge MIB first, fall back to Q-Bridge MIB
@@ -191,7 +204,7 @@ async function snmpMacTable(host, community, version) {
 
   // If Bridge MIB yielded nothing, try LANCOM enterprise WLAN client table (LCOS-LX APs)
   if (entries.length === 0) {
-    return snmpLancomWlanClients(host, community, version);
+    return snmpLancomWlanClients(host, community, version, v3);
   }
 
   return {
@@ -269,13 +282,13 @@ function parseWdsStatus(raw) {
   return Object.values(entries);
 }
 
-async function snmpWdsScan(host, community, version) {
-  const cfgRaw    = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.2.20.13.1');
+async function snmpWdsScan(host, community, version, v3 = {}) {
+  const cfgRaw    = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.2.20.13.1', v3);
   const configMap = parseWdsConfig(cfgRaw);
   const configured = Object.keys(configMap).length > 0;
   if (!configured) return { configured: false, links: [] };
 
-  const staRaw       = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.3.101.1');
+  const staRaw       = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.3.101.1', v3);
   const statusEntries = parseWdsStatus(staRaw);
   return { configured: true, configLinks: Object.values(configMap), statusEntries };
 }
@@ -337,13 +350,13 @@ function parseL2tpStatus(raw) {
   return Object.values(entries);
 }
 
-async function snmpL2tpScan(host, community, version) {
-  const cfgRaw    = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.2.61.1');
+async function snmpL2tpScan(host, community, version, v3 = {}) {
+  const cfgRaw    = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.2.61.1', v3);
   const configMap = parseL2tpConfig(cfgRaw);
   const configured = Object.keys(configMap).length > 0;
   if (!configured) return { configured: false };
 
-  const staRaw        = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.61.2');
+  const staRaw        = await runSnmpWalk(host, community, version, '1.3.6.1.4.1.2356.13.1.61.2', v3);
   const statusEntries = parseL2tpStatus(staRaw);
   return { configured: true, configEndpoints: Object.values(configMap), statusEntries };
 }
@@ -380,6 +393,21 @@ function proxyRequest(targetUrl, method, apiKey, body) {
   });
 }
 
+const MAX_BODY = 1e6; // 1 MB
+
+function readBody(req, limit) {
+  return new Promise((resolve, reject) => {
+    let body = '', size = 0;
+    req.on('data', c => {
+      size += c.length;
+      if (size > limit) { req.destroy(); reject(new Error('Payload too large')); return; }
+      body += c;
+    });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
+}
+
 // ── HTTP Server ───────────────────────────────────────────────────────────────
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url);
@@ -397,81 +425,106 @@ const server = http.createServer(async (req, res) => {
 
   // ── API proxy endpoint ──
   if (parsedUrl.pathname === '/api' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => (body += c));
-    req.on('end', async () => {
-      let input;
-      try { input = JSON.parse(body); } catch {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid JSON' }));
-        return;
+    let body;
+    try { body = await readBody(req, MAX_BODY); } catch {
+      res.writeHead(413, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Payload too large' })); return;
+    }
+    let input;
+    try { input = JSON.parse(body); } catch {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      return;
+    }
+
+    const { api_key, service, path: apiPath, method = 'GET', body: reqBody } = input;
+
+    if (!api_key || !service || !apiPath || !SERVICES[service]) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Missing api_key, service or path' }));
+      return;
+    }
+
+    const targetUrl = SERVICES[service] + apiPath;
+
+    try {
+      const result = await proxyRequest(targetUrl, method.toUpperCase(), api_key, reqBody ?? null);
+      if (result.status < 200 || result.status >= 300) {
+        console.error(`[LMC API] ${method.toUpperCase()} ${targetUrl} → ${result.status}: ${result.body}`);
       }
-
-      const { api_key, service, path: apiPath, method = 'GET', body: reqBody } = input;
-
-      if (!api_key || !service || !apiPath || !SERVICES[service]) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Missing api_key, service or path' }));
-        return;
-      }
-
-      const targetUrl = SERVICES[service] + apiPath;
-
-      try {
-        const result = await proxyRequest(targetUrl, method.toUpperCase(), api_key, reqBody ?? null);
-        if (result.status < 200 || result.status >= 300) {
-          console.error(`[LMC API] ${method.toUpperCase()} ${targetUrl} → ${result.status}: ${result.body}`);
-        }
-        res.writeHead(result.status, { 'Content-Type': 'application/json' });
-        res.end(result.body);
-      } catch (e) {
-        console.error(`[LMC Proxy] Error proxying ${method.toUpperCase()} ${targetUrl}:`, e.message);
-        res.writeHead(502, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Upstream error: ' + e.message }));
-      }
-    });
+      res.writeHead(result.status, { 'Content-Type': 'application/json' });
+      res.end(result.body);
+    } catch (e) {
+      console.error(`[LMC Proxy] Error proxying ${method.toUpperCase()} ${targetUrl}:`, e.message);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Upstream error: ' + e.message }));
+    }
     return;
   }
 
   // ── SNMP endpoint ──
   if (parsedUrl.pathname === '/snmp' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => (body += c));
-    req.on('end', async () => {
-      let input;
-      try { input = JSON.parse(body); } catch {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid JSON' })); return;
-      }
+    let body;
+    try { body = await readBody(req, MAX_BODY); } catch {
+      res.writeHead(413, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Payload too large' })); return;
+    }
+    let input;
+    try { input = JSON.parse(body); } catch {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid JSON' })); return;
+    }
 
-      const { host, community = 'public', version = '2c', type = 'mac-table' } = input;
+      const {
+        host, community = 'public', version = '2c', type = 'mac-table',
+        v3Username = '', v3SecLevel = 'noAuthNoPriv',
+        v3AuthProto = 'SHA', v3AuthPass = '',
+        v3PrivProto = 'AES', v3PrivPass = '',
+      } = input;
 
       // Basic validation – prevent shell injection
       if (!host || !/^[a-zA-Z0-9.\-]+$/.test(host)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Ungültige Host-Adresse' })); return;
       }
-      if (!community || !/^[\w\-@.!#%&*+=]+$/.test(community)) {
+      if (!['1', '2c', '3'].includes(version)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Ungültiger Community-String' })); return;
+        res.end(JSON.stringify({ error: 'Version muss 1, 2c oder 3 sein' })); return;
       }
-      if (!['1', '2c'].includes(version)) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Version muss 1 oder 2c sein' })); return;
+      if (version !== '3') {
+        if (!community || !/^[\w\-@.!#%&*+=]+$/.test(community)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Ungültiger Community-String' })); return;
+        }
+      } else {
+        if (!v3Username || !/^[\w\-@.]+$/.test(v3Username)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Ungültiger SNMPv3 Benutzername' })); return;
+        }
+        if (!['noAuthNoPriv', 'authNoPriv', 'authPriv'].includes(v3SecLevel)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Ungültiges Security Level' })); return;
+        }
       }
+
+      const v3 = version === '3' ? {
+        username: v3Username, secLevel: v3SecLevel,
+        authProto: v3AuthProto, authPass: v3AuthPass,
+        privProto: v3PrivProto, privPass: v3PrivPass,
+      } : {};
 
       try {
         let result;
         if (type === 'mac-table') {
-          result = await snmpMacTable(host, community, version);
+          result = await snmpMacTable(host, community, version, v3);
         } else if (type === 'test') {
-          const out = await runSnmpWalk(host, community, version, '1.3.6.1.2.1.1.1.0');
+          const out = await runSnmpWalk(host, community, version, '1.3.6.1.2.1.1.1.0', v3);
           const m = out.match(/STRING:\s*"?([^\n"]+)"?\s*$/m);
           result = { ok: !!m, sysDescr: m ? m[1].trim() : (out.trim().slice(0, 200) || 'Keine Antwort') };
         } else if (type === 'wds-scan') {
-          result = await snmpWdsScan(host, community, version);
+          result = await snmpWdsScan(host, community, version, v3);
         } else if (type === 'l2tp-scan') {
-          result = await snmpL2tpScan(host, community, version);
+          result = await snmpL2tpScan(host, community, version, v3);
         } else {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Unbekannter Typ' })); return;
@@ -483,7 +536,6 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(502, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: e.message }));
       }
-    });
     return;
   }
 
