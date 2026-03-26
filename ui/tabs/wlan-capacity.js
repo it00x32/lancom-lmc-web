@@ -2,20 +2,11 @@ import S from '../lib/state.js';
 import { escHtml, deviceName, isOnline } from '../lib/helpers.js';
 import { api, toast } from '../lib/api.js';
 
-let wcData = {};   // { deviceId: { name, hourly: [{ts, count}], daily: [{ts, count}] } }
+let wcData = {};
 let wcLoading = false;
 
-const HOUR_LABELS = ['00','01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23'];
-const DAY_LABELS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 const WARN_THRESHOLD = 20;
 const CRIT_THRESHOLD = 35;
-
-function parseStationCount(entry) {
-  if (Array.isArray(entry)) return entry.length;
-  if (typeof entry === 'number' && isFinite(entry)) return entry;
-  if (entry && typeof entry === 'object' && 'count' in entry) return Number(entry.count) || 0;
-  return 0;
-}
 
 async function loadWlanCapacity() {
   const ids = Object.keys(S.devices);
@@ -26,11 +17,8 @@ async function loadWlanCapacity() {
 
   const icon = document.getElementById('wc-refresh-icon');
   if (icon) icon.classList.add('fa-spin');
-
-  const days = parseInt(document.getElementById('wc-period')?.value || '7');
   wcData = {};
 
-  let errCount = 0;
   const batches = [];
   for (let i = 0; i < ids.length; i += 5) batches.push(ids.slice(i, i + 5));
 
@@ -38,47 +26,27 @@ async function loadWlanCapacity() {
     await Promise.allSettled(batch.map(async deviceId => {
       const dev = S.devices[deviceId];
       const name = deviceName(dev);
-
       try {
-        const latest = days * 24 * 60;
         const data = await api('monitoring',
-          `/accounts/${S.accountId}/records/wlan_info_json?group=DEVICE&groupId=${deviceId}&period=MINUTE1&type=json&name=stations&latest=${latest}`
+          `/accounts/${S.accountId}/records/wlan_info_json?group=DEVICE&groupId=${deviceId}&period=MINUTE1&type=json&name=stations&latest=1`
         );
-
-        const values = data?.items?.stations?.values || [];
-        const timestamps = data?.items?.stations?.timestamps || [];
-        if (!values.length) return;
-
-        const hourBuckets = {};
-        for (let i = 0; i < values.length; i++) {
-          const count = parseStationCount(values[i]);
-          const ts = timestamps[i] ? new Date(timestamps[i]).getTime() : (Date.now() - (values.length - i) * 60000);
-          const hourTs = Math.floor(ts / 3600000) * 3600000;
-          if (!hourBuckets[hourTs]) hourBuckets[hourTs] = { sum: 0, n: 0 };
-          hourBuckets[hourTs].sum += count;
-          hourBuckets[hourTs].n++;
-        }
-
-        const hourly = Object.entries(hourBuckets)
-          .map(([ts, b]) => ({ ts: Number(ts), count: Math.round(b.sum / b.n) }))
-          .sort((a, b) => a.ts - b.ts);
-
-        const hasClients = hourly.some(h => h.count > 0);
-        if (hourly.length > 0 && hasClients) {
-          wcData[deviceId] = { name, hourly, online: isOnline(dev), siteName: dev.siteName || '' };
-        }
+        const clients = data?.items?.stations?.values?.[0];
+        if (!Array.isArray(clients) || !clients.length) return;
+        wcData[deviceId] = {
+          name,
+          online: isOnline(dev),
+          siteName: dev.siteName || '',
+          model: dev.status?.model || '',
+          clients
+        };
       } catch (err) {
-        errCount++;
-        console.warn(`[WC] ${name} (${deviceId}):`, err?.message || err);
+        console.warn(`[WC] ${name}:`, err?.message || err);
       }
     }));
   }
 
   wcLoading = false;
   if (icon) icon.classList.remove('fa-spin');
-  if (!Object.keys(wcData).length && errCount > 0) {
-    console.warn(`[WC] ${errCount}/${ids.length} Geräte mit Fehlern, 0 mit WLAN-Daten`);
-  }
   renderWlanCapacity();
 }
 
@@ -89,77 +57,105 @@ function renderWlanCapacity() {
   const entries = Object.entries(wcData);
   if (!entries.length) {
     const total = Object.keys(S.devices).length;
-    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-chart-area"></i><h3>Keine WLAN-Daten</h3><p>Keine APs mit Client-Daten im gewählten Zeitraum gefunden (${total} Geräte geprüft).<br><span class="muted" style="font-size:12px">Tipp: Prüfe ob WLAN-APs in der LMC registriert sind und Clients verbunden waren.</span></p></div>`;
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-chart-area"></i><h3>Keine WLAN-Daten</h3><p>Keine APs mit verbundenen Clients gefunden (${total} Geräte geprüft).</p></div>`;
     return;
   }
 
-  const now = Date.now();
-  let totalClientsNow = 0;
-  let peakClients = 0;
-  let peakAP = '';
-  let peakTime = 0;
-  let apCount = entries.length;
+  const allClients = entries.flatMap(([, d]) => d.clients);
+  const totalClients = allClients.length;
+  const apCount = entries.length;
+
+  const band24 = allClients.filter(c => c.band === 'GHZ24').length;
+  const band50 = allClients.filter(c => c.band === 'GHZ50' || c.band === 'GHZ5').length;
+  const band6 = allClients.filter(c => c.band === 'GHZ60' || c.band === 'GHZ6E').length;
+
+  const signals = allClients.map(c => c.signal).filter(s => typeof s === 'number');
+  const avgSignal = signals.length ? Math.round(signals.reduce((a, b) => a + b, 0) / signals.length) : 0;
+  const weakClients = signals.filter(s => s < 30).length;
+
+  const ssidMap = {};
+  allClients.forEach(c => { const s = c.ssid || '?'; ssidMap[s] = (ssidMap[s] || 0) + 1; });
+  const ssids = Object.entries(ssidMap).sort((a, b) => b[1] - a[1]);
+
+  const standardMap = {};
+  allClients.forEach(c => { const s = c.standard || '?'; standardMap[s] = (standardMap[s] || 0) + 1; });
 
   const apStats = entries.map(([id, d]) => {
-    const last = d.hourly[d.hourly.length - 1]?.count || 0;
-    totalClientsNow += last;
-    const max = Math.max(...d.hourly.map(h => h.count));
-    const avg = d.hourly.reduce((s, h) => s + h.count, 0) / d.hourly.length;
-    const peakEntry = d.hourly.find(h => h.count === max);
-    if (max > peakClients) { peakClients = max; peakAP = d.name; peakTime = peakEntry?.ts || 0; }
-    const overWarn = d.hourly.filter(h => h.count >= WARN_THRESHOLD).length;
-    const overCrit = d.hourly.filter(h => h.count >= CRIT_THRESHOLD).length;
+    const n = d.clients.length;
+    const b24 = d.clients.filter(c => c.band === 'GHZ24').length;
+    const b50 = d.clients.filter(c => c.band === 'GHZ50' || c.band === 'GHZ5').length;
+    const sigs = d.clients.map(c => c.signal).filter(s => typeof s === 'number');
+    const avg = sigs.length ? Math.round(sigs.reduce((a, b) => a + b, 0) / sigs.length) : 0;
+    return { id, name: d.name, siteName: d.siteName, model: d.model, online: d.online, count: n, band24: b24, band50: b50, avgSignal: avg, clients: d.clients };
+  }).sort((a, b) => b.count - a.count);
 
-    return { id, name: d.name, siteName: d.siteName, online: d.online, current: last, peak: max, avg, peakTs: peakEntry?.ts || 0, overWarn, overCrit, hourly: d.hourly };
-  }).sort((a, b) => b.peak - a.peak);
-
-  const warnAPs = apStats.filter(a => a.overWarn > 0).length;
-  const critAPs = apStats.filter(a => a.overCrit > 0).length;
-  const avgAll = entries.reduce((s, [, d]) => s + d.hourly.reduce((s2, h) => s2 + h.count, 0) / d.hourly.length, 0);
+  const warnAPs = apStats.filter(a => a.count >= WARN_THRESHOLD).length;
+  const critAPs = apStats.filter(a => a.count >= CRIT_THRESHOLD).length;
 
   let html = `<div class="wc-stats">
-    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(0,76,151,.1);color:var(--accent)"><i class="fa-solid fa-wifi"></i></div><div class="wc-stat-val">${totalClientsNow}</div><div class="wc-stat-lbl">Clients jetzt</div></div>
-    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(211,47,47,.1);color:var(--red)"><i class="fa-solid fa-arrow-up"></i></div><div class="wc-stat-val">${peakClients}</div><div class="wc-stat-lbl">Peak (${peakAP})</div></div>
-    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(26,138,62,.1);color:var(--green)"><i class="fa-solid fa-chart-line"></i></div><div class="wc-stat-val">${avgAll.toFixed(1)}</div><div class="wc-stat-lbl">Ø Clients gesamt</div></div>
-    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(0,76,151,.1);color:var(--blue)"><i class="fa-solid fa-tower-broadcast"></i></div><div class="wc-stat-val">${apCount}</div><div class="wc-stat-lbl">Access Points</div></div>
-    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(217,119,6,.1);color:var(--amber)"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="wc-stat-val">${warnAPs}</div><div class="wc-stat-lbl">APs ≥${WARN_THRESHOLD} Clients</div></div>
-    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(211,47,47,.1);color:var(--red)"><i class="fa-solid fa-circle-exclamation"></i></div><div class="wc-stat-val">${critAPs}</div><div class="wc-stat-lbl">APs ≥${CRIT_THRESHOLD} Clients</div></div>
+    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(0,76,151,.1);color:var(--accent)"><i class="fa-solid fa-wifi"></i></div><div class="wc-stat-val">${totalClients}</div><div class="wc-stat-lbl">Clients gesamt</div></div>
+    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(0,76,151,.1);color:var(--blue)"><i class="fa-solid fa-tower-broadcast"></i></div><div class="wc-stat-val">${apCount}</div><div class="wc-stat-lbl">Aktive APs</div></div>
+    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(217,119,6,.1);color:var(--amber)"><i class="fa-solid fa-signal"></i></div><div class="wc-stat-val">${avgSignal}%</div><div class="wc-stat-lbl">Ø Signal</div></div>
+    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(211,47,47,.1);color:var(--red)"><i class="fa-solid fa-signal" style="opacity:.5"></i></div><div class="wc-stat-val">${weakClients}</div><div class="wc-stat-lbl">Schwach (&lt;30%)</div></div>
+    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(26,138,62,.1);color:var(--green)"><i class="fa-solid fa-chart-pie"></i></div><div class="wc-stat-val">${band50}/${band24}</div><div class="wc-stat-lbl">5 GHz / 2.4 GHz</div></div>
+    <div class="wc-stat"><div class="wc-stat-icon" style="background:rgba(211,47,47,.1);color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="wc-stat-val">${warnAPs}</div><div class="wc-stat-lbl">APs ≥${WARN_THRESHOLD} Clients</div></div>
   </div>`;
 
-  // Heatmap: hours of week × APs
+  // Band & SSID distribution
+  html += `<div class="wc-grid2">`;
+  html += buildBandChart(band24, band50, band6);
+  html += buildSsidChart(ssids, totalClients);
+  html += `</div>`;
+
+  // AP capacity bars
   html += `<div class="wc-section">
-    <div class="wc-section-title"><i class="fa-solid fa-fire" style="color:var(--red)"></i> Heatmap – Clients pro Stunde</div>
-    ${buildHeatmap(apStats)}
+    <div class="wc-section-title"><i class="fa-solid fa-tower-broadcast" style="color:var(--accent)"></i> Auslastung pro AP</div>
+    <div class="wc-ap-list">${apStats.map(a => {
+      const pct = Math.min(100, Math.round(a.count / CRIT_THRESHOLD * 100));
+      const col = a.count >= CRIT_THRESHOLD ? 'var(--red)' : a.count >= WARN_THRESHOLD ? 'var(--amber)' : 'var(--green)';
+      const sigCol = a.avgSignal >= 60 ? 'var(--green)' : a.avgSignal >= 30 ? 'var(--amber)' : 'var(--red)';
+      return `<div class="wc-ap-card">
+        <div class="wc-ap-head">
+          <span class="wc-ap-name" title="${escHtml(a.name)}">${escHtml(a.name)}</span>
+          <span class="wc-ap-meta">${escHtml(a.model)}</span>
+        </div>
+        <div class="wc-ap-metrics">
+          <span class="wc-ap-count" style="color:${col}">${a.count}</span>
+          <span class="wc-ap-sub">Clients</span>
+          <span class="wc-ap-badge" style="background:rgba(0,76,151,.1);color:var(--blue)">${a.band50} × 5G</span>
+          <span class="wc-ap-badge" style="background:rgba(217,119,6,.1);color:var(--amber)">${a.band24} × 2.4G</span>
+          <span class="wc-ap-badge" style="background:${sigCol === 'var(--green)' ? 'rgba(26,138,62,.1)' : sigCol === 'var(--amber)' ? 'rgba(217,119,6,.1)' : 'rgba(211,47,47,.1)'};color:${sigCol}">Ø ${a.avgSignal}%</span>
+        </div>
+        <div class="wc-bar-wrap"><div class="wc-bar" style="width:${pct}%;background:${col}"></div><span class="wc-bar-label">${a.count}/${CRIT_THRESHOLD}</span></div>
+      </div>`;
+    }).join('')}</div>
   </div>`;
 
-  // Timeline
-  html += `<div class="wc-section">
-    <div class="wc-section-title"><i class="fa-solid fa-chart-area" style="color:var(--blue)"></i> Zeitverlauf</div>
-    ${buildTimeline(apStats)}
-  </div>`;
+  // Signal distribution
+  html += buildSignalHistogram(signals);
 
-  // AP Table
+  // Client table
   html += `<div class="wc-section">
-    <div class="wc-section-title"><i class="fa-solid fa-table" style="color:var(--accent)"></i> AP-Kapazitätsübersicht</div>
+    <div class="wc-section-title"><i class="fa-solid fa-table" style="color:var(--accent)"></i> Client-Details (${totalClients})</div>
     <div class="table-wrap"><table class="data-table">
-      <thead><tr><th>Access Point</th><th>Standort</th><th>Jetzt</th><th>Peak</th><th>Ø</th><th>Peak-Zeit</th><th>Status</th><th>Auslastung</th></tr></thead>
-      <tbody>${apStats.map(a => {
-        const pct = Math.min(100, Math.round(a.peak / CRIT_THRESHOLD * 100));
-        const barCol = a.overCrit ? 'var(--red)' : a.overWarn ? 'var(--amber)' : 'var(--green)';
-        const statusLabel = a.overCrit ? '<span style="color:var(--red);font-weight:700">Kritisch</span>'
-          : a.overWarn ? '<span style="color:var(--amber);font-weight:700">Warnung</span>'
-          : '<span style="color:var(--green)">OK</span>';
-        const peakDate = a.peakTs ? new Date(a.peakTs) : null;
-        const peakStr = peakDate ? `${DAY_LABELS[peakDate.getDay() === 0 ? 6 : peakDate.getDay()-1]} ${peakDate.getHours()}:00` : '–';
+      <thead><tr><th>Client</th><th>AP</th><th>SSID</th><th>Band</th><th>Kanal</th><th>Standard</th><th>Signal</th><th>Rate</th><th>Vendor</th></tr></thead>
+      <tbody>${allClients.map(c => {
+        const apName = entries.find(([id]) => id === c.deviceId)?.[1]?.name || '?';
+        const sigPct = typeof c.signal === 'number' ? c.signal : 0;
+        const sigCol = sigPct >= 60 ? 'var(--green)' : sigPct >= 30 ? 'var(--amber)' : 'var(--red)';
+        const band = c.band === 'GHZ24' ? '2.4 GHz' : c.band === 'GHZ50' || c.band === 'GHZ5' ? '5 GHz' : c.band === 'GHZ60' || c.band === 'GHZ6E' ? '6 GHz' : c.band || '–';
+        const rate = c.actualRate ? fmtWlanRate(c.actualRate) : '–';
+        const clientName = c.name || c.ip || c.mac || '–';
         return `<tr>
-          <td style="font-weight:600">${escHtml(a.name)}</td>
-          <td class="muted">${escHtml(a.siteName || '–')}</td>
-          <td style="font-weight:600;font-variant-numeric:tabular-nums">${a.current}</td>
-          <td style="font-weight:700;color:${a.peak >= CRIT_THRESHOLD ? 'var(--red)' : a.peak >= WARN_THRESHOLD ? 'var(--amber)' : 'var(--text)'};font-variant-numeric:tabular-nums">${a.peak}</td>
-          <td class="muted" style="font-variant-numeric:tabular-nums">${a.avg.toFixed(1)}</td>
-          <td class="muted">${peakStr}</td>
-          <td>${statusLabel}</td>
-          <td><div class="wc-bar-wrap"><div class="wc-bar" style="width:${pct}%;background:${barCol}"></div><span class="wc-bar-label">${pct}%</span></div></td>
+          <td title="${escHtml(c.mac || '')}" style="font-weight:500">${escHtml(clientName.length > 22 ? clientName.slice(0, 21) + '…' : clientName)}</td>
+          <td class="muted">${escHtml(apName.length > 16 ? apName.slice(0, 15) + '…' : apName)}</td>
+          <td><span class="wc-ssid-pill">${escHtml(c.ssid || '–')}</span></td>
+          <td>${band}</td>
+          <td style="text-align:center;font-variant-numeric:tabular-nums">${c.channel || '–'}</td>
+          <td style="text-align:center">${fmtStandard(c.standard)}</td>
+          <td><span style="color:${sigCol};font-weight:600;font-variant-numeric:tabular-nums">${sigPct}%</span></td>
+          <td class="muted" style="font-variant-numeric:tabular-nums">${rate}</td>
+          <td class="muted" title="${escHtml(c.vendor || '')}">${escHtml((c.vendor || '–').length > 18 ? (c.vendor || '–').slice(0, 17) + '…' : (c.vendor || '–'))}</td>
         </tr>`;
       }).join('')}</tbody>
     </table></div>
@@ -168,125 +164,83 @@ function renderWlanCapacity() {
   wrap.innerHTML = html;
 }
 
-function buildHeatmap(apStats) {
-  if (!apStats.length) return '';
-  const top = apStats.slice(0, 15);
-  const grid = {};
-  let maxCount = 1;
-
-  top.forEach(a => {
-    grid[a.id] = new Array(7 * 24).fill(0);
-    a.hourly.forEach(h => {
-      const d = new Date(h.ts);
-      const dow = d.getDay() === 0 ? 6 : d.getDay() - 1;
-      const hour = d.getHours();
-      const idx = dow * 24 + hour;
-      if (idx >= 0 && idx < 168) {
-        grid[a.id][idx] = Math.max(grid[a.id][idx], h.count);
-        if (h.count > maxCount) maxCount = h.count;
-      }
-    });
-  });
-
-  let html = `<div class="wc-heatmap-scroll"><table class="wc-heatmap"><thead><tr><th class="wc-hm-label"></th>`;
-  for (let d = 0; d < 7; d++) {
-    html += `<th class="wc-hm-day" colspan="24">${DAY_LABELS[d]}</th>`;
-  }
-  html += '</tr><tr><th class="wc-hm-label"></th>';
-  for (let d = 0; d < 7; d++) {
-    for (let h = 0; h < 24; h++) {
-      html += h % 6 === 0 ? `<th class="wc-hm-hour">${HOUR_LABELS[h]}</th>` : '<th class="wc-hm-hour"></th>';
-    }
-  }
-  html += '</tr></thead><tbody>';
-
-  top.forEach(a => {
-    html += `<tr><td class="wc-hm-label" title="${escHtml(a.name)}">${escHtml(a.name.length > 18 ? a.name.slice(0, 17) + '…' : a.name)}</td>`;
-    for (let i = 0; i < 168; i++) {
-      const v = grid[a.id][i];
-      const intensity = v / maxCount;
-      const bg = v === 0 ? 'var(--card2)'
-        : v >= CRIT_THRESHOLD ? `rgba(211,47,47,${0.3 + intensity * 0.7})`
-        : v >= WARN_THRESHOLD ? `rgba(217,119,6,${0.2 + intensity * 0.6})`
-        : `rgba(0,76,151,${0.08 + intensity * 0.5})`;
-      html += `<td class="wc-hm-cell" style="background:${bg}" title="${a.name}: ${v} Clients (${DAY_LABELS[Math.floor(i/24)]} ${HOUR_LABELS[i%24]}:00)">${v > 0 ? v : ''}</td>`;
-    }
-    html += '</tr>';
-  });
-
-  html += '</tbody></table></div>';
-
-  html += `<div class="wc-hm-legend">
-    <span class="wc-hm-legend-item"><span class="wc-hm-swatch" style="background:var(--card2)"></span>0</span>
-    <span class="wc-hm-legend-item"><span class="wc-hm-swatch" style="background:rgba(0,76,151,.25)"></span>1–${WARN_THRESHOLD-1}</span>
-    <span class="wc-hm-legend-item"><span class="wc-hm-swatch" style="background:rgba(217,119,6,.5)"></span>${WARN_THRESHOLD}–${CRIT_THRESHOLD-1}</span>
-    <span class="wc-hm-legend-item"><span class="wc-hm-swatch" style="background:rgba(211,47,47,.7)"></span>≥${CRIT_THRESHOLD}</span>
+function buildBandChart(b24, b50, b6) {
+  const total = b24 + b50 + b6 || 1;
+  const p24 = Math.round(b24 / total * 100);
+  const p50 = Math.round(b50 / total * 100);
+  const p6 = Math.round(b6 / total * 100);
+  let bar = '';
+  if (b50) bar += `<div style="width:${p50}%;background:var(--blue);border-radius:4px 0 0 4px" title="5 GHz: ${b50} (${p50}%)"></div>`;
+  if (b24) bar += `<div style="width:${p24}%;background:var(--amber)" title="2.4 GHz: ${b24} (${p24}%)"></div>`;
+  if (b6) bar += `<div style="width:${p6}%;background:var(--green);border-radius:0 4px 4px 0" title="6 GHz: ${b6} (${p6}%)"></div>`;
+  return `<div class="wc-chart-card">
+    <div class="wc-chart-title">Band-Verteilung</div>
+    <div class="wc-stacked-bar">${bar}</div>
+    <div class="wc-chart-legend">
+      <span><span class="wc-dot" style="background:var(--blue)"></span>5 GHz: ${b50} (${p50}%)</span>
+      <span><span class="wc-dot" style="background:var(--amber)"></span>2.4 GHz: ${b24} (${p24}%)</span>
+      ${b6 ? `<span><span class="wc-dot" style="background:var(--green)"></span>6 GHz: ${b6} (${p6}%)</span>` : ''}
+    </div>
   </div>`;
-
-  return html;
 }
 
-function buildTimeline(apStats) {
-  if (!apStats.length) return '';
-  const top = apStats.slice(0, 8);
-  const allTs = [];
-  top.forEach(a => a.hourly.forEach(h => { if (!allTs.includes(h.ts)) allTs.push(h.ts); }));
-  allTs.sort((a, b) => a - b);
-  if (!allTs.length) return '';
-
-  const W = 960, H = 220, PL = 40, PR = 10, PT = 10, PB = 30;
-  const cw = W - PL - PR, ch = H - PT - PB;
-  const maxVal = Math.max(1, ...top.flatMap(a => a.hourly.map(h => h.count)));
-  const minTs = allTs[0], maxTs = allTs[allTs.length - 1];
-  const rangeTs = maxTs - minTs || 1;
-
-  const colors = ['#004c97','#d32f2f','#1a8a3e','#d97706','#0891b2','#7c3aed','#be185d','#475569'];
-
-  let svg = `<svg viewBox="0 0 ${W} ${H}" class="wc-timeline-svg">`;
-
-  // grid lines
-  for (let i = 0; i <= 4; i++) {
-    const y = PT + ch - (i / 4) * ch;
-    const val = Math.round(maxVal * i / 4);
-    svg += `<line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}" stroke="rgba(0,40,85,.08)" stroke-width="1"/>`;
-    svg += `<text x="${PL - 4}" y="${y + 3}" text-anchor="end" font-size="9" fill="var(--text3)" font-family="var(--mono)">${val}</text>`;
-  }
-
-  // time axis
-  const dayMs = 86400000;
-  let cursor = new Date(minTs);
-  cursor.setHours(0, 0, 0, 0);
-  cursor = cursor.getTime() + dayMs;
-  while (cursor < maxTs) {
-    const x = PL + ((cursor - minTs) / rangeTs) * cw;
-    const d = new Date(cursor);
-    svg += `<line x1="${x}" y1="${PT}" x2="${x}" y2="${H - PB}" stroke="rgba(0,40,85,.06)" stroke-width="1"/>`;
-    svg += `<text x="${x}" y="${H - PB + 14}" text-anchor="middle" font-size="9" fill="var(--text3)" font-family="var(--font)">${DAY_LABELS[d.getDay() === 0 ? 6 : d.getDay()-1]} ${d.getDate()}.${d.getMonth()+1}</text>`;
-    cursor += dayMs;
-  }
-
-  // lines per AP
-  top.forEach((a, idx) => {
-    const sorted = [...a.hourly].sort((x, y) => x.ts - y.ts);
-    if (sorted.length < 2) return;
-    const pts = sorted.map(h => {
-      const x = PL + ((h.ts - minTs) / rangeTs) * cw;
-      const y = PT + ch - (h.count / maxVal) * ch;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
-    svg += `<polyline points="${pts}" fill="none" stroke="${colors[idx % colors.length]}" stroke-width="1.5" stroke-linejoin="round" opacity="0.8"/>`;
+function buildSsidChart(ssids, total) {
+  const colors = ['var(--blue)', 'var(--amber)', 'var(--green)', 'var(--red)', '#7c3aed', '#0891b2', '#be185d'];
+  let bar = '';
+  ssids.forEach(([name, count], i) => {
+    const pct = Math.round(count / total * 100);
+    const r = i === 0 ? '4px 0 0 4px' : i === ssids.length - 1 ? '0 4px 4px 0' : '0';
+    bar += `<div style="width:${pct}%;background:${colors[i % colors.length]};border-radius:${r}" title="${name}: ${count} (${pct}%)"></div>`;
   });
+  return `<div class="wc-chart-card">
+    <div class="wc-chart-title">SSID-Verteilung</div>
+    <div class="wc-stacked-bar">${bar}</div>
+    <div class="wc-chart-legend">
+      ${ssids.map(([name, count], i) => `<span><span class="wc-dot" style="background:${colors[i % colors.length]}"></span>${escHtml(name)}: ${count}</span>`).join('')}
+    </div>
+  </div>`;
+}
 
-  svg += '</svg>';
-
-  // Legend
-  let legend = '<div class="wc-timeline-legend">';
-  top.forEach((a, idx) => {
-    legend += `<span class="wc-tl-item"><span class="wc-tl-dot" style="background:${colors[idx % colors.length]}"></span>${escHtml(a.name.length > 20 ? a.name.slice(0, 19) + '…' : a.name)}</span>`;
+function buildSignalHistogram(signals) {
+  if (!signals.length) return '';
+  const buckets = [0, 0, 0, 0, 0];
+  const labels = ['0–20%', '20–40%', '40–60%', '60–80%', '80–100%'];
+  const bucketColors = ['var(--red)', '#e65100', 'var(--amber)', '#7cb342', 'var(--green)'];
+  signals.forEach(s => {
+    if (s < 20) buckets[0]++;
+    else if (s < 40) buckets[1]++;
+    else if (s < 60) buckets[2]++;
+    else if (s < 80) buckets[3]++;
+    else buckets[4]++;
   });
-  legend += '</div>';
+  const max = Math.max(1, ...buckets);
 
-  return svg + legend;
+  return `<div class="wc-section">
+    <div class="wc-section-title"><i class="fa-solid fa-signal" style="color:var(--amber)"></i> Signalqualität-Verteilung</div>
+    <div class="wc-histo">
+      ${buckets.map((count, i) => {
+        const h = Math.max(4, Math.round(count / max * 120));
+        return `<div class="wc-histo-col">
+          <div class="wc-histo-val">${count}</div>
+          <div class="wc-histo-bar" style="height:${h}px;background:${bucketColors[i]}"></div>
+          <div class="wc-histo-lbl">${labels[i]}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function fmtWlanRate(bps) {
+  if (!bps) return '–';
+  if (bps >= 1000000) return (bps / 1000000).toFixed(1) + ' Mbps';
+  if (bps >= 1000) return Math.round(bps / 1000) + ' kbps';
+  return bps + ' bps';
+}
+
+function fmtStandard(s) {
+  if (!s) return '–';
+  const map = { 'a': 'a', 'b': 'b', 'g': 'g', 'n': 'Wi-Fi 4', 'ac': 'Wi-Fi 5', 'ax': 'Wi-Fi 6', 'be': 'Wi-Fi 7' };
+  return map[s] || s;
 }
 
 function resetWcState() { wcData = {}; wcLoading = false; }

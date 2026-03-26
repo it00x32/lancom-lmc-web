@@ -857,13 +857,9 @@
   <!-- TAB: WLAN CAPACITY -->
   <section class="tab-section" id="tab-wlan-capacity">
     <div class="toolbar">
-      <span class="toolbar-title"><i class="fa-solid fa-chart-area" style="color:var(--blue);margin-right:6px"></i>WLAN Kapazitätsplanung</span>
+      <span class="toolbar-title"><i class="fa-solid fa-chart-area" style="color:var(--blue);margin-right:6px"></i>WLAN Kapazität</span>
       <div class="toolbar-spacer"></div>
-      <select id="wc-period" onchange="loadWlanCapacity()" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:5px 10px;font-family:var(--font);font-size:12px;cursor:pointer;outline:none">
-        <option value="7">7 Tage</option>
-        <option value="14">14 Tage</option>
-        <option value="30">30 Tage</option>
-      </select>
+      <span style="font-size:11px;color:var(--text3);margin-right:8px"><i class="fa-solid fa-circle" style="color:var(--green);font-size:7px;margin-right:4px"></i>Live</span>
       <button class="icon-btn" onclick="loadWlanCapacity()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="wc-refresh-icon"></i></button>
     </div>
     <div id="wc-wrap">
