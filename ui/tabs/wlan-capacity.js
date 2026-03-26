@@ -30,10 +30,14 @@ async function loadWlanCapacity() {
     await Promise.allSettled(batch.map(async deviceId => {
       const dev = S.devices[deviceId];
       const name = deviceName(dev);
-      const isAP = (dev.deviceType || '').includes('ACCESS_POINT') ||
-                   (dev.status?.softwareVersion || '').includes('LX') ||
+      const devType = (dev.status?.type || '').toUpperCase();
+      const model = (dev.status?.model || '').toUpperCase();
+      const sw = (dev.status?.softwareVersion || '').toUpperCase();
+      const isAP = devType === 'ACCESS_POINT' ||
+                   sw.includes('LCOS LX') || sw.includes('LX ') ||
+                   /^(LW|LX|OAP|L-\d+|IAP)/.test(model) ||
                    S.wlanClients[deviceId] > 0;
-      if (!isAP && !S.wlanClients[deviceId]) return;
+      if (!isAP) return;
 
       try {
         const data = await api('monitoring',
