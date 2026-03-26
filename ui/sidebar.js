@@ -49,6 +49,7 @@ async function showTab(id, skipHash) {
   if(id==='mesh') window.renderMeshPage?.();
   if(id==='l2tp') window.renderL2tpPage?.();
   if(id==='switch-events'&&S.accountId&&!S._loaded.has('switch-events')) window.loadSwitchEvents?.(true);
+  if(id==='wlan-capacity'&&Object.keys(S.devices).length&&!S._loaded.has('wlan-capacity')) window.loadWlanCapacity?.();
 }
 
 function setRefreshInterval(seconds) {

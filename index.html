@@ -189,6 +189,10 @@
           <span class="tb-label">Predictive Anomaly</span>
           <span class="tab-badge" id="badge-anomaly">–</span>
         </button>
+        <button class="tab-btn" onclick="showTab('wlan-capacity')" id="tab-btn-wlan-capacity" data-tooltip="WLAN Kapazität">
+          <span class="tb-icon"><i class="fa-solid fa-chart-area"></i></span>
+          <span class="tb-label">WLAN Kapazität</span>
+        </button>
       </details>
 
       <details class="sidebar-group">
@@ -843,6 +847,23 @@
     </div>
     <div class="pa-wrap" id="pa-wrap">
       <div class="empty-state"><i class="fa-solid fa-brain"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden, dann Analyse starten.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: WLAN CAPACITY -->
+  <section class="tab-section" id="tab-wlan-capacity">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-chart-area" style="color:var(--blue);margin-right:6px"></i>WLAN Kapazitätsplanung</span>
+      <div class="toolbar-spacer"></div>
+      <select id="wc-period" onchange="loadWlanCapacity()" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:5px 10px;font-family:var(--font);font-size:12px;cursor:pointer;outline:none">
+        <option value="7">7 Tage</option>
+        <option value="14">14 Tage</option>
+        <option value="30">30 Tage</option>
+      </select>
+      <button class="icon-btn" onclick="loadWlanCapacity()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="wc-refresh-icon"></i></button>
+    </div>
+    <div id="wc-wrap">
+      <div class="empty-state"><i class="fa-solid fa-chart-area"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
     </div>
   </section>
 

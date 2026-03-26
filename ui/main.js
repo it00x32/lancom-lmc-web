@@ -19,6 +19,7 @@ import { buildTopoSelector, renderTopology, topoSetRoot, topoOpenDetail, topoClo
 import { lcSetFilter, renderLifecycle } from './tabs/lifecycle.js';
 import { renderEnergy, saveEnergyPrice, loadEnergyPrice } from './tabs/energy.js';
 import { paLoadAll, paToggleDetail, renderAnomalyPage, paState } from './tabs/anomaly.js';
+import { loadWlanCapacity, renderWlanCapacity, resetWcState } from './tabs/wlan-capacity.js';
 import { startCeScan, cancelCeScan, ceScanSingle, ceLookup, ceFormatHint, ceClearResult, ceMacTableOpen, ceMacTableClose, ceMacTableFilter, ceRenderDeviceTable, ceInitDevices, resetCeState } from './tabs/client-explorer.js';
 import { meshScanAll, renderMeshPage } from './tabs/mesh.js';
 import { l2tpScanAll, renderL2tpPage } from './tabs/l2tp.js';
@@ -146,6 +147,11 @@ window.paLoadAll = paLoadAll;
 window.paToggleDetail = paToggleDetail;
 window.renderAnomalyPage = renderAnomalyPage;
 window.paState = paState;
+
+// WLAN Capacity
+window.loadWlanCapacity = loadWlanCapacity;
+window.renderWlanCapacity = renderWlanCapacity;
+window.resetWcState = resetWcState;
 
 // Client Explorer
 window.startCeScan = startCeScan;
