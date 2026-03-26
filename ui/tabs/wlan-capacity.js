@@ -10,6 +10,13 @@ const DAY_LABELS  = ['Mo','Di','Mi','Do','Fr','Sa','So'];
 const WARN_THRESHOLD = 20;
 const CRIT_THRESHOLD = 35;
 
+function parseStationCount(entry) {
+  if (Array.isArray(entry)) return entry.length;
+  if (typeof entry === 'number' && isFinite(entry)) return entry;
+  if (entry && typeof entry === 'object' && 'count' in entry) return Number(entry.count) || 0;
+  return 0;
+}
+
 async function loadWlanCapacity() {
   const ids = Object.keys(S.devices);
   if (!ids.length) return;
@@ -23,6 +30,7 @@ async function loadWlanCapacity() {
   const days = parseInt(document.getElementById('wc-period')?.value || '7');
   wcData = {};
 
+  let errCount = 0;
   const batches = [];
   for (let i = 0; i < ids.length; i += 5) batches.push(ids.slice(i, i + 5));
 
@@ -32,30 +40,45 @@ async function loadWlanCapacity() {
       const name = deviceName(dev);
 
       try {
+        const latest = days * 24 * 60;
         const data = await api('monitoring',
-          `/accounts/${S.accountId}/records/wlan_info_json?group=DEVICE&groupId=${deviceId}&period=HOUR1&type=json&name=stations&latest=${days * 24}`
+          `/accounts/${S.accountId}/records/wlan_info_json?group=DEVICE&groupId=${deviceId}&period=MINUTE1&type=json&name=stations&latest=${latest}`
         );
+
         const values = data?.items?.stations?.values || [];
         const timestamps = data?.items?.stations?.timestamps || [];
         if (!values.length) return;
 
-        const hourly = [];
+        const hourBuckets = {};
         for (let i = 0; i < values.length; i++) {
-          const stationList = values[i] || [];
-          const ts = timestamps[i] ? new Date(timestamps[i]).getTime() : (Date.now() - (values.length - i) * 3600000);
-          hourly.push({ ts, count: stationList.length });
+          const count = parseStationCount(values[i]);
+          const ts = timestamps[i] ? new Date(timestamps[i]).getTime() : (Date.now() - (values.length - i) * 60000);
+          const hourTs = Math.floor(ts / 3600000) * 3600000;
+          if (!hourBuckets[hourTs]) hourBuckets[hourTs] = { sum: 0, n: 0 };
+          hourBuckets[hourTs].sum += count;
+          hourBuckets[hourTs].n++;
         }
+
+        const hourly = Object.entries(hourBuckets)
+          .map(([ts, b]) => ({ ts: Number(ts), count: Math.round(b.sum / b.n) }))
+          .sort((a, b) => a.ts - b.ts);
 
         const hasClients = hourly.some(h => h.count > 0);
         if (hourly.length > 0 && hasClients) {
           wcData[deviceId] = { name, hourly, online: isOnline(dev), siteName: dev.siteName || '' };
         }
-      } catch { /* non-WLAN device or API error — skip */ }
+      } catch (err) {
+        errCount++;
+        console.warn(`[WC] ${name} (${deviceId}):`, err?.message || err);
+      }
     }));
   }
 
   wcLoading = false;
   if (icon) icon.classList.remove('fa-spin');
+  if (!Object.keys(wcData).length && errCount > 0) {
+    console.warn(`[WC] ${errCount}/${ids.length} Geräte mit Fehlern, 0 mit WLAN-Daten`);
+  }
   renderWlanCapacity();
 }
 
@@ -65,7 +88,8 @@ function renderWlanCapacity() {
 
   const entries = Object.entries(wcData);
   if (!entries.length) {
-    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-chart-area"></i><h3>Keine WLAN-Daten</h3><p>Keine APs mit Client-Daten gefunden.</p></div>`;
+    const total = Object.keys(S.devices).length;
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-chart-area"></i><h3>Keine WLAN-Daten</h3><p>Keine APs mit Client-Daten im gewählten Zeitraum gefunden (${total} Geräte geprüft).<br><span class="muted" style="font-size:12px">Tipp: Prüfe ob WLAN-APs in der LMC registriert sind und Clients verbunden waren.</span></p></div>`;
     return;
   }
 
