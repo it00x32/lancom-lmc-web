@@ -193,7 +193,7 @@
           <span class="tb-icon"><i class="fa-solid fa-chart-area"></i></span>
           <span class="tb-label">WLAN Kapazität</span>
         </button>
-        <button class="tab-btn" onclick="showTab('if-util')" id="tab-btn-if-util" data-tooltip="Interface-Auslastung">
+        <button class="tab-btn" onclick="showTab('if-util')" id="tab-btn-if-util" data-tooltip="Port-Auslastung">
           <span class="tb-icon"><i class="fa-solid fa-gauge-high"></i></span>
           <span class="tb-label">Port-Auslastung</span>
         </button>
@@ -874,7 +874,7 @@
   <!-- TAB: INTERFACE UTILIZATION -->
   <section class="tab-section" id="tab-if-util">
     <div class="toolbar">
-      <span class="toolbar-title"><i class="fa-solid fa-gauge-high" style="color:var(--accent);margin-right:6px"></i>Interface-Auslastung</span>
+      <span class="toolbar-title"><i class="fa-solid fa-gauge-high" style="color:var(--accent);margin-right:6px"></i>Port-Auslastung</span>
       <div class="toolbar-spacer"></div>
       <select id="ifu-sort" onchange="renderIfUtil()" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:5px 10px;font-family:var(--font);font-size:12px;cursor:pointer;outline:none">
         <option value="util">Sortierung: Auslastung</option>
@@ -882,7 +882,7 @@
         <option value="speed">Sortierung: Link-Speed</option>
       </select>
       <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer;margin-left:8px">
-        <input type="checkbox" id="ifu-active-only" onchange="renderIfUtil()" checked> Nur aktive
+        <input type="checkbox" id="ifu-active-only" onchange="renderIfUtil()" checked> Nur verlinkte
       </label>
       <button class="icon-btn" onclick="loadIfUtil()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="ifu-refresh-icon"></i></button>
     </div>
