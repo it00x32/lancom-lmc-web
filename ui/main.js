@@ -27,6 +27,10 @@ import { loadSubnetOverview, renderSubnetOverview, resetSnState } from './tabs/s
 import { renderFwMatrix, resetFwmState } from './tabs/fw-matrix.js';
 import { loadAlertTimeline, renderAlertTimeline, setAtFilter, resetAtState } from './tabs/alert-timeline.js';
 import { loadLogArchive, renderLogArchive, resetLaState } from './tabs/log-archive.js';
+import { loadHealthScore, renderHealthScore, resetHsState } from './tabs/health-score.js';
+import { enterTvMode, exitTvMode, renderTvSlide, resetTvState } from './tabs/tv-mode.js';
+import { renderReportPage, generateReport, resetRptState } from './tabs/pdf-report.js';
+import { loadChangeRadar, renderChangeRadar, resetCrState } from './tabs/change-radar.js';
 import { startCeScan, cancelCeScan, ceScanSingle, ceLookup, ceFormatHint, ceClearResult, ceMacTableOpen, ceMacTableClose, ceMacTableFilter, ceRenderDeviceTable, ceInitDevices, resetCeState } from './tabs/client-explorer.js';
 import { meshScanAll, renderMeshPage } from './tabs/mesh.js';
 import { l2tpScanAll, renderL2tpPage } from './tabs/l2tp.js';
@@ -195,6 +199,27 @@ window.resetAtState = resetAtState;
 window.loadLogArchive = loadLogArchive;
 window.renderLogArchive = renderLogArchive;
 window.resetLaState = resetLaState;
+
+// Health Score
+window.loadHealthScore = loadHealthScore;
+window.renderHealthScore = renderHealthScore;
+window.resetHsState = resetHsState;
+
+// TV Mode
+window.enterTvMode = enterTvMode;
+window.exitTvMode = exitTvMode;
+window.renderTvSlide = renderTvSlide;
+window.resetTvState = resetTvState;
+
+// PDF Report
+window.renderReportPage = renderReportPage;
+window.generateReport = generateReport;
+window.resetRptState = resetRptState;
+
+// Change Radar
+window.loadChangeRadar = loadChangeRadar;
+window.renderChangeRadar = renderChangeRadar;
+window.resetCrState = resetCrState;
 
 // Client Explorer
 window.startCeScan = startCeScan;

@@ -57,6 +57,9 @@ async function showTab(id, skipHash) {
   if(id==='fw-matrix'&&Object.keys(S.devices).length) window.renderFwMatrix?.();
   if(id==='alert-timeline'&&S.accountId&&!S._loaded.has('alert-timeline')) window.loadAlertTimeline?.();
   if(id==='log-archive'&&S.accountId&&!S._loaded.has('log-archive')) window.loadLogArchive?.();
+  if(id==='health-score'&&Object.keys(S.devices).length&&!S._loaded.has('health-score')) window.loadHealthScore?.();
+  if(id==='change-radar'&&S.accountId&&!S._loaded.has('change-radar')) window.loadChangeRadar?.();
+  if(id==='report'&&Object.keys(S.devices).length) window.renderReportPage?.();
 }
 
 function fmtCountdown(s) {

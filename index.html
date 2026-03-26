@@ -117,6 +117,12 @@
     </div>
     <nav class="sidebar-nav">
 
+      <!-- Health Score -->
+      <button class="tab-btn" onclick="showTab('health-score')" id="tab-btn-health-score" data-tooltip="Health Score">
+        <span class="tb-icon"><i class="fa-solid fa-heart-pulse"></i></span>
+        <span class="tb-label">Health Score</span>
+      </button>
+
       <!-- Dashboard -->
       <button class="tab-btn active" onclick="showTab('dashboard')" id="tab-btn-dashboard" data-tooltip="Dashboard">
         <span class="tb-icon"><i class="fa-solid fa-gauge-high"></i></span>
@@ -243,6 +249,22 @@
         <button class="tab-btn" onclick="showTab('log-archive')" id="tab-btn-log-archive" data-tooltip="Log-Archiv">
           <span class="tb-icon"><i class="fa-solid fa-box-archive"></i></span>
           <span class="tb-label">Log-Archiv</span>
+        </button>
+      </details>
+
+      <details class="sidebar-group">
+        <summary>Intelligence</summary>
+        <button class="tab-btn" onclick="showTab('change-radar')" id="tab-btn-change-radar" data-tooltip="Änderungs-Radar">
+          <span class="tb-icon"><i class="fa-solid fa-satellite-dish"></i></span>
+          <span class="tb-label">Änderungs-Radar</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('report')" id="tab-btn-report" data-tooltip="PDF-Report">
+          <span class="tb-icon"><i class="fa-solid fa-file-pdf"></i></span>
+          <span class="tb-label">PDF-Report</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('tv-mode')" id="tab-btn-tv-mode" data-tooltip="TV-Modus">
+          <span class="tb-icon"><i class="fa-solid fa-tv"></i></span>
+          <span class="tb-label">TV-Modus</span>
         </button>
       </details>
 
@@ -1153,6 +1175,57 @@
     </div>
   </section>
 
+  <!-- TAB: HEALTH SCORE -->
+  <section class="tab-section" id="tab-health-score">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-heart-pulse" style="color:var(--red);margin-right:6px"></i>Network Health Score</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="loadHealthScore()" title="Neu berechnen"><i class="fa-solid fa-arrows-rotate"></i></button>
+    </div>
+    <div id="hs-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-heart-pulse"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: ÄNDERUNGS-RADAR -->
+  <section class="tab-section" id="tab-change-radar">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-satellite-dish" style="color:var(--accent);margin-right:6px"></i>Änderungs-Radar</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="loadChangeRadar()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="cr-refresh-icon"></i></button>
+    </div>
+    <div id="cr-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-satellite-dish"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: PDF-REPORT -->
+  <section class="tab-section" id="tab-report">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-file-pdf" style="color:var(--red);margin-right:6px"></i>Netzwerk-Report</span>
+      <div class="toolbar-spacer"></div>
+    </div>
+    <div id="rpt-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-file-pdf"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: TV-MODUS -->
+  <section class="tab-section" id="tab-tv-mode">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-tv" style="color:var(--accent2);margin-right:6px"></i>TV-Modus / Status Wall</span>
+      <div class="toolbar-spacer"></div>
+    </div>
+    <div style="padding:24px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+      <i class="fa-solid fa-tv" style="font-size:48px;color:var(--text3);opacity:.5"></i>
+      <div style="text-align:center;max-width:400px">
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:8px">TV-Modus</h3>
+        <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px">Vollbild-Statusanzeige für Wandmonitore. Wechselt automatisch alle 8 Sekunden zwischen Geräte-Status, Typen, Firmware und Standorten.</p>
+        <button onclick="enterTvMode()" style="background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;padding:12px 28px;cursor:pointer;display:inline-flex;align-items:center;gap:10px"><i class="fa-solid fa-expand"></i> TV-Modus starten</button>
+      </div>
+    </div>
+  </section>
+
   <!-- TAB: STANDORT-KARTE -->
   <section class="tab-section" id="tab-site-map">
     <div class="toolbar">
@@ -1507,6 +1580,19 @@
 </div>
 
 <div id="toast-container"></div>
+
+<!-- TV MODE OVERLAY -->
+<div id="tv-overlay" style="display:none">
+  <div class="tv-header">
+    <div class="tv-logo"><i class="fa-solid fa-network-wired"></i> OnSite<span>Web</span></div>
+    <div class="tv-header-mid"><span id="tv-date"></span></div>
+    <div class="tv-header-right"><span id="tv-clock" class="tv-clock"></span>
+      <button onclick="exitTvMode()" class="tv-exit-btn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+  <div id="tv-content" class="tv-content"></div>
+  <div id="tv-dots" class="tv-dots"></div>
+</div>
 
 <script src="app.js"></script>
 </body>
