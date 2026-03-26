@@ -29,7 +29,10 @@ function fmtBytes(b) {
 function fmtRate(kbps) {
   if(!kbps && kbps!==0) return '–';
   kbps=Number(kbps); if(isNaN(kbps)) return '–';
-  return kbps<1000 ? kbps+'kbps' : (kbps/1000).toFixed(1)+'Mbps';
+  if(kbps>=1000000) return (kbps/1000000).toFixed(1)+' Gbps';
+  if(kbps>=1000) return (kbps/1000).toFixed(1)+' Mbps';
+  if(kbps>=100) return Math.round(kbps)+' kbps';
+  return kbps.toFixed(1)+' kbps';
 }
 function signalLevel(rssi) {
   rssi=Number(rssi)||0;
