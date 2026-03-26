@@ -219,6 +219,34 @@
       </details>
 
       <details class="sidebar-group">
+        <summary>Infrastruktur</summary>
+        <button class="tab-btn" onclick="showTab('site-map')" id="tab-btn-site-map" data-tooltip="Standort-Karte">
+          <span class="tb-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+          <span class="tb-label">Standort-Karte</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('switch-ports')" id="tab-btn-switch-ports" data-tooltip="Switch-Portmap">
+          <span class="tb-icon"><i class="fa-solid fa-ethernet"></i></span>
+          <span class="tb-label">Switch-Portmap</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('subnet-overview')" id="tab-btn-subnet-overview" data-tooltip="IP-Übersicht">
+          <span class="tb-icon"><i class="fa-solid fa-diagram-project"></i></span>
+          <span class="tb-label">IP-Übersicht</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('fw-matrix')" id="tab-btn-fw-matrix" data-tooltip="Firmware-Matrix">
+          <span class="tb-icon"><i class="fa-solid fa-table-cells"></i></span>
+          <span class="tb-label">Firmware-Matrix</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('alert-timeline')" id="tab-btn-alert-timeline" data-tooltip="Alert-Timeline">
+          <span class="tb-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+          <span class="tb-label">Alert-Timeline</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('log-archive')" id="tab-btn-log-archive" data-tooltip="Log-Archiv">
+          <span class="tb-icon"><i class="fa-solid fa-box-archive"></i></span>
+          <span class="tb-label">Log-Archiv</span>
+        </button>
+      </details>
+
+      <details class="sidebar-group">
         <summary>Verwaltung</summary>
         <button class="tab-btn" onclick="showTab('addins')" id="tab-btn-addins" data-tooltip="Add-ins">
           <span class="tb-icon"><i class="fa-solid fa-puzzle-piece"></i></span>
@@ -1122,6 +1150,83 @@
     </div>
     <div class="sites-grid" id="sites-grid">
       <div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-location-dot"></i><h3>Keine Standorte</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: STANDORT-KARTE -->
+  <section class="tab-section" id="tab-site-map">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-map-location-dot" style="color:var(--accent);margin-right:6px"></i>Standort-Karte</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="loadSiteMap()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="sm-refresh-icon"></i></button>
+    </div>
+    <div id="sm-wrap" style="overflow-y:auto;flex:1">
+      <div class="empty-state"><i class="fa-solid fa-map-location-dot"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: SWITCH-PORTMAP -->
+  <section class="tab-section" id="tab-switch-ports">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-ethernet" style="color:var(--blue);margin-right:6px"></i>Switch-Portmap</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="loadSwitchPorts()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="sp-refresh-icon"></i></button>
+    </div>
+    <div id="sp-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-ethernet"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: IP-ÜBERSICHT -->
+  <section class="tab-section" id="tab-subnet-overview">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-diagram-project" style="color:var(--purple);margin-right:6px"></i>IP-Übersicht</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="loadSubnetOverview()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="sn-refresh-icon"></i></button>
+    </div>
+    <div id="sn-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-network-wired"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: FIRMWARE-MATRIX -->
+  <section class="tab-section" id="tab-fw-matrix">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-table-cells" style="color:var(--teal);margin-right:6px"></i>Firmware-Matrix</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="renderFwMatrix()" title="Aktualisieren"><i class="fa-solid fa-arrows-rotate"></i></button>
+    </div>
+    <div id="fwm-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-microchip"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: ALERT-TIMELINE -->
+  <section class="tab-section" id="tab-alert-timeline">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--amber);margin-right:6px"></i>Alert-Timeline</span>
+      <div class="toolbar-spacer"></div>
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="setAtFilter('all',this)">Alle</button>
+        <button class="filter-btn" onclick="setAtFilter('open',this)">Offen</button>
+        <button class="filter-btn" onclick="setAtFilter('closed',this)">Geschlossen</button>
+      </div>
+      <button class="icon-btn" onclick="loadAlertTimeline()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="at-refresh-icon"></i></button>
+    </div>
+    <div id="at-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-bell"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: LOG-ARCHIV -->
+  <section class="tab-section" id="tab-log-archive">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-box-archive" style="color:var(--green);margin-right:6px"></i>Log-Archiv</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="loadLogArchive()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="la-refresh-icon"></i></button>
+    </div>
+    <div id="la-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-box-archive"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
     </div>
   </section>
 

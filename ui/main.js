@@ -21,6 +21,12 @@ import { renderEnergy, saveEnergyPrice, loadEnergyPrice } from './tabs/energy.js
 import { paLoadAll, paToggleDetail, renderAnomalyPage, paState } from './tabs/anomaly.js';
 import { loadWlanCapacity, renderWlanCapacity, resetWcState } from './tabs/wlan-capacity.js';
 import { loadIfUtil, renderIfUtil, toggleIfuChart, resetIfuState } from './tabs/if-utilization.js';
+import { loadSiteMap, renderSiteMap, resetSmState } from './tabs/site-map.js';
+import { loadSwitchPorts, renderSwitchPorts, resetSpState } from './tabs/switch-ports.js';
+import { loadSubnetOverview, renderSubnetOverview, resetSnState } from './tabs/subnet-overview.js';
+import { renderFwMatrix, resetFwmState } from './tabs/fw-matrix.js';
+import { loadAlertTimeline, renderAlertTimeline, setAtFilter, resetAtState } from './tabs/alert-timeline.js';
+import { loadLogArchive, renderLogArchive, resetLaState } from './tabs/log-archive.js';
 import { startCeScan, cancelCeScan, ceScanSingle, ceLookup, ceFormatHint, ceClearResult, ceMacTableOpen, ceMacTableClose, ceMacTableFilter, ceRenderDeviceTable, ceInitDevices, resetCeState } from './tabs/client-explorer.js';
 import { meshScanAll, renderMeshPage } from './tabs/mesh.js';
 import { l2tpScanAll, renderL2tpPage } from './tabs/l2tp.js';
@@ -159,6 +165,36 @@ window.loadIfUtil = loadIfUtil;
 window.renderIfUtil = renderIfUtil;
 window.toggleIfuChart = toggleIfuChart;
 window.resetIfuState = resetIfuState;
+
+// Site Map
+window.loadSiteMap = loadSiteMap;
+window.renderSiteMap = renderSiteMap;
+window.resetSmState = resetSmState;
+
+// Switch Ports
+window.loadSwitchPorts = loadSwitchPorts;
+window.renderSwitchPorts = renderSwitchPorts;
+window.resetSpState = resetSpState;
+
+// Subnet Overview
+window.loadSubnetOverview = loadSubnetOverview;
+window.renderSubnetOverview = renderSubnetOverview;
+window.resetSnState = resetSnState;
+
+// Firmware Matrix
+window.renderFwMatrix = renderFwMatrix;
+window.resetFwmState = resetFwmState;
+
+// Alert Timeline
+window.loadAlertTimeline = loadAlertTimeline;
+window.renderAlertTimeline = renderAlertTimeline;
+window.setAtFilter = setAtFilter;
+window.resetAtState = resetAtState;
+
+// Log Archive
+window.loadLogArchive = loadLogArchive;
+window.renderLogArchive = renderLogArchive;
+window.resetLaState = resetLaState;
 
 // Client Explorer
 window.startCeScan = startCeScan;

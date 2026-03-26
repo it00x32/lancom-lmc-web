@@ -51,6 +51,12 @@ async function showTab(id, skipHash) {
   if(id==='switch-events'&&S.accountId&&!S._loaded.has('switch-events')) window.loadSwitchEvents?.(true);
   if(id==='wlan-capacity'&&Object.keys(S.devices).length&&!S._loaded.has('wlan-capacity')) window.loadWlanCapacity?.();
   if(id==='if-util'&&Object.keys(S.devices).length&&!S._loaded.has('if-util')) window.loadIfUtil?.();
+  if(id==='site-map'&&S.accountId&&!S._loaded.has('site-map')) window.loadSiteMap?.();
+  if(id==='switch-ports'&&Object.keys(S.devices).length&&!S._loaded.has('switch-ports')) window.loadSwitchPorts?.();
+  if(id==='subnet-overview'&&S.accountId&&!S._loaded.has('subnet-overview')) window.loadSubnetOverview?.();
+  if(id==='fw-matrix'&&Object.keys(S.devices).length) window.renderFwMatrix?.();
+  if(id==='alert-timeline'&&S.accountId&&!S._loaded.has('alert-timeline')) window.loadAlertTimeline?.();
+  if(id==='log-archive'&&S.accountId&&!S._loaded.has('log-archive')) window.loadLogArchive?.();
 }
 
 function fmtCountdown(s) {
