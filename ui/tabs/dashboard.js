@@ -241,8 +241,8 @@ async function loadLldpData(deviceIds) {
               vlan: p.vlan,
               poeStatus: p.poeStatus,
               poePower: p.poePower,
-              rxBitPerSec: p.rxBitPerSec,
-              txBitPerSec: p.txBitPerSec,
+              rxBitPerSec: (p.rxBitPerSec || 0) / 1000,
+              txBitPerSec: (p.txBitPerSec || 0) / 1000,
               configuration: p.configuration||'',
               qosClass: p.qosClass,
             }))

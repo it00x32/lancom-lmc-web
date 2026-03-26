@@ -101,8 +101,8 @@ async function loadIfUtil() {
               description: p.description || '',
               active: !!p.active,
               speed: p.speed || 0,
-              rxKbps: p.rxBitPerSec || 0,
-              txKbps: p.txBitPerSec || 0,
+              rxKbps: (p.rxBitPerSec || 0) / 1000,
+              txKbps: (p.txBitPerSec || 0) / 1000,
               vlan: p.vlan,
               lldpNames: p.lldpNames || [],
             };
