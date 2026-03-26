@@ -18,8 +18,12 @@ function lldpBadge(names) {
   return names.map(n => `<span style="background:rgba(217,119,6,.15);color:var(--teal);padding:2px 7px;border-radius:4px;font-size:12px;font-weight:600">${escHtml(n)}</span>`).join(' ');
 }
 
-function speedMbit(s) {
-  return s ? Math.round(s / 1000000) + '&nbsp;Mbit/s' : '–';
+function fmtSpeed(kbps) {
+  if (!kbps || kbps <= 0) return '–';
+  if (kbps >= 1e7) return (kbps / 1e6).toFixed(0) + '&nbsp;Gbit/s';
+  if (kbps >= 1e6) return (kbps / 1e6).toFixed(1) + '&nbsp;Gbit/s';
+  if (kbps >= 1e3) return (kbps / 1e3).toFixed(0) + '&nbsp;Mbit/s';
+  return kbps + '&nbsp;kbit/s';
 }
 
 function poeCell(status, power) {
@@ -57,7 +61,7 @@ function renderLldp() {
       <td class="muted">${escHtml(p.description) || '–'}</td>
       <td>${lldpBadge(p.lldpNames)}</td>
       <td>${statusDot(p.active)}</td>
-      <td class="muted">${speedMbit(p.speed)}</td>
+      <td class="muted">${fmtSpeed(p.speed)}</td>
       <td class="muted">${p.vlan ?? '–'}</td>
       <td class="muted" style="white-space:nowrap">${poeCell(p.poeStatus, p.poePower)}</td>
       <td class="muted">${fmtRate(p.rxBitPerSec)}</td>
@@ -86,7 +90,7 @@ function renderLldp() {
         <td>${lldpBadge(p.lldpNames)}</td>
         <td>${statusDot(p.active)}</td>
         <td>${loopCell}</td>
-        <td class="muted">${speedMbit(p.speed)}</td>
+        <td class="muted">${fmtSpeed(p.speed)}</td>
         <td class="muted">${p.vlan ?? '–'}</td>
         <td class="muted">${escHtml(p.configuration) || '–'}</td>
         <td class="muted" style="white-space:nowrap">${poeCell(p.poeStatus, p.poePower)}</td>
@@ -97,4 +101,4 @@ function renderLldp() {
   }
 }
 
-export { lldpView, setLldpView, lldpBadge, speedMbit, poeCell, renderLldp };
+export { lldpView, setLldpView, lldpBadge, fmtSpeed, poeCell, renderLldp };

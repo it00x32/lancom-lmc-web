@@ -9,20 +9,18 @@ let ifuHistory = {}; // deviceId → portName → [{ts, rx, tx}]
 const WARN_PCT = 50;
 const CRIT_PCT = 80;
 
-// speed from API is in bit/s
-function fmtSpeed(bps) {
-  if (!bps || bps <= 0) return '–';
-  if (bps >= 1e10) return (bps / 1e9).toFixed(0) + ' Gbit/s';
-  if (bps >= 1e9)  return (bps / 1e9).toFixed(1) + ' Gbit/s';
-  if (bps >= 1e6)  return (bps / 1e6).toFixed(0) + ' Mbit/s';
-  return (bps / 1e3).toFixed(0) + ' kbit/s';
+// All values from lan_info_json are in kbit/s
+function fmtSpeed(kbps) {
+  if (!kbps || kbps <= 0) return '–';
+  if (kbps >= 1e7) return (kbps / 1e6).toFixed(0) + ' Gbit/s';
+  if (kbps >= 1e6) return (kbps / 1e6).toFixed(1) + ' Gbit/s';
+  if (kbps >= 1e3) return (kbps / 1e3).toFixed(0) + ' Mbit/s';
+  return kbps + ' kbit/s';
 }
 
-// rxBitPerSec/txBitPerSec from API are in kbit/s; speed is in bit/s
-function utilPct(rxKbps, txKbps, speedBps) {
-  if (!speedBps || speedBps <= 0) return 0;
-  const peakKbps = Math.max(rxKbps || 0, txKbps || 0);
-  return Math.min(100, (peakKbps * 1000) / speedBps * 100);
+function utilPct(rxKbps, txKbps, speedKbps) {
+  if (!speedKbps || speedKbps <= 0) return 0;
+  return Math.min(100, Math.max(rxKbps || 0, txKbps || 0) / speedKbps * 100);
 }
 
 function utilColor(pct) {
@@ -207,8 +205,8 @@ function renderIfUtil() {
       const rates = [];
       for (let i = 1; i < hist.length; i++) {
         const dt = ((hist[i].ts - hist[i - 1].ts) / 1000) || 60;
-        const bps = Math.max(0, hist[i].rx - hist[i - 1].rx) * 8 / dt + Math.max(0, hist[i].tx - hist[i - 1].tx) * 8 / dt;
-        rates.push(bps);
+        const kbps = (Math.max(0, hist[i].rx - hist[i - 1].rx) + Math.max(0, hist[i].tx - hist[i - 1].tx)) * 8 / dt / 1000;
+        rates.push(kbps);
       }
       const maxR = p.speed || Math.max(...rates, 1);
       spark = sparkSvg(rates, col === 'var(--text3)' ? '#93a3b8' : col, maxR);

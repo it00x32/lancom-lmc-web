@@ -2,7 +2,7 @@ import S from '../lib/state.js';
 import { escHtml, deviceName, isOnline, statusDot, fmtRate, fmtBytes, signalBar, bandBadge } from '../lib/helpers.js';
 import { api, toast } from '../lib/api.js';
 import { snmpReqBody } from '../lib/snmp.js';
-import { speedMbit, poeCell } from './lldp.js';
+import { fmtSpeed, poeCell } from './lldp.js';
 
 // ─── NETWORK TOPOLOGY ─────────────────────────────────────────────────────────
 let topoTx = 0, topoTy = 0, topoScale = 1, topoRootId = '', topoSiteFilter = '';
@@ -381,7 +381,7 @@ function topoOpenDetail(id) {
         <td><strong>${escHtml(p.portName)}</strong>${p.description ? `<div style="font-size:10px;color:var(--text2)">${escHtml(p.description)}</div>` : ''}</td>
         <td>${neighbor}</td>
         <td>${statusDot(p.active)}</td>
-        <td class="muted" style="white-space:nowrap">${speedMbit(p.speed)}</td>
+        <td class="muted" style="white-space:nowrap">${fmtSpeed(p.speed)}</td>
         <td class="muted" style="white-space:nowrap">${poeCell(p.poeStatus, p.poePower)}</td>
       </tr>`;
     });
@@ -398,7 +398,7 @@ function topoOpenDetail(id) {
         <td class="device-ref">${escHtml(p._deviceName)}</td>
         <td><strong>${escHtml(p.portName)}</strong>${p.description ? `<div style="font-size:10px;color:var(--text2)">${escHtml(p.description)}</div>` : ''}</td>
         <td>${statusDot(p.active)}</td>
-        <td class="muted" style="white-space:nowrap">${speedMbit(p.speed)}</td>
+        <td class="muted" style="white-space:nowrap">${fmtSpeed(p.speed)}</td>
       </tr>`;
     });
     html += `</tbody></table>`;
