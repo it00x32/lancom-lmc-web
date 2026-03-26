@@ -300,13 +300,15 @@ function renderIfUtil() {
   const devices = new Set(ifuData.map(p => p._deviceId));
   const periodLabel = hours <= 1 ? '1h' : hours <= 6 ? '6h' : hours <= 24 ? '24h' : '7d';
 
+  const topName = topPort ? escHtml(topPort._deviceName.length > 12 ? topPort._deviceName.slice(0, 11) + '…' : topPort._deviceName) + ' ' + escHtml(topPort.portName) : 'Top Peak';
+
   let html = `<div class="ifu-stats">
-    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(0,76,151,.1);color:var(--accent)"><i class="fa-solid fa-ethernet"></i></div><div class="ifu-stat-val">${linkedPorts.length}<span class="ifu-stat-sub">/ ${ifuData.length}</span></div><div class="ifu-stat-lbl">Mit Link / Gesamt</div></div>
-    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(0,76,151,.1);color:var(--blue)"><i class="fa-solid fa-server"></i></div><div class="ifu-stat-val">${devices.size}</div><div class="ifu-stat-lbl">Geräte</div></div>
-    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(26,138,62,.1);color:var(--green)"><i class="fa-solid fa-gauge-high"></i></div><div class="ifu-stat-val">${avgUtil.toFixed(1)}%</div><div class="ifu-stat-lbl">Ø Auslastung jetzt</div></div>
-    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(217,119,6,.1);color:var(--amber)"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="ifu-stat-val">${warnPorts.length}</div><div class="ifu-stat-lbl">Peak ≥${WARN_PCT}% (${periodLabel})</div></div>
-    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(211,47,47,.1);color:var(--red)"><i class="fa-solid fa-circle-exclamation"></i></div><div class="ifu-stat-val">${critPorts.length}</div><div class="ifu-stat-lbl">Peak ≥${CRIT_PCT}% (${periodLabel})</div></div>
-    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(211,47,47,.1);color:var(--red)"><i class="fa-solid fa-arrow-up"></i></div><div class="ifu-stat-val">${topPort ? topPort.peak.peakPct.toFixed(1) + '%' : '–'}</div><div class="ifu-stat-lbl">${topPort ? escHtml(topPort._deviceName + ' ' + topPort.portName) : 'Top Peak'}</div></div>
+    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(0,76,151,.1);color:var(--accent)"><i class="fa-solid fa-ethernet"></i></div><div><div class="ifu-stat-val">${linkedPorts.length}<span class="ifu-stat-sub">/ ${ifuData.length}</span></div><div class="ifu-stat-lbl">Link / Gesamt</div></div></div>
+    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(0,76,151,.1);color:var(--blue)"><i class="fa-solid fa-server"></i></div><div><div class="ifu-stat-val">${devices.size}</div><div class="ifu-stat-lbl">Geräte</div></div></div>
+    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(26,138,62,.1);color:var(--green)"><i class="fa-solid fa-gauge-high"></i></div><div><div class="ifu-stat-val">${avgUtil.toFixed(1)}%</div><div class="ifu-stat-lbl">Ø jetzt</div></div></div>
+    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(217,119,6,.1);color:var(--amber)"><i class="fa-solid fa-triangle-exclamation"></i></div><div><div class="ifu-stat-val">${warnPorts.length}</div><div class="ifu-stat-lbl">≥${WARN_PCT}% ${periodLabel}</div></div></div>
+    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(211,47,47,.1);color:var(--red)"><i class="fa-solid fa-circle-exclamation"></i></div><div><div class="ifu-stat-val">${critPorts.length}</div><div class="ifu-stat-lbl">≥${CRIT_PCT}% ${periodLabel}</div></div></div>
+    <div class="ifu-stat"><div class="ifu-stat-icon" style="background:rgba(211,47,47,.1);color:var(--red)"><i class="fa-solid fa-arrow-up"></i></div><div><div class="ifu-stat-val">${topPort ? topPort.peak.peakPct.toFixed(1) + '%' : '–'}</div><div class="ifu-stat-lbl">${topName}</div></div></div>
   </div>`;
 
   // Top 10 by peak
