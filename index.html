@@ -876,8 +876,15 @@
     <div class="toolbar">
       <span class="toolbar-title"><i class="fa-solid fa-gauge-high" style="color:var(--accent);margin-right:6px"></i>Port-Auslastung</span>
       <div class="toolbar-spacer"></div>
+      <select id="ifu-period" onchange="loadIfUtil()" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:5px 10px;font-family:var(--font);font-size:12px;cursor:pointer;outline:none">
+        <option value="1">1 Stunde</option>
+        <option value="6">6 Stunden</option>
+        <option value="24" selected>24 Stunden</option>
+        <option value="168">7 Tage</option>
+      </select>
       <select id="ifu-sort" onchange="renderIfUtil()" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);padding:5px 10px;font-family:var(--font);font-size:12px;cursor:pointer;outline:none">
         <option value="util">Sortierung: Auslastung</option>
+        <option value="peak">Sortierung: Peak</option>
         <option value="device">Sortierung: Gerät</option>
         <option value="speed">Sortierung: Link-Speed</option>
       </select>
