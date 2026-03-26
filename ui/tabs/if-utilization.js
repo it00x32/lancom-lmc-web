@@ -2,13 +2,14 @@ import S from '../lib/state.js';
 import { escHtml, deviceName, isOnline, fmtRate } from '../lib/helpers.js';
 import { api } from '../lib/api.js';
 
-let ifuData = [];    // [{_deviceId, _deviceName, portName, speed, rxBps, txBps, active, ...}]
+let ifuData = [];    // [{_deviceId, _deviceName, portName, speed, rxKbps, txKbps, active, ...}]
 let ifuLoading = false;
 let ifuHistory = {}; // deviceId → portName → [{ts, rx, tx}]
 
 const WARN_PCT = 50;
 const CRIT_PCT = 80;
 
+// speed from API is in bit/s
 function fmtSpeed(bps) {
   if (!bps || bps <= 0) return '–';
   if (bps >= 1e10) return (bps / 1e9).toFixed(0) + ' Gbit/s';
@@ -17,9 +18,11 @@ function fmtSpeed(bps) {
   return (bps / 1e3).toFixed(0) + ' kbit/s';
 }
 
-function utilPct(rxBps, txBps, speed) {
-  if (!speed || speed <= 0) return 0;
-  return Math.min(100, Math.max(rxBps || 0, txBps || 0) / speed * 100);
+// rxBitPerSec/txBitPerSec from API are in kbit/s; speed is in bit/s
+function utilPct(rxKbps, txKbps, speedBps) {
+  if (!speedBps || speedBps <= 0) return 0;
+  const peakKbps = Math.max(rxKbps || 0, txKbps || 0);
+  return Math.min(100, (peakKbps * 1000) / speedBps * 100);
 }
 
 function utilColor(pct) {
@@ -75,8 +78,8 @@ async function loadIfUtil() {
               description: p.description || '',
               active: !!p.active,
               speed: p.speed || 0,
-              rxBps: p.rxBitPerSec || 0,
-              txBps: p.txBitPerSec || 0,
+              rxKbps: p.rxBitPerSec || 0,
+              txKbps: p.txBitPerSec || 0,
               vlan: p.vlan,
               lldpNames: p.lldpNames || [],
             });
@@ -136,7 +139,7 @@ function renderIfUtil() {
 
   let ports = ifuData.map(p => ({
     ...p,
-    pct: utilPct(p.rxBps, p.txBps, p.speed),
+    pct: utilPct(p.rxKbps, p.txKbps, p.speed),
   }));
 
   if (activeOnly) ports = ports.filter(p => p.active);
@@ -147,11 +150,11 @@ function renderIfUtil() {
 
   // Stats
   const activePorts = ifuData.filter(p => p.active);
-  const avgUtil = activePorts.length ? activePorts.reduce((s, p) => s + utilPct(p.rxBps, p.txBps, p.speed), 0) / activePorts.length : 0;
-  const warnPorts = activePorts.filter(p => utilPct(p.rxBps, p.txBps, p.speed) >= WARN_PCT);
-  const critPorts = activePorts.filter(p => utilPct(p.rxBps, p.txBps, p.speed) >= CRIT_PCT);
+  const avgUtil = activePorts.length ? activePorts.reduce((s, p) => s + utilPct(p.rxKbps, p.txKbps, p.speed), 0) / activePorts.length : 0;
+  const warnPorts = activePorts.filter(p => utilPct(p.rxKbps, p.txKbps, p.speed) >= WARN_PCT);
+  const critPorts = activePorts.filter(p => utilPct(p.rxKbps, p.txKbps, p.speed) >= CRIT_PCT);
   const topPort = activePorts.reduce((best, p) => {
-    const u = utilPct(p.rxBps, p.txBps, p.speed);
+    const u = utilPct(p.rxKbps, p.txKbps, p.speed);
     return u > (best?.pct || 0) ? { ...p, pct: u } : best;
   }, null);
   const devices = new Set(ifuData.map(p => p._deviceId));
@@ -175,7 +178,7 @@ function renderIfUtil() {
           <span class="ifu-top-rank">#${i + 1}</span>
           <span class="ifu-top-name">${escHtml(p._deviceName)} <span style="color:var(--text2);font-weight:400">· ${escHtml(p.portName)}</span></span>
           <span class="ifu-top-speed">${fmtSpeed(p.speed)}</span>
-          <span class="ifu-top-rates"><span style="color:#004c97">↓${fmtRate(p.rxBps / 1000)}</span> <span style="color:#1a8a3e">↑${fmtRate(p.txBps / 1000)}</span></span>
+          <span class="ifu-top-rates"><span style="color:#004c97">↓${fmtRate(p.rxKbps)}</span> <span style="color:#1a8a3e">↑${fmtRate(p.txKbps)}</span></span>
           <div class="ifu-top-bar-wrap"><div class="ifu-top-bar" style="width:${p.pct}%;background:${utilColor(p.pct)}"></div></div>
           <span class="ifu-top-pct" style="color:${utilColor(p.pct)}">${p.pct.toFixed(1)}%</span>
         </div>`;
@@ -217,8 +220,8 @@ function renderIfUtil() {
       <td class="muted" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.description) || '–'}</td>
       <td style="font-size:11px">${neighbor}</td>
       <td class="muted mono" style="white-space:nowrap">${fmtSpeed(p.speed)}</td>
-      <td style="color:#004c97;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600;font-size:12px">↓ ${fmtRate(p.rxBps / 1000)}</td>
-      <td style="color:#1a8a3e;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600;font-size:12px">↑ ${fmtRate(p.txBps / 1000)}</td>
+      <td style="color:#004c97;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600;font-size:12px">↓ ${fmtRate(p.rxKbps)}</td>
+      <td style="color:#1a8a3e;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600;font-size:12px">↑ ${fmtRate(p.txKbps)}</td>
       <td><div class="ifu-bar-wrap"><div class="ifu-bar" style="width:${pct}%;background:${col}"></div></div></td>
       <td style="font-weight:700;color:${col};font-variant-numeric:tabular-nums;text-align:right;font-size:13px">${p.active && p.speed ? pct.toFixed(1) + '%' : '–'}</td>
       <td>${p.active ? utilLabel(pct) : '<span class="muted">Inaktiv</span>'}</td>
