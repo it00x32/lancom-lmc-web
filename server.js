@@ -6,7 +6,6 @@
  */
 
 const http   = require('http');
-const https  = require('https');
 const fs     = require('fs');
 const path   = require('path');
 const url    = require('url');
@@ -14,15 +13,7 @@ const { spawn } = require('child_process');
 
 const PORT = parseInt(process.argv[2] || process.env.PORT || '3001', 10);
 
-const DEFAULT_BASE = 'cloud.lancom.de';
-const SERVICE_NAMES = ['devices','monitoring','monitor-frontend','useragent','auth','config','notification','devicetunnel','siem','logging'];
-
-function buildServices(base) {
-  const host = base || DEFAULT_BASE;
-  const obj = {};
-  SERVICE_NAMES.forEach(s => { obj[s] = `https://${host}/cloud-service-${s}`; });
-  return obj;
-}
+const { buildServices, proxyRequest } = require('./src/proxy');
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -359,35 +350,36 @@ async function snmpL2tpScan(host, community, version, v3 = {}) {
 }
 
 // ── Proxy helper ──────────────────────────────────────────────────────────────
-function proxyRequest(targetUrl, method, apiKey, body) {
-  return new Promise((resolve, reject) => {
-    const parsed  = new url.URL(targetUrl);
-    const bodyStr = body !== null && body !== undefined ? JSON.stringify(body) : '';
+// ── Rate limiter (per IP, sliding window) ─────────────────────────────────────
+const _rlMap = new Map();
+const RL_WINDOW = 60_000;   // 1 minute
+const RL_MAX_SNMP = 30;     // max SNMP requests per window
+const RL_MAX_API  = 120;    // max API requests per window
 
-    const options = {
-      hostname: parsed.hostname,
-      path:     parsed.pathname + parsed.search,
-      method:   method,
-      headers: {
-        'Authorization': `LMC-API-KEY ${apiKey}`,
-        'Accept':        '*/*',
-        ...(bodyStr ? {
-          'Content-Type':   'application/json',
-          'Content-Length': Buffer.byteLength(bodyStr),
-        } : {}),
-      },
-    };
+function rateLimit(ip, bucket, max) {
+  const key = `${bucket}:${ip}`;
+  const now = Date.now();
+  let entry = _rlMap.get(key);
+  if (!entry || now - entry.start > RL_WINDOW) {
+    entry = { start: now, count: 0 };
+    _rlMap.set(key, entry);
+  }
+  entry.count++;
+  return entry.count > max;
+}
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of _rlMap) { if (now - v.start > RL_WINDOW * 2) _rlMap.delete(k); }
+}, RL_WINDOW * 3);
 
-    const req = https.request(options, res => {
-      let data = '';
-      res.on('data', chunk => (data += chunk));
-      res.on('end', () => resolve({ status: res.statusCode, body: data }));
-    });
-
-    req.on('error', reject);
-    if (bodyStr) req.write(bodyStr);
-    req.end();
-  });
+function isPrivateIp(ip) {
+  if (/^10\./.test(ip)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true;
+  if (/^192\.168\./.test(ip)) return true;
+  if (/^127\./.test(ip)) return true;
+  if (/^169\.254\./.test(ip)) return true;
+  if (ip === 'localhost') return true;
+  return false;
 }
 
 const MAX_BODY = 1e6; // 1 MB
@@ -420,8 +412,14 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+
   // ── API proxy endpoint ──
   if (parsedUrl.pathname === '/api' && req.method === 'POST') {
+    if (rateLimit(clientIp, 'api', RL_MAX_API)) {
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Too many requests' })); return;
+    }
     let body;
     try { body = await readBody(req, MAX_BODY); } catch {
       res.writeHead(413, { 'Content-Type': 'application/json' });
@@ -462,6 +460,10 @@ const server = http.createServer(async (req, res) => {
 
   // ── SNMP endpoint ──
   if (parsedUrl.pathname === '/snmp' && req.method === 'POST') {
+    if (rateLimit(clientIp, 'snmp', RL_MAX_SNMP)) {
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Too many SNMP requests' })); return;
+    }
     let body;
     try { body = await readBody(req, MAX_BODY); } catch {
       res.writeHead(413, { 'Content-Type': 'application/json' });
@@ -480,10 +482,13 @@ const server = http.createServer(async (req, res) => {
         v3PrivProto = 'AES', v3PrivPass = '',
       } = input;
 
-      // Basic validation – prevent shell injection
       if (!host || !/^[a-zA-Z0-9.\-]+$/.test(host)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Ungültige Host-Adresse' })); return;
+      }
+      if (!isPrivateIp(host)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'SNMP nur für private IP-Adressen erlaubt' })); return;
       }
       if (!['1', '2c', '3'].includes(version)) {
         res.writeHead(400, { 'Content-Type': 'application/json' });

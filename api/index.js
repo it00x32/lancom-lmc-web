@@ -1,44 +1,5 @@
 // Vercel Serverless Function – LMC API Proxy
-const https = require('https');
-const url   = require('url');
-
-const DEFAULT_BASE = 'cloud.lancom.de';
-const SERVICE_NAMES = ['devices','monitoring','monitor-frontend','useragent','auth','config','notification','devicetunnel','siem','logging'];
-
-function buildServices(base) {
-  const host = base || DEFAULT_BASE;
-  const obj = {};
-  SERVICE_NAMES.forEach(s => { obj[s] = `https://${host}/cloud-service-${s}`; });
-  return obj;
-}
-
-function proxyRequest(targetUrl, method, apiKey, body) {
-  return new Promise((resolve, reject) => {
-    const parsed  = new url.URL(targetUrl);
-    const bodyStr = body !== null && body !== undefined ? JSON.stringify(body) : '';
-    const options = {
-      hostname: parsed.hostname,
-      path:     parsed.pathname + parsed.search,
-      method:   method,
-      headers: {
-        'Authorization': `LMC-API-KEY ${apiKey}`,
-        'Accept':        '*/*',
-        ...(bodyStr ? {
-          'Content-Type':   'application/json',
-          'Content-Length': Buffer.byteLength(bodyStr),
-        } : {}),
-      },
-    };
-    const req = https.request(options, res => {
-      let data = '';
-      res.on('data', chunk => (data += chunk));
-      res.on('end', () => resolve({ status: res.statusCode, body: data }));
-    });
-    req.on('error', reject);
-    if (bodyStr) req.write(bodyStr);
-    req.end();
-  });
-}
+const { buildServices, proxyRequest } = require('../src/proxy');
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -55,7 +16,7 @@ function parseInput(req) {
   return readBody(req).then(raw => JSON.parse(raw));
 }
 
-const PKG_VERSION = '1.7.0';
+const PKG_VERSION = '1.8.0';
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
