@@ -764,3 +764,25 @@ tr.bulk-selected td{background:rgba(0,76,151,.08)!important;}
 .wc-bar-wrap{position:relative;height:18px;background:var(--card2);border-radius:9px;overflow:hidden;min-width:80px;}
 .wc-bar{height:100%;border-radius:9px;transition:width .3s;}
 .wc-bar-label{position:absolute;right:6px;top:1px;font-size:10px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+
+/* ── INTERFACE UTILIZATION ──────────────────────── */
+.ifu-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:16px 24px 0;}
+.ifu-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.ifu-stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ifu-stat-val{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;}
+.ifu-stat-sub{font-size:13px;font-weight:400;color:var(--text3);margin-left:2px;}
+.ifu-stat-lbl{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.ifu-section{padding:16px 24px 0;}
+.ifu-section-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.ifu-top10{display:flex;flex-direction:column;gap:6px;}
+.ifu-top-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;font-size:12px;}
+.ifu-top-rank{font-weight:800;color:var(--text3);width:24px;flex-shrink:0;font-variant-numeric:tabular-nums;}
+.ifu-top-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ifu-top-speed{color:var(--text3);font-size:11px;width:80px;text-align:right;flex-shrink:0;font-family:var(--mono);}
+.ifu-top-rates{width:140px;flex-shrink:0;font-size:11px;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;display:flex;gap:8px;justify-content:flex-end;}
+.ifu-top-bar-wrap{width:120px;height:14px;background:var(--card2);border-radius:7px;overflow:hidden;flex-shrink:0;}
+.ifu-top-bar{height:100%;border-radius:7px;transition:width .3s;}
+.ifu-top-pct{width:52px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums;font-size:13px;flex-shrink:0;}
+.ifu-table th{font-size:10px!important;text-transform:uppercase;letter-spacing:.5px;}
+.ifu-bar-wrap{height:16px;background:var(--card2);border-radius:8px;overflow:hidden;min-width:80px;}
+.ifu-bar{height:100%;border-radius:8px;transition:width .3s;}

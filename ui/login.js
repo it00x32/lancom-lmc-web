@@ -2,7 +2,7 @@ import S from './lib/state.js';
 import { api, toast } from './lib/api.js';
 import { escHtml } from './lib/helpers.js';
 
-const APP_VERSION = 'v1.9.0';
+const APP_VERSION = 'v1.10.0';
 
 document.getElementById('app-version').textContent = APP_VERSION;
 document.getElementById('api-key-input').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
@@ -107,6 +107,7 @@ function doLogout() {
   window.resetAddinsState?.();
   window.resetSweState?.();
   window.resetWcState?.();
+  window.resetIfuState?.();
   document.getElementById('badge-addins').textContent='–';
   document.getElementById('site-filter-toolbar').style.display='none';
   document.getElementById('site-tiles').style.display='none';
