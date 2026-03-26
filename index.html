@@ -89,11 +89,11 @@
     <select id="refresh-select" onchange="setRefreshInterval(+this.value)" title="Auto-Update Intervall"
       style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--text1);font-size:12px;padding:4px 8px;cursor:pointer;outline:none;">
       <option value="0">Manuell</option>
-      <option value="10">10 Sek</option>
       <option value="30">30 Sek</option>
       <option value="60" selected>60 Sek</option>
+      <option value="600">10 Min</option>
     </select>
-    <span class="sync-info" id="sync-info-text" style="display:none">in <span id="countdown">–</span>s</span>
+    <span class="sync-info" id="sync-info-text" style="display:none">in <span id="countdown">–</span></span>
     <button class="icon-btn" onclick="openSearch()" title="Suchen (/)">
       <i class="fa-solid fa-magnifying-glass"></i>
     </button>

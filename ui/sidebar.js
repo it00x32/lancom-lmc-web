@@ -53,6 +53,11 @@ async function showTab(id, skipHash) {
   if(id==='if-util'&&Object.keys(S.devices).length&&!S._loaded.has('if-util')) window.loadIfUtil?.();
 }
 
+function fmtCountdown(s) {
+  if(s>=60) { const m=Math.floor(s/60); return m+':'+(''+(s%60)).padStart(2,'0'); }
+  return s+'s';
+}
+
 function setRefreshInterval(seconds) {
   S.refreshInterval=seconds;
   localStorage.setItem('refreshInterval', seconds);
@@ -62,10 +67,10 @@ function setRefreshInterval(seconds) {
   if(seconds>0){
     info.style.display='';
     S.countdown=seconds;
-    document.getElementById('countdown').textContent=seconds;
+    document.getElementById('countdown').textContent=fmtCountdown(seconds);
     S.timer=setInterval(()=>{
       S.countdown--;
-      document.getElementById('countdown').textContent=S.countdown;
+      document.getElementById('countdown').textContent=fmtCountdown(S.countdown);
       if(S.countdown<=0){ clearInterval(S.timer); S.timer=null; window.refreshDashboard?.(); }
     },1000);
   } else {

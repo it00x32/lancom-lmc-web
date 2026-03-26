@@ -2,7 +2,7 @@ import S from './lib/state.js';
 import { api, toast } from './lib/api.js';
 import { escHtml } from './lib/helpers.js';
 
-const APP_VERSION = 'v1.11.0';
+const APP_VERSION = 'v1.11.1';
 
 document.getElementById('app-version').textContent = APP_VERSION;
 document.getElementById('api-key-input').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
