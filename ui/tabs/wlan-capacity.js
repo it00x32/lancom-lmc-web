@@ -30,14 +30,6 @@ async function loadWlanCapacity() {
     await Promise.allSettled(batch.map(async deviceId => {
       const dev = S.devices[deviceId];
       const name = deviceName(dev);
-      const devType = (dev.status?.type || '').toUpperCase();
-      const model = (dev.status?.model || '').toUpperCase();
-      const sw = (dev.status?.softwareVersion || '').toUpperCase();
-      const isAP = devType === 'ACCESS_POINT' ||
-                   sw.includes('LCOS LX') || sw.includes('LX ') ||
-                   /^(LW|LX|OAP|L-\d+|IAP)/.test(model) ||
-                   S.wlanClients[deviceId] > 0;
-      if (!isAP) return;
 
       try {
         const data = await api('monitoring',
@@ -45,6 +37,7 @@ async function loadWlanCapacity() {
         );
         const values = data?.items?.stations?.values || [];
         const timestamps = data?.items?.stations?.timestamps || [];
+        if (!values.length) return;
 
         const hourly = [];
         for (let i = 0; i < values.length; i++) {
@@ -53,10 +46,11 @@ async function loadWlanCapacity() {
           hourly.push({ ts, count: stationList.length });
         }
 
-        if (hourly.length > 0) {
+        const hasClients = hourly.some(h => h.count > 0);
+        if (hourly.length > 0 && hasClients) {
           wcData[deviceId] = { name, hourly, online: isOnline(dev), siteName: dev.siteName || '' };
         }
-      } catch { /* skip device */ }
+      } catch { /* non-WLAN device or API error — skip */ }
     }));
   }
 
