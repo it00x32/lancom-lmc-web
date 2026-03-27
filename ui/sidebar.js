@@ -60,6 +60,9 @@ async function showTab(id, skipHash) {
   if(id==='health-score'&&Object.keys(S.devices).length&&!S._loaded.has('health-score')) window.loadHealthScore?.();
   if(id==='change-radar'&&S.accountId&&!S._loaded.has('change-radar')) window.loadChangeRadar?.();
   if(id==='report'&&Object.keys(S.devices).length) window.renderReportPage?.();
+  if(id==='dhcp-leases'&&Object.keys(S.devices).length&&!S._loaded.has('dhcp-leases')) window.loadDhcpLeases?.();
+  if(id==='vlan-map'&&S.accountId&&!S._loaded.has('vlan-map')) window.loadVlanMap?.();
+  if(id==='account-members'&&S.accountId&&!S._loaded.has('account-members')) window.loadAccountMembers?.();
 }
 
 function fmtCountdown(s) {

@@ -31,6 +31,9 @@ import { loadHealthScore, renderHealthScore, resetHsState } from './tabs/health-
 import { enterTvMode, exitTvMode, renderTvSlide, resetTvState } from './tabs/tv-mode.js';
 import { renderReportPage, generateReport, resetRptState } from './tabs/pdf-report.js';
 import { loadChangeRadar, renderChangeRadar, resetCrState } from './tabs/change-radar.js';
+import { loadDhcpLeases, renderDhcpLeases, setDlSearch, exportDhcpCsv, resetDlState } from './tabs/dhcp-leases.js';
+import { loadVlanMap, renderVlanMap, resetVmState } from './tabs/vlan-map.js';
+import { loadAccountMembers, renderAccountMembers, resetAmState } from './tabs/account-members.js';
 import { startCeScan, cancelCeScan, ceScanSingle, ceLookup, ceFormatHint, ceClearResult, ceMacTableOpen, ceMacTableClose, ceMacTableFilter, ceRenderDeviceTable, ceInitDevices, resetCeState } from './tabs/client-explorer.js';
 import { meshScanAll, renderMeshPage } from './tabs/mesh.js';
 import { l2tpScanAll, renderL2tpPage } from './tabs/l2tp.js';
@@ -220,6 +223,23 @@ window.resetRptState = resetRptState;
 window.loadChangeRadar = loadChangeRadar;
 window.renderChangeRadar = renderChangeRadar;
 window.resetCrState = resetCrState;
+
+// DHCP Leases
+window.loadDhcpLeases = loadDhcpLeases;
+window.renderDhcpLeases = renderDhcpLeases;
+window.setDlSearch = setDlSearch;
+window.exportDhcpCsv = exportDhcpCsv;
+window.resetDlState = resetDlState;
+
+// VLAN Map
+window.loadVlanMap = loadVlanMap;
+window.renderVlanMap = renderVlanMap;
+window.resetVmState = resetVmState;
+
+// Account Members
+window.loadAccountMembers = loadAccountMembers;
+window.renderAccountMembers = renderAccountMembers;
+window.resetAmState = resetAmState;
 
 // Client Explorer
 window.startCeScan = startCeScan;

@@ -2,7 +2,7 @@ const https = require('https');
 const url   = require('url');
 
 const DEFAULT_BASE = 'cloud.lancom.de';
-const SERVICE_NAMES = ['devices','monitoring','monitor-frontend','useragent','auth','config','notification','devicetunnel','siem','logging'];
+const SERVICE_NAMES = ['devices','monitoring','monitor-frontend','useragent','auth','config','notification','devicetunnel','siem','logging','licenses'];
 
 function buildServices(base) {
   const host = base || DEFAULT_BASE;

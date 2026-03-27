@@ -1051,3 +1051,82 @@ tr.bulk-selected td{background:rgba(0,76,151,.08)!important;}
 .cr-event-body{flex:1;font-size:12px;display:flex;gap:6px;align-items:baseline;min-width:0;}
 .cr-event-title{font-weight:700;white-space:nowrap;}
 .cr-event-detail{color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ── DHCP LEASES ──────────────────────────────────── */
+.dl-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:16px 24px 0;}
+.dl-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px;min-width:0;}
+.dl-stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.dl-stat-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;}
+.dl-stat-lbl{font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+.dl-section{padding:16px 24px 0;}
+.dl-section-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.dl-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--card);}
+.dl-table{width:100%;border-collapse:collapse;font-size:12px;}
+.dl-table th{background:var(--card2);padding:8px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;}
+.dl-table td{padding:7px 12px;border-bottom:1px solid var(--border);}
+.dl-table tr:hover td{background:rgba(77,166,255,.04);}
+.dl-td-mono{font-family:var(--mono);font-size:11px;}
+.dl-td-dev{font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dl-td-time{font-family:var(--mono);font-size:11px;color:var(--text3);}
+.dl-row-dup td{background:rgba(240,85,104,.04)!important;}
+.dl-dup-list{display:flex;flex-direction:column;gap:6px;}
+.dl-dup{display:flex;align-items:center;gap:10px;background:rgba(240,85,104,.06);border:1px solid rgba(240,85,104,.15);border-radius:var(--r);padding:8px 12px;font-size:12px;}
+.dl-dup-ip{font-family:var(--mono);font-weight:700;width:110px;flex-shrink:0;}
+.dl-dup-count{color:var(--red);font-weight:700;width:30px;flex-shrink:0;}
+.dl-dup-macs{color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.toolbar-search{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text);font-family:var(--font);outline:none;}
+.toolbar-search:focus{border-color:var(--accent);}
+
+/* ── VLAN MAP ─────────────────────────────────────── */
+.vm-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:16px 24px 0;}
+.vm-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px;min-width:0;}
+.vm-stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.vm-stat-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;}
+.vm-stat-lbl{font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+.vm-section{padding:16px 24px 0;}
+.vm-section-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.vm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.vm-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:transform .15s;}
+.vm-card:hover{transform:translateY(-2px);}
+.vm-card-disabled{opacity:.55;}
+.vm-card-head{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);}
+.vm-vlan-tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:6px;font-variant-numeric:tabular-nums;min-width:36px;text-align:center;}
+.vm-card-name{font-size:14px;font-weight:700;flex:1;}
+.vm-disabled-badge{font-size:10px;color:var(--red);font-weight:700;border:1px solid var(--red);border-radius:4px;padding:1px 6px;}
+.vm-card-body{padding:10px 14px;display:flex;flex-direction:column;gap:4px;}
+.vm-row{display:flex;justify-content:space-between;font-size:12px;}
+.vm-label{color:var(--text3);}
+.vm-value{font-weight:600;}
+.vm-badges{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 12px;}
+.vm-badge{font-size:10px;font-weight:700;border:1px solid;border-radius:4px;padding:2px 8px;}
+
+/* ── ACCOUNT MEMBERS ──────────────────────────────── */
+.am-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:16px 24px 0;}
+.am-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:10px;min-width:0;}
+.am-stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.am-stat-val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;}
+.am-stat-lbl{font-size:9px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+.am-section{padding:16px 24px 0;}
+.am-section-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.am-user-card{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;}
+.am-user-avatar{font-size:40px;color:var(--accent);opacity:.7;}
+.am-user-name{font-size:16px;font-weight:800;}
+.am-user-email{font-size:13px;color:var(--text2);margin-top:2px;}
+.am-user-meta{display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--text3);flex-wrap:wrap;}
+.am-user-meta span{display:flex;align-items:center;gap:4px;}
+.am-role-badge{font-size:10px;font-weight:700;border-radius:4px;padding:2px 8px;display:inline-block;}
+.am-role-owner{background:rgba(139,92,246,.15);color:var(--purple);}
+.am-role-admin{background:rgba(0,76,151,.15);color:var(--blue);}
+.am-role-member,.am-role-viewer{background:rgba(107,114,128,.15);color:var(--text2);}
+.am-license-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.am-license-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.am-lic-head{padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.am-lic-body{padding:10px 14px;}
+.am-lic-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;}
+.am-lic-row span:first-child{color:var(--text3);}
+.am-lic-val{font-weight:600;}
+.am-sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
+.am-sec-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;display:flex;gap:12px;align-items:flex-start;}
+.am-sec-icon{font-size:18px;width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.05);flex-shrink:0;}
+.am-sec-title{font-size:13px;font-weight:700;margin-bottom:2px;}
+.am-sec-desc{font-size:11px;color:var(--text2);line-height:1.5;}

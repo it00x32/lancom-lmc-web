@@ -1,6 +1,6 @@
 {
   "name": "onsite-web",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "OnSite Web – LANCOM LMC Network Management Dashboard",
   "main": "server.js",
   "scripts": {

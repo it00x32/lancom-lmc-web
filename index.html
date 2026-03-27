@@ -253,6 +253,22 @@
       </details>
 
       <details class="sidebar-group">
+        <summary>Netzwerk-Daten</summary>
+        <button class="tab-btn" onclick="showTab('dhcp-leases')" id="tab-btn-dhcp-leases" data-tooltip="DHCP-Leases">
+          <span class="tb-icon"><i class="fa-solid fa-address-book"></i></span>
+          <span class="tb-label">DHCP-Leases</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('vlan-map')" id="tab-btn-vlan-map" data-tooltip="VLAN-Karte">
+          <span class="tb-icon"><i class="fa-solid fa-layer-group"></i></span>
+          <span class="tb-label">VLAN-Karte</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('account-members')" id="tab-btn-account-members" data-tooltip="Benutzer & Zugriff">
+          <span class="tb-icon"><i class="fa-solid fa-users-gear"></i></span>
+          <span class="tb-label">Benutzer & Zugriff</span>
+        </button>
+      </details>
+
+      <details class="sidebar-group">
         <summary>Intelligence</summary>
         <button class="tab-btn" onclick="showTab('change-radar')" id="tab-btn-change-radar" data-tooltip="Änderungs-Radar">
           <span class="tb-icon"><i class="fa-solid fa-satellite-dish"></i></span>
@@ -1184,6 +1200,44 @@
     </div>
     <div id="hs-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
       <div class="empty-state"><i class="fa-solid fa-heart-pulse"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: DHCP-LEASES -->
+  <section class="tab-section" id="tab-dhcp-leases">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-address-book" style="color:var(--accent);margin-right:6px"></i>DHCP-Leases</span>
+      <div class="toolbar-spacer"></div>
+      <input type="text" class="toolbar-search" placeholder="Suche (IP, MAC, Host)…" oninput="setDlSearch(this.value)" style="width:200px">
+      <button class="icon-btn" onclick="exportDhcpCsv()" title="CSV Export"><i class="fa-solid fa-download"></i></button>
+      <button class="icon-btn" onclick="loadDhcpLeases()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="dl-refresh-icon"></i></button>
+    </div>
+    <div id="dl-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-network-wired"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: VLAN-KARTE -->
+  <section class="tab-section" id="tab-vlan-map">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-layer-group" style="color:var(--purple);margin-right:6px"></i>VLAN-Netzwerk-Karte</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="loadVlanMap()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="vm-refresh-icon"></i></button>
+    </div>
+    <div id="vm-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-network-wired"></i><h3>Keine Daten</h3><p>Zuerst Geräte laden.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB: BENUTZER & ZUGRIFF -->
+  <section class="tab-section" id="tab-account-members">
+    <div class="toolbar">
+      <span class="toolbar-title"><i class="fa-solid fa-users-gear" style="color:var(--accent2);margin-right:6px"></i>Benutzer & Zugriff</span>
+      <div class="toolbar-spacer"></div>
+      <button class="icon-btn" onclick="loadAccountMembers()" title="Neu laden"><i class="fa-solid fa-arrows-rotate" id="am-refresh-icon"></i></button>
+    </div>
+    <div id="am-wrap" style="overflow-y:auto;flex:1;padding-bottom:24px">
+      <div class="empty-state"><i class="fa-solid fa-users"></i><h3>Keine Daten</h3><p>Zuerst einloggen.</p></div>
     </div>
   </section>
 
