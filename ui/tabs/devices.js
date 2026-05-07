@@ -1,10 +1,21 @@
 import S from '../lib/state.js';
-import { escHtml, deviceName, isOnline, fmtRelTime } from '../lib/helpers.js';
+import { escHtml, deviceName, deviceTypeLabel, isOnline, fmtRelTime } from '../lib/helpers.js';
 import { api, toast } from '../lib/api.js';
 
 // ─── FILTER / SEARCH / DEVICE RENDER ──────────────────────────────────────────
 function setFilter(f,btn) { S.devFilter=f; document.querySelectorAll('#status-filter-group .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderDevices(); }
-function setSiteFilter(f,btn) { S.siteFilter=f; document.querySelectorAll('#site-filter-group .filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderDevices(); window.renderSiteTiles?.(); }
+function setSiteFilter(value) {
+  S.siteFilter = value;
+  const sel = document.getElementById('device-site-filter');
+  if (sel) sel.value = value === 'all' ? '' : value;
+  renderDevices();
+  window.renderSiteTiles?.();
+}
+
+function setSiteFilterFromDropdown(el) {
+  const v = el.value;
+  setSiteFilter(v === '' ? 'all' : v);
+}
 
 function renderDevices() {
   const grid=document.getElementById('device-grid');
@@ -15,8 +26,8 @@ function renderDevices() {
     if(S.devFilter==='alert'&&!d.alerting?.hasAlert) return false;
     if(S.siteFilter!=='all'&&(d.siteName||'')!==S.siteFilter) return false;
     if(q){
-      const f=[d.label,d.name,d.siteName,d.status?.deviceLabel,d.status?.model,d.status?.serial,d.status?.mac,d.status?.ip,d.id];
-      if(!f.some(x=>x&&x.toLowerCase().includes(q))) return false;
+      const f=[d.label,d.name,d.siteName,d.status?.deviceLabel,d.status?.model,d.status?.serial,d.status?.mac,d.status?.ip,d.id,d.status?.type,d.deviceType,deviceTypeLabel(d)];
+      if(!f.some(x=>x&&String(x).toLowerCase().includes(q))) return false;
     }
     return true;
   });
@@ -40,7 +51,7 @@ function renderDevices() {
     const site=d.siteName||'(kein Standort)';
     if(multiSite&&site!==lastSite) {
       const siteCount=visible.filter(x=>(x.siteName||'(kein Standort)')===site).length;
-      const cols=wlanLoaded?11:10;
+      const cols=wlanLoaded?12:11;
       rows+=`<tr><td colspan="${cols}" style="background:var(--card2);padding:8px 14px;font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text2)"><i class="fa-solid fa-location-dot" style="margin-right:5px;opacity:.5"></i>${escHtml(site)} <span style="color:var(--accent);font-family:var(--mono);font-weight:400;margin-left:6px">${siteCount}</span></td></tr>`;
       lastSite=site;
     }
@@ -50,6 +61,7 @@ function renderDevices() {
     <th style="width:32px"></th>
     <th>Gerät</th>
     <th>Standort</th>
+    <th>Typ</th>
     <th>Modell</th>
     <th>MAC</th>
     <th>IP</th>
@@ -93,6 +105,7 @@ function deviceRow(d, wlanLoaded) {
     <td style="text-align:center;width:32px">${bulkMode?`<input type="checkbox" ${isBulkSel?'checked':''} onclick="event.stopPropagation()" onchange="bulkToggleDevice('${id}',event)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)">`:statusDot}</td>
     <td><span style="font-weight:600">${escHtml(name)}</span>${alertIcon}${offlineTs?`<div style="font-size:10px;color:var(--text3);margin-top:1px"><i class="fa-solid fa-clock" style="margin-right:2px;opacity:.5"></i>${offlineTs}</div>`:''}</td>
     <td style="color:var(--text2);font-size:12px">${escHtml(site)||'–'}</td>
+    <td style="color:var(--text2);font-size:12px;white-space:nowrap">${escHtml(deviceTypeLabel(d))}</td>
     <td style="font-size:12px">${escHtml(model)}</td>
     <td class="mono" style="font-size:11px">${escHtml(mac)}</td>
     <td class="mono" style="font-size:11.5px">${escHtml(ip)}</td>
@@ -167,7 +180,7 @@ function bulkSelectAll() {
     if(S.devFilter==='offline'&&isOnline(d)) return;
     if(S.devFilter==='alert'&&!d.alerting?.hasAlert) return;
     if(S.siteFilter!=='all'&&(d.siteName||'')!==S.siteFilter) return;
-    if(q){const f=[d.label,d.name,d.siteName,d.status?.deviceLabel,d.status?.model,d.status?.serial,d.status?.ip,d.id];if(!f.some(x=>x&&x.toLowerCase().includes(q)))return;}
+    if(q){const f=[d.label,d.name,d.siteName,d.status?.deviceLabel,d.status?.model,d.status?.serial,d.status?.ip,d.id,d.status?.type,d.deviceType,deviceTypeLabel(d)];if(!f.some(x=>x&&String(x).toLowerCase().includes(q)))return;}
     bulkSelected.add(d.id);
   });
   updateBulkBar();
@@ -289,11 +302,11 @@ function closeActionModal() {
 function exportDevicesCsv() {
   const devices = Object.values(S.devices);
   if(!devices.length) { toast('info','Keine Daten','Zuerst Geräte laden.'); return; }
-  const headers = ['Name','Modell','Seriennummer','IP-Adresse','Standort','Status','Firmware','FW-Status','CFG-Status','WLAN-Clients','Lifecycle'];
+  const headers = ['Name','Typ','Modell','Seriennummer','IP-Adresse','Standort','Status','Firmware','FW-Status','CFG-Status','WLAN-Clients','Lifecycle'];
   const rows = devices.map(d => {
     const wlan = S.wlanClients[d.id]!==undefined ? String(S.wlanClients[d.id]) : '–';
     return [
-      deviceName(d), d.status?.model||'–', d.status?.serial||'–', d.status?.ip||'–',
+      deviceName(d), deviceTypeLabel(d), d.status?.model||'–', d.status?.serial||'–', d.status?.ip||'–',
       d.siteName||'–', isOnline(d)?'Online':'Offline', d.status?.fwLabel||'–',
       d.firmwareState||'–', S.configStates[d.id]?.category||'–', wlan,
       d.status?.lifecycle?.status||'–',
@@ -312,6 +325,7 @@ function exportDevicesCsv() {
 export {
   setFilter,
   setSiteFilter,
+  setSiteFilterFromDropdown,
   renderDevices,
   deviceRow,
   exportDevicesCsv,

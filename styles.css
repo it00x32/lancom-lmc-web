@@ -81,6 +81,7 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
 .header-logo .logo-badge{width:34px;height:34px;border-radius:var(--r);background:linear-gradient(180deg,#002855,#001f40);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;}
 .header-logo .logo-text{font-family:var(--font);font-weight:700;font-size:14px;line-height:1.2;letter-spacing:.5px;text-transform:uppercase;color:#fff;}
 .header-logo .logo-text span{display:block;font-size:11px;color:rgba(255,255,255,.5);font-weight:400;letter-spacing:2px;}
+.header-version{font-size:10px;font-family:var(--mono);font-weight:500;color:rgba(255,255,255,.42);letter-spacing:.25px;flex-shrink:0;margin-left:-6px}
 .header-account{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:var(--r);padding:4px 12px;}
 .header-account .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
 .header-account .name{font-size:12px;font-weight:600;font-family:var(--mono);letter-spacing:.3px;color:#fff;}
@@ -371,6 +372,68 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
   min-width:112px;
   max-width:min(340px,85vw);
 }
+.topo-depth-banner{
+  flex-shrink:0;
+  display:none;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  padding:8px 24px;
+  font-size:12px;
+  line-height:1.35;
+  color:var(--text2);
+  background:rgba(0,76,151,.08);
+  border-bottom:1px solid rgba(0,76,151,.14);
+}
+.topo-depth-banner-text{flex:1;min-width:180px;}
+.topo-depth-banner-btn{
+  flex-shrink:0;
+  background:rgba(0,76,151,.12);
+  border:1px solid rgba(0,76,151,.35);
+  border-radius:var(--r);
+  color:var(--accent2);
+  font-size:11px;
+  font-weight:700;
+  padding:6px 12px;
+  cursor:pointer;
+  font-family:var(--font);
+}
+.topo-depth-banner-btn:hover{background:rgba(0,76,151,.18);}
+.topo-filter-row{
+  flex-shrink:0;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px 22px;
+  padding:8px 24px 10px;
+  font-size:12px;
+  background:var(--card2);
+  border-bottom:1px solid rgba(0,40,85,.1);
+  position:relative;
+  z-index:24;
+}
+.topo-filter-heading{
+  font-size:10px;
+  font-weight:700;
+  color:var(--text3);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-right:4px;
+}
+.topo-filter-label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  cursor:pointer;
+  color:var(--text2);
+  user-select:none;
+}
+.topo-filter-label input{
+  width:14px;
+  height:14px;
+  accent-color:var(--accent);
+  cursor:pointer;
+}
 .topo-canvas{
   flex:1;
   min-height:0;
@@ -397,7 +460,24 @@ body{background:var(--bg);background-image:radial-gradient(ellipse 60% 40% at 20
 @media(max-width:900px){.stats-bar{grid-template-columns:repeat(3,1fr);} .device-grid{grid-template-columns:1fr;padding:0 12px 20px;}}
 @media(max-width:600px){.stats-bar{grid-template-columns:repeat(2,1fr);padding:12px 12px 6px;} .toolbar{padding:6px 12px 10px;} .table-wrap{padding:0 12px 16px;} .mini-stats{padding:10px 12px 0;}}
 
-.mesh-link-table th{background:rgba(0,76,151,.06);}
+.device-site-filter-select{
+  min-width:200px;
+  max-width:min(420px,56vw);
+  flex:0 1 auto;
+  background:var(--card2);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  color:var(--text);
+  padding:6px 12px;
+  font-family:var(--font);
+  font-size:12px;
+  font-weight:600;
+  outline:none;
+  cursor:pointer;
+  transition:border-color .15s;
+}
+.device-site-filter-select:focus{border-color:rgba(0,76,151,.45);}
+.device-site-filter-select option{background:var(--card2);}
 .mesh-link-table td{border-bottom:1px solid rgba(0,40,85,.07);}
 .mesh-link-table tbody tr:hover td{background:rgba(0,76,151,.04);}
 .mesh-ap-badge.wds-no{background:rgba(0,0,0,.04);color:var(--text2);border-color:var(--border);}

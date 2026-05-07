@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OnSite Web</title>
+<title>OnSite Web</title><!-- wird von APP_VERSION in ui/main.js gesetzt -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -81,6 +81,7 @@
       <div class="logo-badge"><i class="fa-solid fa-network-wired"></i></div>
       <div class="logo-text">OnSite<span>Web</span></div>
     </div>
+    <span id="header-app-version" class="header-version" aria-label="App-Version"></span>
     <div class="header-account">
       <div class="dot"></div>
       <span class="name" id="header-account-name">–</span>
@@ -357,9 +358,9 @@
         <input type="text" id="search-input" placeholder="Suchen…" oninput="debouncedRenderDevices()">
       </div>
     </div>
-    <div class="toolbar" id="site-filter-toolbar" style="display:none;padding-top:0;border-top:none;gap:6px;">
-      <i class="fa-solid fa-map-marker-alt" style="color:var(--text3);font-size:12px;margin-right:2px;flex-shrink:0"></i>
-      <div class="filter-group" id="site-filter-group" style="flex-wrap:wrap;"></div>
+    <div class="toolbar" id="site-filter-toolbar" style="display:none;padding-top:0;border-top:none;gap:10px;align-items:center;">
+      <label for="device-site-filter" style="font-size:12px;color:var(--text2);font-weight:600;flex-shrink:0">Standort:</label>
+      <select id="device-site-filter" class="device-site-filter-select" onchange="setSiteFilterFromDropdown(this)" aria-label="Standort filtern"></select>
     </div>
     <div class="table-wrap" id="device-grid"></div>
     <div class="sync-bar" id="sync-bar">Letzte Aktualisierung: –</div>
@@ -725,9 +726,7 @@
         <span class="toolbar-title">Netzwerkplan</span>
         <div class="toolbar-spacer"></div>
         <label style="font-size:12px;color:var(--text2);flex-shrink:0;font-weight:600">Standort:</label>
-        <select id="topo-site-select" class="topo-select" onchange="topoChangeSite(this.value)" style="min-width:130px;">
-          <option value="">Alle Standorte</option>
-        </select>
+        <select id="topo-site-select" class="topo-select" onchange="topoChangeSite(this.value)" style="min-width:130px;" aria-label="Standort für Netzwerkplan"></select>
         <label style="font-size:12px;color:var(--text2);flex-shrink:0;font-weight:600">Startgerät:</label>
         <select id="topo-root-select" class="topo-select" onchange="topoChangeRoot()">
           <option value="">– Daten werden geladen –</option>
@@ -751,9 +750,17 @@
         <button class="icon-btn" onclick="topoZoom(0.8)" title="Verkleinern"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
         <button class="icon-btn" onclick="topoFit()" title="Ansicht einpassen"><i class="fa-solid fa-compress-arrows-alt"></i></button>
         <button class="icon-btn" onclick="topoResetPositions()" title="Positionen zurücksetzen"><i class="fa-solid fa-rotate-left"></i></button>
-        <button class="icon-btn" onclick="topoExportSvg()" title="Als SVG exportieren"><i class="fa-solid fa-file-arrow-down"></i></button>
+        <button class="icon-btn" onclick="topoExportPdf()" title="Als PDF exportieren (Druckdialog → Als PDF speichern)"><i class="fa-solid fa-file-pdf"></i></button>
         <button class="icon-btn" id="topo-fs-btn" onclick="topoToggleFullscreen()" title="Vollbild"><i class="fa-solid fa-expand"></i></button>
       </div>
+      <div class="topo-filter-row">
+        <span class="topo-filter-heading">Filter</span>
+        <label class="topo-filter-label"><input type="checkbox" id="topo-hide-ap" onchange="topoSetHideAp(this.checked)"> Access Points ausblenden</label>
+        <label class="topo-filter-label"><input type="checkbox" id="topo-hide-offline" onchange="topoSetHideOffline(this.checked)"> Offline-Geräte ausblenden</label>
+        <label class="topo-filter-label"><input type="checkbox" id="topo-hide-unconnected" onchange="topoSetHideUnconnected(this.checked)"> Geräte ohne Verbindung ausblenden</label>
+        <label class="topo-filter-label"><input type="checkbox" id="topo-hide-ghost" onchange="topoSetHideGhost(this.checked)"> Nicht verwaltete Geräte ausblenden</label>
+      </div>
+      <div id="topo-depth-banner" class="topo-depth-banner" style="display:none" role="status" aria-live="polite"></div>
       <div class="topo-canvas">
       <svg id="topo-svg" xmlns="http://www.w3.org/2000/svg">
         <defs>

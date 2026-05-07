@@ -294,18 +294,24 @@ function updateAllBadges() {
 }
 
 function buildSiteFilter() {
-  const sites=[...new Set(Object.values(S.devices).map(d=>d.siteName||'').filter(Boolean))].sort();
-  const toolbar=document.getElementById('site-filter-toolbar');
-  const group=document.getElementById('site-filter-group');
-  if(sites.length<2){ toolbar.style.display='none'; window.renderSiteTiles?.(); return; }
-  toolbar.style.display='flex';
-  const siteFilter = S.siteFilter ?? 'all';
-  group.innerHTML=`<button class="filter-btn${siteFilter==='all'?' active':''}" onclick="setSiteFilter('all',this)">Alle</button>`
-    +sites.map(s=>`<button class="filter-btn${siteFilter===s?' active':''}" data-site="${s.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" onclick="setSiteFilter(this.dataset.site,this)">${escHtml(s)}</button>`).join('');
+  const sites = [...new Set(Object.values(S.devices).map(d => d.siteName || '').filter(Boolean))].sort();
+  const toolbar = document.getElementById('site-filter-toolbar');
+  const sel = document.getElementById('device-site-filter');
+  if (!toolbar || !sel) return;
+  if (sites.length < 2) { toolbar.style.display = 'none'; window.renderSiteTiles?.(); return; }
+  toolbar.style.display = 'flex';
+  let siteFilter = S.siteFilter ?? 'all';
+  if (siteFilter !== 'all' && !sites.includes(siteFilter)) {
+    siteFilter = 'all';
+    S.siteFilter = 'all';
+  }
+  const escAttr = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  let opts = '<option value="">Alle Standorte</option>';
+  sites.forEach(s => { opts += `<option value="${escAttr(s)}">${escHtml(s)}</option>`; });
+  sel.innerHTML = opts;
+  sel.value = siteFilter === 'all' ? '' : siteFilter;
   window.renderSiteTiles?.();
 }
-
-let siteFilter = 'all';
 
 function renderSiteTiles() {
   const tileEl = document.getElementById('site-tiles');
@@ -314,11 +320,12 @@ function renderSiteTiles() {
   const sites = [...new Set(devs.map(d=>d.siteName||'').filter(Boolean))].sort();
   if(sites.length < 2) { tileEl.style.display = 'none'; return; }
   tileEl.style.display = 'flex';
+  const cur = S.siteFilter ?? 'all';
   tileEl.innerHTML = sites.map(s => {
     const sd = devs.filter(d => d.siteName === s);
     const onl = sd.filter(d => isOnline(d)).length;
     const al  = sd.filter(d => d.alerting?.hasAlert).length;
-    const act = siteFilter === s;
+    const act = cur === s;
     return `<div class="site-tile${act?' active':''}" onclick="tileSiteFilter(${JSON.stringify(s)})">
       <div class="site-tile-name"><i class="fa-solid fa-location-dot" style="margin-right:4px;opacity:.5"></i>${escHtml(s)}</div>
       <div class="site-tile-count">${sd.length}</div>
@@ -328,7 +335,7 @@ function renderSiteTiles() {
         ${al?`<span style="color:var(--amber)"><i class="fa-solid fa-triangle-exclamation" style="font-size:9px"></i> ${al}</span>`:''}
       </div>
     </div>`;
-  }).join('') + `<div class="site-tile${siteFilter==='all'?' active':''}" onclick="tileSiteFilter('all')" style="min-width:80px">
+  }).join('') + `<div class="site-tile${cur==='all'?' active':''}" onclick="tileSiteFilter('all')" style="min-width:80px">
     <div class="site-tile-name">Alle</div>
     <div class="site-tile-count">${devs.length}</div>
     <div class="site-tile-detail" style="color:var(--text3)">Standorte: ${sites.length}</div>
@@ -336,11 +343,9 @@ function renderSiteTiles() {
 }
 
 function tileSiteFilter(name) {
-  siteFilter = name;
   S.siteFilter = name;
-  document.querySelectorAll('#site-filter-group .filter-btn').forEach(b => {
-    b.classList.toggle('active', (b.dataset.site||'all') === name || (name==='all' && !b.dataset.site));
-  });
+  const sel = document.getElementById('device-site-filter');
+  if (sel) sel.value = name === 'all' ? '' : name;
   window.renderDevices?.();
   renderSiteTiles();
 }
@@ -360,7 +365,6 @@ export {
   loadConfigState,
   renderSiteTiles,
   tileSiteFilter,
-  siteFilter,
   ensureLoaded,
   loadNeighborsData,
   loadLldpFullData,

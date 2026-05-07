@@ -2,9 +2,13 @@ import S from './lib/state.js';
 import { api, toast } from './lib/api.js';
 import { escHtml } from './lib/helpers.js';
 
-const APP_VERSION = 'v1.14.4';
+const APP_VERSION = 'v1.14.13';
+
+document.title = `OnSite Web · ${APP_VERSION}`;
 
 document.getElementById('app-version').textContent = APP_VERSION;
+const _hv = document.getElementById('header-app-version');
+if (_hv) _hv.textContent = APP_VERSION;
 document.getElementById('api-key-input').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 document.getElementById('api-base-input').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 (function(){

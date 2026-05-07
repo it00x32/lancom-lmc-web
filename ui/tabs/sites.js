@@ -64,7 +64,7 @@ function renderSitesFromDevices() {
 }
 
 function siteCardHtml(name, total, online, alerts, fwOld, siteName) {
-  return `<div class="site-card" onclick="showTab('devices');setTimeout(()=>{const btn=document.querySelector('#site-filter-group [data-site]');if(btn)setSiteFilter(${JSON.stringify(siteName)},document.querySelector('#site-filter-group [data-site=\\'+${JSON.stringify(siteName)}+'\\']')||document.createElement('button'));},200)">
+  return `<div class="site-card" onclick="showTab('devices');setTimeout(()=>setSiteFilter(${JSON.stringify(siteName)}),200)">
     <div class="site-card-name"><i class="fa-solid fa-location-dot" style="color:var(--accent);font-size:13px;flex-shrink:0"></i><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(name)}</span></div>
     <div class="site-stat-row">
       <div class="site-stat"><div class="site-stat-val" style="color:var(--text)">${total}</div><div class="site-stat-lbl">Gesamt</div></div>

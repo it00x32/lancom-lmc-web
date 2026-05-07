@@ -1,11 +1,161 @@
 import S from '../lib/state.js';
-import { escHtml, deviceName, isOnline, statusDot, fmtRate, fmtBytes, signalBar, bandBadge } from '../lib/helpers.js';
+import { escHtml, deviceName, deviceTypeLabel, isOnline, statusDot, fmtRate, fmtBytes, signalBar, bandBadge } from '../lib/helpers.js';
 import { api, toast } from '../lib/api.js';
 import { snmpReqBody } from '../lib/snmp.js';
 import { fmtSpeed, poeCell } from './lldp.js';
 
 // ─── NETWORK TOPOLOGY ─────────────────────────────────────────────────────────
 let topoTx = 0, topoTy = 0, topoScale = 1, topoRootId = '', topoSiteFilter = '';
+
+let topoHideAP = false;
+let topoHideOffline = false;
+let topoHideUnconnected = false;
+let topoHideGhost = false;
+(function loadTopoHideOpts() {
+  try {
+    if (localStorage.getItem('lmc_topo_hide_ap') === '1') topoHideAP = true;
+    if (localStorage.getItem('lmc_topo_hide_offline') === '1') topoHideOffline = true;
+    if (localStorage.getItem('lmc_topo_hide_unconnected') === '1') topoHideUnconnected = true;
+    if (localStorage.getItem('lmc_topo_hide_ghost') === '1') topoHideGhost = true;
+  } catch {}
+})();
+
+function escAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+/** Netzwerkplan: immer ein konkreter Standort (kein „alle Standorte“). '' = nur Geräte ohne Standortname. */
+function topoMatchesSite(d) {
+  const sn = (d.siteName || '').trim();
+  if (topoSiteFilter === '') return !sn;
+  return sn === topoSiteFilter;
+}
+
+const TOPO_KIND = { ROUTER: 'ROUTER', ACCESS_POINT: 'ACCESS_POINT', SWITCH: 'SWITCH', FIREWALL: 'FIREWALL', UNKNOWN: 'UNKNOWN' };
+
+/** Gerätetyp für Farbe/Badge (API > Heuristik LLDP/WLAN). */
+function topoResolveKind(node) {
+  const raw = (node.deviceType || '').toString().trim().toUpperCase();
+  if (raw === 'ROUTER') return TOPO_KIND.ROUTER;
+  if (raw === 'ACCESS_POINT') return TOPO_KIND.ACCESS_POINT;
+  if (raw === 'SWITCH') return TOPO_KIND.SWITCH;
+  if (raw === 'FIREWALL') return TOPO_KIND.FIREWALL;
+  if (raw) return TOPO_KIND.UNKNOWN;
+  if (node.isSwitch) return TOPO_KIND.SWITCH;
+  if (node.wlanClients > 0) return TOPO_KIND.ACCESS_POINT;
+  return TOPO_KIND.ROUTER;
+}
+
+function topoKindStyle(kind) {
+  switch (kind) {
+    case TOPO_KIND.ACCESS_POINT:
+      return {
+        short: 'AP',
+        badgeBg: 'rgba(167,139,250,.26)',
+        badgeFg: '#c4b5fd',
+        fillOnline: 'rgba(139,92,246,.1)',
+        strokeOnline: 'rgba(167,139,250,.65)',
+      };
+    case TOPO_KIND.SWITCH:
+      return {
+        short: 'SW',
+        badgeBg: 'rgba(45,212,191,.24)',
+        badgeFg: '#5eead4',
+        fillOnline: 'rgba(13,148,136,.11)',
+        strokeOnline: 'rgba(34,211,238,.62)',
+      };
+    case TOPO_KIND.FIREWALL:
+      return {
+        short: 'FW',
+        badgeBg: 'rgba(251,146,60,.28)',
+        badgeFg: '#fdba74',
+        fillOnline: 'rgba(234,88,12,.1)',
+        strokeOnline: 'rgba(251,146,60,.68)',
+      };
+    case TOPO_KIND.UNKNOWN:
+      return {
+        short: '?',
+        badgeBg: 'rgba(148,163,184,.22)',
+        badgeFg: '#cbd5e1',
+        fillOnline: 'rgba(100,116,139,.09)',
+        strokeOnline: 'rgba(148,163,184,.52)',
+      };
+    case TOPO_KIND.ROUTER:
+    default:
+      return {
+        short: 'GW',
+        badgeBg: 'rgba(96,165,250,.24)',
+        badgeFg: '#93c5fd',
+        fillOnline: 'rgba(37,99,235,.09)',
+        strokeOnline: 'rgba(59,130,246,.65)',
+      };
+  }
+}
+
+function persistTopoHideFlag(key, val) {
+  try { localStorage.setItem(key, val ? '1' : '0'); } catch {}
+}
+
+function syncTopoFilterCheckboxes() {
+  const pairs = [
+    ['topo-hide-ap', topoHideAP],
+    ['topo-hide-offline', topoHideOffline],
+    ['topo-hide-unconnected', topoHideUnconnected],
+    ['topo-hide-ghost', topoHideGhost],
+  ];
+  pairs.forEach(([id, v]) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = v;
+  });
+}
+
+/** Entfernt Knoten aus dem Graphen vor Layout (AP / offline / nicht verwaltet). */
+function applyTopoGraphFilters(nodesIn, edgesIn) {
+  const nodes = { ...nodesIn };
+  const remove = new Set();
+  Object.entries(nodes).forEach(([id, node]) => {
+    if (topoHideGhost && node.isGhost) remove.add(id);
+    if (!node.isGhost && topoHideOffline && !node.online) remove.add(id);
+    if (!node.isGhost && topoHideAP && topoResolveKind(node) === TOPO_KIND.ACCESS_POINT) remove.add(id);
+  });
+  remove.forEach(id => { delete nodes[id]; });
+  const edges = edgesIn.filter(e => nodes[e.from] && nodes[e.to]);
+  return { nodes, edges };
+}
+
+function topoPickRootIfMissing(nodes, preferredRootId) {
+  const ids = Object.keys(nodes);
+  if (!ids.length) return '';
+  if (preferredRootId && nodes[preferredRootId]) return preferredRootId;
+  const managed = ids.filter(id => !nodes[id].isGhost).sort((a, b) =>
+    (nodes[a].name || '').localeCompare(nodes[b].name || '', 'de'));
+  return managed[0] || ids[0];
+}
+
+function topoSetHideAp(v) {
+  topoHideAP = !!v;
+  persistTopoHideFlag('lmc_topo_hide_ap', topoHideAP);
+  renderTopology();
+  setTimeout(topoFit, 80);
+}
+function topoSetHideOffline(v) {
+  topoHideOffline = !!v;
+  persistTopoHideFlag('lmc_topo_hide_offline', topoHideOffline);
+  renderTopology();
+  setTimeout(topoFit, 80);
+}
+function topoSetHideUnconnected(v) {
+  topoHideUnconnected = !!v;
+  persistTopoHideFlag('lmc_topo_hide_unconnected', topoHideUnconnected);
+  renderTopology();
+  setTimeout(topoFit, 80);
+}
+function topoSetHideGhost(v) {
+  topoHideGhost = !!v;
+  persistTopoHideFlag('lmc_topo_hide_ghost', topoHideGhost);
+  renderTopology();
+  setTimeout(topoFit, 80);
+}
 /** null = alle Ebenen; sonst max. BFS-Level vom Startknoten (0 = nur Start) */
 let topoDepthLimit = null;
 try {
@@ -59,15 +209,16 @@ function buildTopoGraph() {
     return null;
   }
 
-  // Nodes: devices of selected site (or all)
+  // Nodes: nur Geräte des gewählten Standorts (bzw. ohne Standort wenn '' gewählt)
   const nodes = {};
   Object.values(S.devices).forEach(d => {
-    if (topoSiteFilter && (d.siteName || '') !== topoSiteFilter) return;
+    if (!topoMatchesSite(d)) return;
     nodes[d.id] = {
       id: d.id,
       name: topoDevName(d),
       model: d.status?.model || '',
       siteName: d.siteName || '',
+      deviceType: (d.status?.type || d.deviceType || '').toString().trim(),
       online: isOnline(d),
       hasAlert: !!d.alerting?.hasAlert,
       isSwitch: false,
@@ -180,17 +331,34 @@ function buildTopoSelector() {
   const allDevices = Object.values(S.devices);
   if (!allDevices.length) return;
 
-  // Populate site selector
   const siteSel = document.getElementById('topo-site-select');
-  const prevSite = siteSel.value || topoSiteFilter;
-  const sites = [...new Set(allDevices.map(d => d.siteName || '').filter(Boolean))].sort();
-  siteSel.innerHTML = `<option value="">Alle Standorte</option>` + sites.map(s => `<option value="${escHtml(s)}"${s === topoSiteFilter ? ' selected' : ''}>${escHtml(s)}</option>`).join('');
-  if (prevSite && sites.includes(prevSite)) { siteSel.value = prevSite; topoSiteFilter = prevSite; }
+  if (!siteSel) return;
 
-  // Filtered device ids
-  const ids = allDevices
-    .filter(d => !topoSiteFilter || (d.siteName || '') === topoSiteFilter)
-    .map(d => d.id);
+  const namedSites = [...new Set(allDevices.map(d => (d.siteName || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
+  const hasUnnamed = allDevices.some(d => !(d.siteName || '').trim());
+
+  const prevSelected = siteSel.value;
+  let opts = '';
+  namedSites.forEach(s => {
+    opts += `<option value="${escAttr(s)}">${escHtml(s)}</option>`;
+  });
+  if (hasUnnamed) {
+    opts += `<option value="">Ohne Standort</option>`;
+  }
+  siteSel.innerHTML = opts;
+
+  const valid = new Set(namedSites);
+  if (hasUnnamed) valid.add('');
+
+  let next = topoSiteFilter;
+  if (valid.has(prevSelected)) next = prevSelected;
+  else if (!valid.has(topoSiteFilter)) {
+    next = namedSites.length ? namedSites[0] : '';
+  }
+  topoSiteFilter = next;
+  siteSel.value = topoSiteFilter;
+
+  const ids = allDevices.filter(d => topoMatchesSite(d)).map(d => d.id);
   if (!ids.length) return;
 
   const sel = document.getElementById('topo-root-select');
@@ -217,32 +385,87 @@ function buildTopoSelector() {
 }
 
 function renderTopology() {
+  buildTopoSelector();
+  syncTopoFilterCheckboxes();
+
   const ids = Object.values(S.devices)
-    .filter(d => !topoSiteFilter || (d.siteName || '') === topoSiteFilter)
+    .filter(d => topoMatchesSite(d))
     .map(d => d.id);
   const empty = document.getElementById('topo-empty');
   const gEl = document.getElementById('topo-g');
-  if (!ids.length) { empty.style.display = 'flex'; gEl.innerHTML = ''; return; }
+  if (!ids.length) {
+    empty.style.display = 'flex'; gEl.innerHTML = '';
+    const depthBanner = document.getElementById('topo-depth-banner');
+    if (depthBanner) { depthBanner.style.display = 'none'; depthBanner.innerHTML = ''; }
+    return;
+  }
   empty.style.display = 'none';
 
-  buildTopoSelector();
   syncTopoDepthSelect();
-  const rootId = document.getElementById('topo-root-select').value || topoRootId || ids[0];
-  topoRootId = rootId;
+  let rootId = document.getElementById('topo-root-select').value || topoRootId || ids[0];
 
-  const { nodes, edges } = buildTopoGraph();
+  let { nodes, edges } = buildTopoGraph();
+  ({ nodes, edges } = applyTopoGraphFilters(nodes, edges));
+
+  if (!Object.keys(nodes).length) {
+    const depthBanner = document.getElementById('topo-depth-banner');
+    if (depthBanner) { depthBanner.style.display = 'none'; depthBanner.innerHTML = ''; }
+    gEl.innerHTML = '';
+    empty.style.display = 'flex';
+    const eh = empty.querySelector('h3');
+    const ep = empty.querySelector('p');
+    if (eh) eh.textContent = 'Ansicht leer';
+    if (ep) ep.textContent = 'Alle Knoten sind durch die aktiven Filter ausgeblendet. Bitte Filter anpassen.';
+    return;
+  }
+  const eh = empty.querySelector('h3');
+  const ep = empty.querySelector('p');
+  if (eh) eh.textContent = 'Keine Topologie-Daten';
+  if (ep) ep.textContent = 'Keine LLDP-Verbindungen oder Geräte vorhanden.';
+
+  rootId = topoPickRootIfMissing(nodes, rootId);
+  topoRootId = rootId;
+  const rootSel = document.getElementById('topo-root-select');
+  if (rootSel && nodes[rootId]) rootSel.value = rootId;
+
   const { pos, level, unconnected } = layoutTopo(nodes, edges, rootId);
 
-  function visible(id) {
-    return level[id] !== undefined && (topoDepthLimit == null || level[id] <= topoDepthLimit);
+  function inSpanningTree(id) {
+    return level[id] !== undefined;
+  }
+
+  /** Darstellung: Pfad vom Startgerät inkl. Tiefenlimit; „ohne Verbindung“ nur bei unbegrenzter Tiefe und wenn nicht gefiltert. */
+  function showTopoNode(id) {
+    if (!nodes[id]) return false;
+    if (inSpanningTree(id)) {
+      return topoDepthLimit == null || level[id] <= topoDepthLimit;
+    }
+    if (topoDepthLimit != null) return false;
+    if (topoHideUnconnected) return false;
+    return true;
+  }
+
+  const depthBanner = document.getElementById('topo-depth-banner');
+  if (depthBanner) {
+    if (topoDepthLimit == null) {
+      depthBanner.style.display = 'none';
+      depthBanner.innerHTML = '';
+    } else {
+      const reachable = Object.keys(level).length;
+      const shown = Object.keys(nodes).filter(id => showTopoNode(id)).length;
+      depthBanner.style.display = 'flex';
+      depthBanner.innerHTML = `<span class="topo-depth-banner-text">Ansicht begrenzt auf <strong>${topoDepthLimit}</strong> Hop(s) vom Startgerät (${shown} von ${reachable} Knoten im Pfad). Für die volle Topologie: <strong>Unbegrenzt</strong> wählen oder hier klicken.</span><button type="button" class="topo-depth-banner-btn" onclick="topoChangeDepth('')">Alle Ebenen anzeigen</button>`;
+    }
   }
 
   let svg = '';
 
-  // Separator line for unconnected nodes (nur bei unbegrenzter Tiefe)
-  if (topoDepthLimit == null && unconnected.length) {
-    const uy = unconnected.map(id => pos[id].y).reduce((a, b) => Math.min(a, b), Infinity);
-    const xs = unconnected.map(id => pos[id].x);
+  const uncShown = topoDepthLimit == null && !topoHideUnconnected
+    ? unconnected.filter(id => nodes[id] && showTopoNode(id))
+    : [];
+  if (uncShown.length) {
+    const uy = uncShown.map(id => pos[id].y).reduce((a, b) => Math.min(a, b), Infinity);
+    const xs = uncShown.map(id => pos[id].x);
     const x1 = Math.min(...xs) - NW / 2 - 30, x2 = Math.max(...xs) + NW / 2 + 30;
     svg += `<line x1="${x1}" y1="${uy - 55}" x2="${x2}" y2="${uy - 55}" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="6,5"/>`;
     svg += `<text x="${(x1 + x2) / 2}" y="${uy - 64}" text-anchor="middle" font-size="9" font-weight="600" fill="rgba(148,163,184,.35)" font-family="'DM Sans',sans-serif" letter-spacing="0.1em">KEINE VERBINDUNG</text>`;
@@ -272,7 +495,7 @@ function renderTopology() {
 
   // Edges (curved bezier paths) with bandwidth coloring + port labels
   edges.forEach(e => {
-    if (!visible(e.from) || !visible(e.to)) return;
+    if (!showTopoNode(e.from) || !showTopoNode(e.to)) return;
     const f = pos[e.from], t = pos[e.to];
     if (!f || !t) return;
     const bothOnline = nodes[e.from]?.online && nodes[e.to]?.online;
@@ -322,7 +545,7 @@ function renderTopology() {
 
   // Nodes
   Object.entries(pos).forEach(([id, { x, y }]) => {
-    if (!visible(id)) return;
+    if (!showTopoNode(id)) return;
     const node = nodes[id]; if (!node) return;
     const isRoot = id === rootId;
     const rx = x - NW / 2, ry = y - NH / 2;
@@ -341,30 +564,40 @@ function renderTopology() {
       return;
     }
 
-    // ── Managed node ──────────────────────────────────────────────────────
-    const borderColor = node.hasAlert ? 'rgba(217,119,6,.75)' : node.online ? 'rgba(26,138,62,.55)' : 'rgba(211,47,47,.4)';
+    // ── Managed node (Typ farblich: Router / AP / Switch / Firewall) ───────
+    const kind = topoResolveKind(node);
+    const ks = topoKindStyle(kind);
+    const borderColor = node.hasAlert
+      ? 'rgba(217,119,6,.82)'
+      : !node.online
+        ? 'rgba(211,47,47,.45)'
+        : ks.strokeOnline;
     const dotColor = node.hasAlert ? '#d97706' : node.online ? '#1a8a3e' : '#d32f2f';
-    const bgFill = node.hasAlert ? 'rgba(217,119,6,.06)' : node.online ? 'rgba(26,138,62,.05)' : 'rgba(211,47,47,.04)';
+    const bgFill = node.hasAlert
+      ? 'rgba(217,119,6,.09)'
+      : !node.online
+        ? 'rgba(71,85,105,.08)'
+        : ks.fillOnline;
     const filter = isRoot ? 'filter="url(#topo-glow)"' : '';
 
     const dname = node.name.length > 21 ? node.name.slice(0, 20) + '…' : node.name;
     const dsub = (node.model || node.siteName);
     const dsubT = dsub.length > 24 ? dsub.slice(0, 23) + '…' : dsub;
 
-    const typeLabel = node.isSwitch ? 'SW' : node.wlanClients > 0 ? 'AP' : 'GW';
-    const typeBg = 'rgba(0,76,151,.12)';
-    const typeColor = '#004c97';
+    const dev = S.devices[id];
+    const tip = escHtml(dev ? deviceTypeLabel(dev) : ks.short);
 
     const nodeText = 'rgba(15,23,42,.92)';
     const nodeSub = 'rgba(71,85,105,.75)';
 
     svg += `<g class="topo-node" data-nid="${id}" data-x="${x}" data-y="${y}" onclick="topoOpenDetail('${id}')" ${filter}>
+      <title>${tip}</title>
       <rect class="topo-node-rect" x="${rx}" y="${ry}" width="${NW}" height="${NH}" rx="10"
         fill="${bgFill}" stroke="${borderColor}" stroke-width="${isRoot ? 2.5 : 1.5}"/>
       ${isRoot ? `<rect x="${rx - 2}" y="${ry - 2}" width="${NW + 4}" height="${NH + 4}" rx="12" fill="none" stroke="${borderColor}" stroke-width="0.5" opacity="0.4"/>` : ''}
       <circle cx="${rx + 16}" cy="${y}" r="5" fill="${dotColor}"${node.online && !node.hasAlert ? ' filter="url(#topo-glow)"' : ''}/>
-      <rect x="${rx + NW - 36}" y="${ry + 6}" width="28" height="16" rx="4" fill="${typeBg}"/>
-      <text x="${rx + NW - 22}" y="${ry + 17}" text-anchor="middle" font-size="9" font-weight="800" fill="${typeColor}" font-family="'DM Sans',sans-serif">${typeLabel}</text>
+      <rect x="${rx + NW - 36}" y="${ry + 6}" width="28" height="16" rx="4" fill="${ks.badgeBg}"/>
+      <text x="${rx + NW - 22}" y="${ry + 17}" text-anchor="middle" font-size="9" font-weight="800" fill="${ks.badgeFg}" font-family="'DM Sans',sans-serif">${ks.short}</text>
       <text x="${rx + 28}" y="${ry + 24}" font-size="13" font-weight="700" fill="${nodeText}" font-family="'DM Sans',sans-serif">${escHtml(dname)}</text>
       <text x="${rx + 28}" y="${ry + 42}" font-size="10" fill="${nodeSub}" font-family="'DM Sans',sans-serif">${escHtml(dsubT || '–')}</text>
     </g>`;
@@ -646,7 +879,7 @@ function topoChangeRoot() {
 }
 
 function topoChangeSite(site) {
-  topoSiteFilter = site;
+  topoSiteFilter = site === undefined || site === null ? '' : String(site);
   topoRootId = '';
   renderTopology();
   setTimeout(topoFit, 80);
@@ -719,7 +952,54 @@ function updateTopoTransform() {
   document.getElementById('topo-g').setAttribute('transform', `translate(${topoTx.toFixed(2)},${topoTy.toFixed(2)}) scale(${topoScale.toFixed(4)})`);
 }
 
-function topoExportSvg() {
+/** SVG-Inhalt für hellen Hintergrund: Kontrast bei Hilfslinien/Text anheben */
+function topoSvgInnerForExport(html) {
+  return html
+    .replace(/stroke="rgba\(255,255,255,\.06\)"/g, 'stroke="rgba(15,23,42,0.14)"')
+    .replace(/fill="rgba\(148,163,184,\.35\)"/g, 'fill="rgba(71,85,105,0.88)"');
+}
+
+function topoSiteExportLabel() {
+  if (topoSiteFilter === '') return 'Ohne Standort';
+  return topoSiteFilter || '–';
+}
+
+/** Alle LLDP-Portzeilen (Monitoring) für Geräte am aktuellen Netzwerkplan-Standort */
+function topoLldpRowsForSite() {
+  const siteIds = new Set(Object.values(S.devices).filter(d => topoMatchesSite(d)).map(d => d.id));
+  return (S.lldpNeighbors || [])
+    .filter(p => siteIds.has(p._deviceId))
+    .sort((a, b) => {
+      const c = (a._deviceName || '').localeCompare(b._deviceName || '', 'de');
+      if (c !== 0) return c;
+      return (a.portName || '').localeCompare(b.portName || '', 'de');
+    });
+}
+
+/** LAN-Interface-Tabelle (Monitoring), gefiltert nach Standort */
+function topoLldpTableRowsForSite() {
+  const siteIds = new Set(Object.values(S.devices).filter(d => topoMatchesSite(d)).map(d => d.id));
+  return (S.lldpTable || [])
+    .filter(row => siteIds.has(row.deviceId || row._deviceId))
+    .sort((a, b) => {
+      const na = S.devices[a.deviceId || a._deviceId]?.status?.name || '';
+      const nb = S.devices[b.deviceId || b._deviceId]?.status?.name || '';
+      const c = na.localeCompare(nb, 'de');
+      if (c !== 0) return c;
+      return (a.name || '').localeCompare(b.name || '', 'de');
+    });
+}
+
+function topoFmtSpeedPlain(kbps) {
+  if (!kbps || kbps <= 0) return '–';
+  if (kbps >= 1e7) return `${(kbps / 1e6).toFixed(0)} Gbit/s`;
+  if (kbps >= 1e6) return `${(kbps / 1e6).toFixed(1)} Gbit/s`;
+  if (kbps >= 1e3) return `${(kbps / 1e3).toFixed(0)} Mbit/s`;
+  return `${kbps} kbit/s`;
+}
+
+/** Export als PDF: öffnet Druckansicht — im Dialog „Als PDF speichern“ / „Microsoft Print to PDF“ wählen (wie Netzwerk-Report). */
+function topoExportPdf() {
   const gEl = document.getElementById('topo-g');
   if (!gEl || !gEl.children.length) { toast('info', 'Netzwerkplan leer', 'Kein Inhalt zum Exportieren.'); return; }
   const bbox = gEl.getBBox();
@@ -728,24 +1008,118 @@ function topoExportSvg() {
   const H = Math.ceil(bbox.height + pad * 2);
   const tx = (pad - bbox.x).toFixed(1);
   const ty = (pad - bbox.y).toFixed(1);
-  const svgStr = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-<rect width="100%" height="100%" fill="#07091a"/>
+  const inner = topoSvgInnerForExport(gEl.innerHTML);
+
+  const svgBlock = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="max-width:100%;height:auto;display:block;border:1px solid #e2e8f0;border-radius:10px;background:#ffffff">
 <defs>
   <filter id="topo-glow" x="-40%" y="-40%" width="180%" height="180%">
     <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
     <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
 </defs>
-<g transform="translate(${tx},${ty})">${gEl.innerHTML}</g>
+<rect width="100%" height="100%" fill="#f8fafc"/>
+<g transform="translate(${tx},${ty})">${inner}</g>
 </svg>`;
-  const blob = new Blob([svgStr], { type: 'image/svg+xml' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'netzwerkplan.svg';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('success', 'SVG exportiert', 'Netzwerkplan als SVG gespeichert.');
+
+  const siteLabel = escHtml(topoSiteExportLabel());
+  const dateStr = escHtml(new Date().toLocaleString('de-DE'));
+
+  const portRows = topoLldpRowsForSite();
+  let portTable = `<table class="lldp-export-table"><thead><tr>
+    <th>Gerät</th><th>Port</th><th>Beschreibung</th><th>LLDP-Nachbarn</th><th>Aktiv</th><th>Geschwindigkeit</th><th>VLAN</th><th>PoE</th><th>RX</th><th>TX</th><th>Loops</th>
+  </tr></thead><tbody>`;
+  if (!portRows.length) {
+    portTable += `<tr><td colspan="11">Keine Port-/LLDP-Daten für diesen Standort (Tab „LLDP“ laden oder Daten aktualisieren).</td></tr>`;
+  } else {
+    portRows.forEach(p => {
+      const neighbors = (p.lldpNames || []).map(n => escHtml(n)).join(', ') || '–';
+      const poe = [p.poeStatus, p.poePower != null && p.poePower !== '' ? `${p.poePower} W` : ''].filter(Boolean).join(', ') || '–';
+      portTable += `<tr>
+        <td>${escHtml(p._deviceName || '')}</td>
+        <td>${escHtml(p.portName || '')}</td>
+        <td>${escHtml(p.description || '')}</td>
+        <td>${neighbors}</td>
+        <td>${p.active ? 'Ja' : 'Nein'}</td>
+        <td>${escHtml(topoFmtSpeedPlain(p.speed))}</td>
+        <td>${escHtml(String(p.vlan ?? '–'))}</td>
+        <td>${escHtml(poe)}</td>
+        <td>${escHtml(fmtRate(p.rxBitPerSec))}</td>
+        <td>${escHtml(fmtRate(p.txBitPerSec))}</td>
+        <td>${p.loops > 0 ? escHtml(String(p.loops)) : '0'}</td>
+      </tr>`;
+    });
+  }
+  portTable += '</tbody></table>';
+
+  const ifRows = topoLldpTableRowsForSite();
+  let ifTable = `<table class="lldp-export-table"><thead><tr>
+    <th>Gerät</th><th>Schnittstelle</th><th>LLDP-Name</th><th>Aktiv</th><th>Beschreibung</th>
+  </tr></thead><tbody>`;
+  if (!ifRows.length) {
+    ifTable += `<tr><td colspan="5">Keine Schnittstellen-Zeilen für diesen Standort (optional, Daten aktualisieren).</td></tr>`;
+  } else {
+    ifRows.forEach(row => {
+      const did = row.deviceId || row._deviceId;
+      const dn = escHtml(deviceName(S.devices[did]) || did || '');
+      ifTable += `<tr>
+        <td>${dn}</td>
+        <td>${escHtml(row.name || '–')}</td>
+        <td>${escHtml(row.lldpName || '–')}</td>
+        <td>${row.active ? 'Ja' : 'Nein'}</td>
+        <td>${escHtml(row.description || '')}</td>
+      </tr>`;
+    });
+  }
+  ifTable += '</tbody></table>';
+
+  const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Netzwerkplan · ${siteLabel}</title>
+<style>
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#eef2f7;color:#0f172a;margin:0;padding:28px 32px 48px;line-height:1.45;}
+h1{font-size:1.35rem;font-weight:700;margin:0 0 6px;}
+.meta{font-size:13px;color:#64748b;margin-bottom:22px;}
+.section{margin-bottom:32px;}
+.section h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0 0 12px;}
+.lldp-export-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;}
+.lldp-export-table th,.lldp-export-table td{border:1px solid #e2e8f0;padding:8px 10px;text-align:left;vertical-align:top;}
+.lldp-export-table th{background:#f1f5f9;font-weight:600;}
+.lldp-export-table tbody tr:nth-child(even) td{background:#fafafa;}
+@media print{
+  body{background:#fff!important;padding:12mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .section{page-break-inside:avoid;margin-bottom:18px;}
+  .section h2{page-break-after:avoid;}
+  .lldp-export-table{font-size:8.5pt;}
+  .lldp-export-table th{font-size:8pt;padding:5px 7px;}
+  .lldp-export-table td{padding:4px 7px;font-size:8.5pt;}
+}
+</style>
+</head>
+<body>
+<h1>Netzwerkplan</h1>
+<div class="meta">Standort: <strong>${siteLabel}</strong> · Export: ${dateStr}</div>
+<div class="section"><h2>Topologie</h2>${svgBlock}</div>
+<div class="section"><h2>LLDP / Ports (Monitoring)</h2>${portTable}</div>
+<div class="section"><h2>Schnittstellen mit LLDP (Konfig-Tabelle)</h2>${ifTable}</div>
+<p style="font-size:11px;color:#94a3b8;margin-top:24px">OnSite Web · Nur Geräte am oben gewählten Netzwerkplan-Standort.</p>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) {
+    toast('error', 'Popup blockiert', 'Bitte Pop-ups für diese Seite erlauben, um den PDF-Export zu nutzen.');
+    return;
+  }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  try { win.document.title = `Netzwerkplan · ${topoSiteExportLabel()}`; } catch {}
+  win.focus();
+  setTimeout(() => { win.print(); }, 500);
+  toast('info', 'PDF erstellen', 'Im Druckdialog „Als PDF speichern“ wählen (z. B. Microsoft Print to PDF).');
 }
 
 function initTopoEvents() {
@@ -808,6 +1182,7 @@ function initTopoEvents() {
     }
     if (topoDrag.active) { topoDrag.active = false; document.getElementById('topo-svg').style.cursor = 'grab'; }
   });
+  syncTopoFilterCheckboxes();
 }
 
 function resetTopoState() { topoRootId = ''; topoSiteFilter = ''; topoTx = 0; topoTy = 0; topoScale = 1; }
@@ -815,8 +1190,9 @@ function resetTopoState() { topoRootId = ''; topoSiteFilter = ''; topoTx = 0; to
 export {
   buildTopoSelector, buildTopoGraph, layoutTopo, renderTopology,
   topoSetRoot, topoOpenDetail, topoCloseDetail, topoChangeRoot, topoChangeSite, topoChangeDepth, topoToggleFullscreen,
-  topoFit, topoZoom, topoResetPositions, topoExportSvg,
+  topoFit, topoZoom, topoResetPositions, topoExportPdf,
   initTopoEvents, updateTopoTransform,
   loadSnmpMacTable, loadMacTable, inspectLldpRaw,
   resetTopoState,
+  topoSetHideAp, topoSetHideOffline, topoSetHideUnconnected, topoSetHideGhost,
 };

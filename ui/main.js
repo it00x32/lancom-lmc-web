@@ -7,7 +7,7 @@ import { toggleSidebar, showTab, setRefreshInterval, startCountdown } from './si
 import { openSearch, closeSearch, runSearch } from './search.js';
 
 import { refreshDashboard, renderCurrentTab, updateStats, updateAllBadges, buildSiteFilter, loadWlanData, loadConfigStatesBatched, loadRecords, loadTable, loadLldpData, loadWlanNeighbors, ensureLoaded, loadNeighborsData, loadLldpFullData, loadConfigData } from './tabs/dashboard.js';
-import { setFilter, setSiteFilter, renderDevices, deviceRow, exportDevicesCsv, toggleBulkMode, bulkToggleDevice, bulkSelectAll, bulkClear, bulkActionReboot, bulkActionFirmware, bulkActionRollout, findActionBtn, setButtonLoading, openActionModal, updateActionDeviceStatus, finalizeActionModal, closeActionModal } from './tabs/devices.js';
+import { setFilter, setSiteFilter, setSiteFilterFromDropdown, renderDevices, deviceRow, exportDevicesCsv, toggleBulkMode, bulkToggleDevice, bulkSelectAll, bulkClear, bulkActionReboot, bulkActionFirmware, bulkActionRollout, findActionBtn, setButtonLoading, openActionModal, updateActionDeviceStatus, finalizeActionModal, closeActionModal } from './tabs/devices.js';
 import { setWlanFilter, renderWlan, loadBlacklist, renderBlacklist, blockWlanClient, unblockMac, generateBlacklistAddin } from './tabs/wlan.js';
 import { renderVpn } from './tabs/vpn.js';
 import { renderWan } from './tabs/wan.js';
@@ -15,7 +15,7 @@ import { renderTraffic, loadTrafficData, reloadTraffic, resetTrafficState } from
 import { renderNeighbors, setNbFilter } from './tabs/neighbors.js';
 import { setLldpView, renderLldp } from './tabs/lldp.js';
 import { loadSwitchEvents, setSweFilter, renderSwitchEvents, resetSweState } from './tabs/switch-events.js';
-import { buildTopoSelector, renderTopology, topoSetRoot, topoOpenDetail, topoCloseDetail, topoChangeRoot, topoChangeSite, topoChangeDepth, topoToggleFullscreen, topoFit, topoZoom, topoResetPositions, topoExportSvg, initTopoEvents, loadSnmpMacTable, loadMacTable, inspectLldpRaw, resetTopoState } from './tabs/topology.js';
+import { buildTopoSelector, renderTopology, topoSetRoot, topoOpenDetail, topoCloseDetail, topoChangeRoot, topoChangeSite, topoChangeDepth, topoToggleFullscreen, topoFit, topoZoom, topoResetPositions, topoExportPdf, initTopoEvents, loadSnmpMacTable, loadMacTable, inspectLldpRaw, resetTopoState, topoSetHideAp, topoSetHideOffline, topoSetHideUnconnected, topoSetHideGhost } from './tabs/topology.js';
 import { lcSetFilter, renderLifecycle } from './tabs/lifecycle.js';
 import { renderEnergy, saveEnergyPrice, loadEnergyPrice } from './tabs/energy.js';
 import { paLoadAll, paToggleDetail, renderAnomalyPage, paState } from './tabs/anomaly.js';
@@ -93,6 +93,7 @@ window.ensureLoaded = async (key) => {
 // Devices
 window.setFilter = setFilter;
 window.setSiteFilter = setSiteFilter;
+window.setSiteFilterFromDropdown = setSiteFilterFromDropdown;
 window.renderDevices = renderDevices;
 window.exportDevicesCsv = exportDevicesCsv;
 window.toggleBulkMode = toggleBulkMode;
@@ -146,11 +147,16 @@ window.topoToggleFullscreen = topoToggleFullscreen;
 window.topoFit = topoFit;
 window.topoZoom = topoZoom;
 window.topoResetPositions = topoResetPositions;
-window.topoExportSvg = topoExportSvg;
+window.topoExportPdf = topoExportPdf;
+window.topoExportSvg = topoExportPdf;
 window.loadSnmpMacTable = loadSnmpMacTable;
 window.loadMacTable = loadMacTable;
 window.inspectLldpRaw = inspectLldpRaw;
 window.resetTopoState = resetTopoState;
+window.topoSetHideAp = topoSetHideAp;
+window.topoSetHideOffline = topoSetHideOffline;
+window.topoSetHideUnconnected = topoSetHideUnconnected;
+window.topoSetHideGhost = topoSetHideGhost;
 
 // Analysis
 window.lcSetFilter = lcSetFilter;
@@ -347,6 +353,8 @@ window.setLoading = setLoading;
 // ── Init ──────────────────────────────────────────────────────────────────────
 function init() {
   document.getElementById('app-version').textContent = APP_VERSION;
+  const headerVer = document.getElementById('header-app-version');
+  if (headerVer) headerVer.textContent = APP_VERSION;
 
   const saved = localStorage.getItem('lmc_api_key');
   if (saved) {

@@ -64,6 +64,21 @@ function deviceName(d) {
   return d.label||d.name||d.status?.name||d.status?.deviceLabel||d.siteName||d.id?.substring(0,8)||'–';
 }
 
+/** LMC device type → kurzer deutscher Anzeigename (Geräteliste, CSV, …) */
+function deviceTypeLabel(d) {
+  const raw = (d?.status?.type || d?.deviceType || '').toString().trim();
+  if (!raw) return '–';
+  const t = raw.toUpperCase();
+  const map = {
+    ROUTER: 'Router',
+    ACCESS_POINT: 'Access Point',
+    SWITCH: 'Switch',
+    FIREWALL: 'Firewall',
+  };
+  if (map[t]) return map[t];
+  return raw.replace(/_/g, ' ');
+}
+
 function fmtRelTime(ts) {
   if(!ts) return '';
   const diff = Date.now() - new Date(ts).getTime();
@@ -110,7 +125,7 @@ function sevBadge(sev) {
 
 export {
   isOnline, isWanUp, fmtWanState, fmt, fmtBytes, fmtRate, signalLevel, signalBar,
-  bandBadge, statusDot, escHtml, deviceName, fmtRelTime, debounce,
+  bandBadge, statusDot, escHtml, deviceName, deviceTypeLabel, fmtRelTime, debounce,
   _dirtyTabs, markAllTabsDirty, renderTabIfActive,
   debouncedRenderDevices, debouncedRenderWlan, debouncedRenderVpn, debouncedRenderWan,
   debouncedRenderNeighbors, debouncedRenderLldp, debouncedRenderLogTable,
