@@ -720,25 +720,41 @@
 
   <!-- TAB: NETZWERKPLAN -->
   <section class="tab-section" id="tab-topology">
-    <div class="toolbar">
-      <span class="toolbar-title">Netzwerkplan</span>
-      <div class="toolbar-spacer"></div>
-      <label style="font-size:12px;color:var(--text2);flex-shrink:0;font-weight:600">Standort:</label>
-      <select id="topo-site-select" class="topo-select" onchange="topoChangeSite(this.value)" style="min-width:130px;">
-        <option value="">Alle Standorte</option>
-      </select>
-      <label style="font-size:12px;color:var(--text2);flex-shrink:0;font-weight:600">Startgerät:</label>
-      <select id="topo-root-select" class="topo-select" onchange="topoChangeRoot()">
-        <option value="">– Daten werden geladen –</option>
-      </select>
-      <button class="icon-btn" onclick="topoZoom(1.25)" title="Vergrößern"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-      <button class="icon-btn" onclick="topoZoom(0.8)" title="Verkleinern"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
-      <button class="icon-btn" onclick="topoFit()" title="Ansicht einpassen"><i class="fa-solid fa-compress-arrows-alt"></i></button>
-      <button class="icon-btn" onclick="topoResetPositions()" title="Positionen zurücksetzen"><i class="fa-solid fa-rotate-left"></i></button>
-      <button class="icon-btn" onclick="topoExportSvg()" title="Als SVG exportieren"><i class="fa-solid fa-file-arrow-down"></i></button>
-      <button class="icon-btn" id="topo-fs-btn" onclick="topoToggleFullscreen()" title="Vollbild"><i class="fa-solid fa-expand"></i></button>
-    </div>
     <div id="topo-wrap">
+      <div class="toolbar topo-toolbar">
+        <span class="toolbar-title">Netzwerkplan</span>
+        <div class="toolbar-spacer"></div>
+        <label style="font-size:12px;color:var(--text2);flex-shrink:0;font-weight:600">Standort:</label>
+        <select id="topo-site-select" class="topo-select" onchange="topoChangeSite(this.value)" style="min-width:130px;">
+          <option value="">Alle Standorte</option>
+        </select>
+        <label style="font-size:12px;color:var(--text2);flex-shrink:0;font-weight:600">Startgerät:</label>
+        <select id="topo-root-select" class="topo-select" onchange="topoChangeRoot()">
+          <option value="">– Daten werden geladen –</option>
+        </select>
+        <label style="font-size:12px;color:var(--text2);flex-shrink:0;font-weight:600" title="Vom Startgerät gezählt: Ebene 0 = Start, Ebene 1 = direkt verbunden, …">Tiefe:</label>
+        <select id="topo-depth-select" class="topo-select" title="Unbegrenzt = gesamte Topologie inkl. Geräte ohne Pfad zum Start. Sonst nur Knoten bis zur angegebenen Hop-Tiefe." onchange="topoChangeDepth(this.value)" style="min-width:118px;">
+          <option value="">Unbegrenzt</option>
+          <option value="0">0 — nur Start</option>
+          <option value="1">1 — direkt</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+        <button class="icon-btn" onclick="topoZoom(1.25)" title="Vergrößern"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+        <button class="icon-btn" onclick="topoZoom(0.8)" title="Verkleinern"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+        <button class="icon-btn" onclick="topoFit()" title="Ansicht einpassen"><i class="fa-solid fa-compress-arrows-alt"></i></button>
+        <button class="icon-btn" onclick="topoResetPositions()" title="Positionen zurücksetzen"><i class="fa-solid fa-rotate-left"></i></button>
+        <button class="icon-btn" onclick="topoExportSvg()" title="Als SVG exportieren"><i class="fa-solid fa-file-arrow-down"></i></button>
+        <button class="icon-btn" id="topo-fs-btn" onclick="topoToggleFullscreen()" title="Vollbild"><i class="fa-solid fa-expand"></i></button>
+      </div>
+      <div class="topo-canvas">
       <svg id="topo-svg" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id="topo-glow" x="-40%" y="-40%" width="180%" height="180%">
@@ -786,6 +802,7 @@
         <h3 style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Keine Topologie-Daten</h3>
         <p style="font-size:13px">Keine LLDP-Verbindungen oder Geräte vorhanden.</p>
       </div>
+      </div><!-- .topo-canvas -->
     </div>
   </section>
 

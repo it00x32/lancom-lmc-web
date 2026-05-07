@@ -6,6 +6,26 @@ import { fmtSpeed, poeCell } from './lldp.js';
 
 // ─── NETWORK TOPOLOGY ─────────────────────────────────────────────────────────
 let topoTx = 0, topoTy = 0, topoScale = 1, topoRootId = '', topoSiteFilter = '';
+/** null = alle Ebenen; sonst max. BFS-Level vom Startknoten (0 = nur Start) */
+let topoDepthLimit = null;
+try {
+  const raw = localStorage.getItem('lmc_topo_max_depth');
+  if (raw !== null && raw !== '') {
+    const n = parseInt(raw, 10);
+    if (!Number.isNaN(n) && n >= 0) topoDepthLimit = n;
+  }
+} catch {}
+function saveTopoDepthLimit() {
+  if (topoDepthLimit === null || topoDepthLimit === undefined) {
+    localStorage.removeItem('lmc_topo_max_depth');
+  } else {
+    localStorage.setItem('lmc_topo_max_depth', String(topoDepthLimit));
+  }
+}
+function syncTopoDepthSelect() {
+  const depthSel = document.getElementById('topo-depth-select');
+  if (depthSel) depthSel.value = topoDepthLimit === null ? '' : String(topoDepthLimit);
+}
 const topoDrag = { active: false, sx: 0, sy: 0, tx: 0, ty: 0 };
 let _nodeDrag = null; // {el,id,ox,oy,sx,sy}
 let topoCustomPos = {};
@@ -206,16 +226,21 @@ function renderTopology() {
   empty.style.display = 'none';
 
   buildTopoSelector();
+  syncTopoDepthSelect();
   const rootId = document.getElementById('topo-root-select').value || topoRootId || ids[0];
   topoRootId = rootId;
 
   const { nodes, edges } = buildTopoGraph();
-  const { pos, level, unconnected, maxLvl } = layoutTopo(nodes, edges, rootId);
+  const { pos, level, unconnected } = layoutTopo(nodes, edges, rootId);
+
+  function visible(id) {
+    return level[id] !== undefined && (topoDepthLimit == null || level[id] <= topoDepthLimit);
+  }
 
   let svg = '';
 
-  // Separator line for unconnected nodes
-  if (unconnected.length) {
+  // Separator line for unconnected nodes (nur bei unbegrenzter Tiefe)
+  if (topoDepthLimit == null && unconnected.length) {
     const uy = unconnected.map(id => pos[id].y).reduce((a, b) => Math.min(a, b), Infinity);
     const xs = unconnected.map(id => pos[id].x);
     const x1 = Math.min(...xs) - NW / 2 - 30, x2 = Math.max(...xs) + NW / 2 + 30;
@@ -247,6 +272,7 @@ function renderTopology() {
 
   // Edges (curved bezier paths) with bandwidth coloring + port labels
   edges.forEach(e => {
+    if (!visible(e.from) || !visible(e.to)) return;
     const f = pos[e.from], t = pos[e.to];
     if (!f || !t) return;
     const bothOnline = nodes[e.from]?.online && nodes[e.to]?.online;
@@ -296,6 +322,7 @@ function renderTopology() {
 
   // Nodes
   Object.entries(pos).forEach(([id, { x, y }]) => {
+    if (!visible(id)) return;
     const node = nodes[id]; if (!node) return;
     const isRoot = id === rootId;
     const rx = x - NW / 2, ry = y - NH / 2;
@@ -625,6 +652,19 @@ function topoChangeSite(site) {
   setTimeout(topoFit, 80);
 }
 
+function topoChangeDepth(value) {
+  if (value === '' || value === null || value === undefined) {
+    topoDepthLimit = null;
+  } else {
+    const n = parseInt(value, 10);
+    topoDepthLimit = Number.isNaN(n) ? null : Math.max(0, n);
+  }
+  saveTopoDepthLimit();
+  syncTopoDepthSelect();
+  renderTopology();
+  setTimeout(topoFit, 80);
+}
+
 function topoToggleFullscreen() {
   const el = document.getElementById('tab-topology');
   if (!document.fullscreenElement) {
@@ -774,7 +814,7 @@ function resetTopoState() { topoRootId = ''; topoSiteFilter = ''; topoTx = 0; to
 
 export {
   buildTopoSelector, buildTopoGraph, layoutTopo, renderTopology,
-  topoSetRoot, topoOpenDetail, topoCloseDetail, topoChangeRoot, topoChangeSite, topoToggleFullscreen,
+  topoSetRoot, topoOpenDetail, topoCloseDetail, topoChangeRoot, topoChangeSite, topoChangeDepth, topoToggleFullscreen,
   topoFit, topoZoom, topoResetPositions, topoExportSvg,
   initTopoEvents, updateTopoTransform,
   loadSnmpMacTable, loadMacTable, inspectLldpRaw,

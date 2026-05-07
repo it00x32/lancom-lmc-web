@@ -15,7 +15,7 @@ import { renderTraffic, loadTrafficData, reloadTraffic, resetTrafficState } from
 import { renderNeighbors, setNbFilter } from './tabs/neighbors.js';
 import { setLldpView, renderLldp } from './tabs/lldp.js';
 import { loadSwitchEvents, setSweFilter, renderSwitchEvents, resetSweState } from './tabs/switch-events.js';
-import { buildTopoSelector, renderTopology, topoSetRoot, topoOpenDetail, topoCloseDetail, topoChangeRoot, topoChangeSite, topoToggleFullscreen, topoFit, topoZoom, topoResetPositions, topoExportSvg, initTopoEvents, loadSnmpMacTable, loadMacTable, inspectLldpRaw, resetTopoState } from './tabs/topology.js';
+import { buildTopoSelector, renderTopology, topoSetRoot, topoOpenDetail, topoCloseDetail, topoChangeRoot, topoChangeSite, topoChangeDepth, topoToggleFullscreen, topoFit, topoZoom, topoResetPositions, topoExportSvg, initTopoEvents, loadSnmpMacTable, loadMacTable, inspectLldpRaw, resetTopoState } from './tabs/topology.js';
 import { lcSetFilter, renderLifecycle } from './tabs/lifecycle.js';
 import { renderEnergy, saveEnergyPrice, loadEnergyPrice } from './tabs/energy.js';
 import { paLoadAll, paToggleDetail, renderAnomalyPage, paState } from './tabs/anomaly.js';
@@ -141,6 +141,7 @@ window.topoOpenDetail = topoOpenDetail;
 window.topoCloseDetail = topoCloseDetail;
 window.topoChangeRoot = topoChangeRoot;
 window.topoChangeSite = topoChangeSite;
+window.topoChangeDepth = topoChangeDepth;
 window.topoToggleFullscreen = topoToggleFullscreen;
 window.topoFit = topoFit;
 window.topoZoom = topoZoom;
