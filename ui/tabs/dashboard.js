@@ -268,6 +268,19 @@ async function loadTable(deviceIds, tableName, columns, service) {
   return all;
 }
 
+/**
+ * LMC Records: GET …/records/lan_info_json ? group=DEVICE & name=interfaces & source=NEW
+ * (siehe apidoku). items.interfaces.values[0] = Port-Map (Key = Port-Index, Value = Metriken inkl. lldpNames).
+ */
+function extractLanInfoInterfaceMap(data) {
+  const vals = data?.items?.interfaces?.values;
+  if (!Array.isArray(vals) || !vals.length) return null;
+  let snap = vals[0];
+  if (snap && typeof snap === 'object' && !Array.isArray(snap)) return snap;
+  const found = vals.find(v => v && typeof v === 'object' && !Array.isArray(v));
+  return found || null;
+}
+
 async function loadLldpData(deviceIds) {
   if(!deviceIds.length) return [];
   const all=[];
@@ -276,8 +289,9 @@ async function loadLldpData(deviceIds) {
     const results=await Promise.allSettled(batch.map(async deviceId=>{
       for(let attempt=0;attempt<2;attempt++){
         try {
-          const data=await api('monitoring',`/accounts/${S.accountId}/records/lan_info_json?group=DEVICE&groupId=${deviceId}&period=MINUTE1&type=json&source=NEW&name=interfaces&latest=1`);
-          const ports=data?.items?.interfaces?.values?.[0];
+          const path = `/accounts/${encodeURIComponent(S.accountId)}/records/lan_info_json?group=DEVICE&groupId=${encodeURIComponent(deviceId)}&period=MINUTE1&type=json&source=NEW&name=interfaces&latest=1`;
+          const data=await api('monitoring', path);
+          const ports=extractLanInfoInterfaceMap(data);
           if(!ports||typeof ports!=='object') return [];
           const devName=S.devices[deviceId]?.status?.name||deviceId;
           return Object.entries(ports)
@@ -309,6 +323,7 @@ async function loadLldpData(deviceIds) {
             .sort((a,b)=>a.portNum-b.portNum);
         } catch(e) {
           if(attempt===0) await new Promise(r=>setTimeout(r,400));
+          else console.warn('[loadLldpData]', deviceId, e.message);
         }
       }
       return [];

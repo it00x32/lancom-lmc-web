@@ -997,8 +997,6 @@ async function inspectLldpRaw(deviceId) {
     { label: 'source=NEW (kein name)', url: `${base}&source=NEW` },
     { label: 'kein source, name=interfaces', url: `${base}&name=interfaces` },
     { label: 'kein source, kein name', url: `${base}` },
-    { label: 'source=NEW, name=lldp', url: `${base}&source=NEW&name=lldp` },
-    { label: 'source=NEW, name=switch', url: `${base}&source=NEW&name=switch` },
   ];
 
   let html = '';

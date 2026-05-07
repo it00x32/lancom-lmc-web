@@ -2,7 +2,7 @@ import S from './lib/state.js';
 import { api, toast } from './lib/api.js';
 import { escHtml } from './lib/helpers.js';
 
-const APP_VERSION = 'v1.14.21';
+const APP_VERSION = 'v1.14.23';
 
 document.title = `OnSite Web · ${APP_VERSION}`;
 
