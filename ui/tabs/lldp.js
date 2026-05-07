@@ -10,6 +10,8 @@ function setLldpView(v, btn) {
   btn.classList.add('active');
   document.getElementById('lldp-view-lldp').style.display = v === 'lldp' ? '' : 'none';
   document.getElementById('lldp-view-ports').style.display = v === 'ports' ? '' : 'none';
+  const wiredEl = document.getElementById('lldp-view-wired');
+  if (wiredEl) wiredEl.style.display = v === 'wired' ? '' : 'none';
   renderLldp();
 }
 
@@ -26,6 +28,12 @@ function fmtSpeed(kbps) {
   return kbps + '&nbsp;kbit/s';
 }
 
+function capShort(s, max = 32) {
+  if (!s) return '–';
+  const t = String(s);
+  return escHtml(t.length > max ? t.slice(0, max) + '…' : t);
+}
+
 function poeCell(status, power) {
   if (!status || status === 'Unknown') return '<span class="muted">–</span>';
   return `${escHtml(status)}${power ? ` <span class="muted">${power}W</span>` : ''}`;
@@ -33,7 +41,8 @@ function poeCell(status, power) {
 
 function renderLldp() {
   const q = document.getElementById('lldp-search').value.toLowerCase();
-  const allPorts = S.lldpNeighbors;
+  const allPorts = S.lldpNeighbors || [];
+  const wiredAll = S.wiredStations || [];
   const switches = new Set(allPorts.map(p => p._deviceId)).size;
   const loopPorts = allPorts.filter(p => p.loops > 0).length;
   const withLldp = allPorts.filter(p => p.lldpNames.length).length;
@@ -42,13 +51,14 @@ function renderLldp() {
     <div class="mini-stat"><div class="ms-icon" style="background:rgba(217,119,6,.15);color:var(--amber)"><i class="fa-solid fa-server"></i></div><div><div class="ms-val" style="color:var(--amber)">${switches}</div><div class="ms-lbl">Switches</div></div></div>
     <div class="mini-stat"><div class="ms-icon" style="background:rgba(0,76,151,.15);color:var(--accent)"><i class="fa-solid fa-plug"></i></div><div><div class="ms-val" style="color:var(--accent)">${allPorts.filter(p => p.active).length}</div><div class="ms-lbl">Ports aktiv</div></div></div>
     <div class="mini-stat"><div class="ms-icon" style="background:rgba(217,119,6,.15);color:var(--teal)"><i class="fa-solid fa-diagram-project"></i></div><div><div class="ms-val" style="color:var(--teal)">${withLldp}</div><div class="ms-lbl">LLDP Nachbarn</div></div></div>
+    ${wiredAll.length ? `<div class="mini-stat"><div class="ms-icon" style="background:rgba(52,217,123,.15);color:var(--green)"><i class="fa-solid fa-network-wired"></i></div><div><div class="ms-val" style="color:var(--green)">${wiredAll.length}</div><div class="ms-lbl">Kabel-Clients</div></div></div>` : ''}
     ${loopPorts ? `<div class="mini-stat"><div class="ms-icon" style="background:rgba(211,47,47,.2);color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i></div><div><div class="ms-val" style="color:var(--red)">${loopPorts}</div><div class="ms-lbl">Loops!</div></div></div>` : ''}`;
 
   if (lldpView === 'lldp') {
     let rows = allPorts.filter(p => {
       if (!p.lldpNames.length) return false;
       if (!q) return true;
-      return [p._deviceName, p.portName, p.description, ...p.lldpNames].some(x => x && x.toLowerCase().includes(q));
+      return [p._deviceName, p.portName, p.description, p.portMac, p.lldpCapabilities, ...p.lldpNames].some(x => x && String(x).toLowerCase().includes(q));
     });
     document.getElementById('lldp-count').textContent = rows.length;
     const tbody = document.getElementById('lldp-tbody');
@@ -63,15 +73,18 @@ function renderLldp() {
       <td>${statusDot(p.active)}</td>
       <td class="muted">${fmtSpeed(p.speed)}</td>
       <td class="muted">${p.vlan ?? '–'}</td>
+      <td class="muted">${p.qosClass !== undefined && p.qosClass !== null ? escHtml(String(p.qosClass)) : '–'}</td>
+      <td class="muted" style="font-family:var(--mono);font-size:11px">${p.portMac ? escHtml(p.portMac) : '–'}</td>
+      <td class="muted" style="font-size:11px;max-width:120px" title="${escHtml(p.lldpCapabilities || '')}">${capShort(p.lldpCapabilities)}</td>
       <td class="muted" style="white-space:nowrap">${poeCell(p.poeStatus, p.poePower)}</td>
       <td class="muted">${fmtRate(p.rxBitPerSec)}</td>
       <td class="muted">${fmtRate(p.txBitPerSec)}</td>
     </tr>`).join('');
 
-  } else {
+  } else if (lldpView === 'ports') {
     let rows = allPorts.filter(p => {
       if (!q) return true;
-      return [p._deviceName, p.portName, p.description, ...p.lldpNames].some(x => x && x.toLowerCase().includes(q));
+      return [p._deviceName, p.portName, p.description, p.configuration, p.portMac, p.lldpCapabilities, ...p.lldpNames].some(x => x && String(x).toLowerCase().includes(q));
     });
     document.getElementById('lldp-count').textContent = rows.length;
     const tbody = document.getElementById('ports-tbody');
@@ -92,12 +105,37 @@ function renderLldp() {
         <td>${loopCell}</td>
         <td class="muted">${fmtSpeed(p.speed)}</td>
         <td class="muted">${p.vlan ?? '–'}</td>
+        <td class="muted">${p.qosClass !== undefined && p.qosClass !== null ? escHtml(String(p.qosClass)) : '–'}</td>
         <td class="muted">${escHtml(p.configuration) || '–'}</td>
+        <td class="muted" style="font-family:var(--mono);font-size:11px">${p.portMac ? escHtml(p.portMac) : '–'}</td>
+        <td class="muted" style="font-size:11px;max-width:100px" title="${escHtml(p.lldpCapabilities || '')}">${capShort(p.lldpCapabilities)}</td>
         <td class="muted" style="white-space:nowrap">${poeCell(p.poeStatus, p.poePower)}</td>
         <td class="muted">${p.active ? fmtRate(p.rxBitPerSec) : '–'}</td>
         <td class="muted">${p.active ? fmtRate(p.txBitPerSec) : '–'}</td>
       </tr>`;
     }).join('');
+
+  } else if (lldpView === 'wired') {
+    let rows = wiredAll.filter(w => {
+      if (!q) return true;
+      const hay = [w._deviceName, w.macAddress, w.remoteName, w.remoteMacAddress, w.remoteDescription, w.remoteCapabilitiesSupported].map(x => x && String(x).toLowerCase()).filter(Boolean);
+      return hay.some(s => s.includes(q));
+    });
+    document.getElementById('lldp-count').textContent = rows.length;
+    const tbody = document.getElementById('wired-tbody');
+    const empty = document.getElementById('wired-empty');
+    if (!tbody || !empty) return;
+    if (!rows.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = rows.map(w => `<tr>
+      <td class="device-ref">${escHtml(w._deviceName)}</td>
+      <td class="muted">${w.localPortId !== undefined && w.localPortId !== null ? escHtml(String(w.localPortId)) : '–'}</td>
+      <td style="font-family:var(--mono);font-size:11px">${w.macAddress ? escHtml(w.macAddress) : '–'}</td>
+      <td>${w.remoteName ? escHtml(w.remoteName) : '<span class="muted">–</span>'}</td>
+      <td style="font-family:var(--mono);font-size:11px">${w.remoteMacAddress ? escHtml(w.remoteMacAddress) : '<span class="muted">–</span>'}</td>
+      <td class="muted" style="font-size:11px;max-width:160px">${w.remoteDescription ? escHtml(w.remoteDescription) : '–'}</td>
+      <td class="muted" style="font-size:10px;max-width:140px" title="${escHtml([w.remoteCapabilitiesSupported, w.remoteCapabilitiesEnabled].filter(Boolean).join(' · '))}">${capShort([w.remoteCapabilitiesSupported, w.remoteCapabilitiesEnabled].filter(Boolean).join(' · '), 40)}</td>
+    </tr>`).join('');
   }
 }
 

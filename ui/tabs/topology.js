@@ -1,4 +1,6 @@
 import S from '../lib/state.js';
+import { jsPDF } from 'jspdf';
+import { autoTable } from 'jspdf-autotable';
 import { escHtml, deviceName, deviceTypeLabel, isOnline, statusDot, fmtRate, fmtBytes, signalBar, bandBadge } from '../lib/helpers.js';
 import { api, toast } from '../lib/api.js';
 import { snmpReqBody } from '../lib/snmp.js';
@@ -189,19 +191,80 @@ function buildTopoGraph() {
 
   // Build lookup maps: name → id, ip → id, mac → id
   const nameToId = {}, ipToId = {}, macToId = {};
+  function addIp(ip, id) {
+    const s = String(ip || '').trim();
+    if (!s) return;
+    ipToId[s] = id;
+  }
+  function addMac(m, id) {
+    if (!m) return;
+    const h = String(m).replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+    if (h.length !== 12) return;
+    const c = h.match(/.{2}/g).join(':');
+    macToId[c] = id;
+    macToId[h] = id;
+  }
   Object.values(S.devices).forEach(d => {
     [d.status?.name, d.label, d.name, topoDevName(d)].filter(Boolean).forEach(n => {
       if (n && n !== '–') nameToId[n.toLowerCase()] = d.id;
     });
-    if (d.status?.ip) ipToId[d.status.ip] = d.id;
-    if (d.status?.mac) macToId[d.status.mac.toLowerCase()] = d.id;
+    addIp(d.status?.ip, d.id);
+    addIp(d.status?.ipAddress, d.id);
+    addIp(d.status?.lastIp, d.id);
+    if (d.status?.mac) {
+      const lc = d.status.mac.toLowerCase();
+      macToId[lc] = d.id;
+      addMac(d.status.mac, d.id);
+    }
   });
 
+  const IPV4_RE = /\b(?:(?:25[0-5]|2[0-4]\d|1?\d{1,2})\.){3}(?:25[0-5]|2[0-4]\d|1?\d{1,2})\b/g;
+  const MAC_IN_STR_RE = /(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}/g;
+
+  function lldpNeighborKey(x) {
+    if (x == null) return '';
+    if (typeof x === 'string') return x.trim();
+    if (typeof x === 'object') {
+      return String(
+        x.name || x.systemName || x.hostName || x.lldpName || x.sysName || x.chassisId || ''
+      ).trim();
+    }
+    return String(x).trim();
+  }
+
+  function macIdFromString(s) {
+    if (!s) return null;
+    const raw = String(s);
+    MAC_IN_STR_RE.lastIndex = 0;
+    let m;
+    while ((m = MAC_IN_STR_RE.exec(raw)) !== null) {
+      const h = m[0].replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+      if (h.length === 12) {
+        if (macToId[h]) return macToId[h];
+        const c = h.match(/.{2}/g).join(':');
+        if (macToId[c]) return macToId[c];
+      }
+    }
+    return null;
+  }
+
   function resolveName(lldpName) {
-    if (!lldpName) return null;
-    const lc = lldpName.toLowerCase();
+    if (lldpName == null) return null;
+    const raw = lldpNeighborKey(lldpName);
+    if (!raw) return null;
+    const lc = raw.toLowerCase();
     if (nameToId[lc]) return nameToId[lc];
     if (macToId[lc]) return macToId[lc];
+    if (ipToId[raw]) return ipToId[raw];
+    if (ipToId[lc]) return ipToId[lc];
+    let m;
+    IPV4_RE.lastIndex = 0;
+    while ((m = IPV4_RE.exec(raw)) !== null) {
+      const ip = m[0];
+      if (ipToId[ip]) return ipToId[ip];
+    }
+    const byMac = macIdFromString(raw);
+    if (byMac) return byMac;
     // partial match: LLDP name might contain the device name or vice versa
     for (const [n, id] of Object.entries(nameToId)) {
       if (n.length > 3 && (lc.includes(n) || n.includes(lc))) return id;
@@ -227,35 +290,73 @@ function buildTopoGraph() {
   });
 
   const edgeMap = {};
-  function addEdge(fromId, toId, portName, bps) {
+  function addEdge(fromId, toId, fromPortName, bps, toPortName) {
     if (!fromId || !toId || fromId === toId) return;
     if (!nodes[fromId] || !nodes[toId]) return;
     const key = [fromId, toId].sort().join('|');
     if (!edgeMap[key]) edgeMap[key] = { from: fromId, to: toId, ports: {}, maxBps: 0 };
-    if (portName) {
+    if (fromPortName) {
       if (!edgeMap[key].ports[fromId]) edgeMap[key].ports[fromId] = [];
-      if (!edgeMap[key].ports[fromId].includes(portName))
-        edgeMap[key].ports[fromId].push(portName);
+      if (!edgeMap[key].ports[fromId].includes(fromPortName))
+        edgeMap[key].ports[fromId].push(fromPortName);
+    }
+    if (toPortName) {
+      if (!edgeMap[key].ports[toId]) edgeMap[key].ports[toId] = [];
+      if (!edgeMap[key].ports[toId].includes(toPortName))
+        edgeMap[key].ports[toId].push(toPortName);
     }
     if (bps > edgeMap[key].maxBps) edgeMap[key].maxBps = bps;
   }
+
+  function normMacHex(m) {
+    if (!m) return '';
+    const h = String(m).replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+    return h.length === 12 ? h : '';
+  }
+
+  const lldpPortByDevNum = new Map();
+  const lldpPortByDevMac = new Map();
+  S.lldpNeighbors.forEach(p => {
+    const did = p._deviceId;
+    lldpPortByDevNum.set(`${did}\t${p.portNum}`, p);
+    lldpPortByDevNum.set(`${did}\t${String(p.portNum)}`, p);
+    const lanM = /^LAN-(\d+)$/i.exec(p.portName || '');
+    if (lanM) lldpPortByDevNum.set(`${did}\t${lanM[1]}`, p);
+    const pm = normMacHex(p.portMac);
+    if (pm) lldpPortByDevMac.set(`${did}\t${pm}`, p);
+  });
 
   // 1) Edges from LLDP port data
   S.lldpNeighbors.forEach(port => {
     const fromId = port._deviceId;
     if (!nodes[fromId]) return;
     nodes[fromId].isSwitch = true;
-    port.lldpNames.forEach(lldpName => {
+    port.lldpNames.forEach((lldpName, idx) => {
+      const nbRaw = lldpNeighborKey(lldpName);
       let toId = resolveName(lldpName);
       if (toId === fromId) return;
       if (!toId) {
-        toId = 'ghost:' + lldpName;
+        toId = 'ghost:' + (nbRaw || String(lldpName));
         if (!nodes[toId]) nodes[toId] = {
-          id: toId, name: lldpName, model: '', siteName: '',
+          id: toId, name: nbRaw || String(lldpName), model: '', siteName: '',
           online: false, hasAlert: false, isSwitch: false, wlanClients: 0, isGhost: true,
         };
       }
-      addEdge(fromId, toId, port.portName, (port.rxBitPerSec || 0) + (port.txBitPerSec || 0));
+      const rPorts = port.lldpRemotePorts;
+      let toPort = (rPorts && rPorts[idx]) ? String(rPorts[idx]).trim() : '';
+      if (!toPort && port.lldpNames.length === 1 && port.lldpRemotePort) {
+        toPort = String(port.lldpRemotePort).trim();
+      }
+      if (!toPort && port.lldpRemoteIfNames && port.lldpRemoteIfNames[idx]) {
+        toPort = String(port.lldpRemoteIfNames[idx]).trim();
+      }
+      addEdge(
+        fromId,
+        toId,
+        port.portName,
+        (port.rxBitPerSec || 0) + (port.txBitPerSec || 0),
+        toPort || undefined
+      );
     });
   });
 
@@ -275,7 +376,58 @@ function buildTopoGraph() {
         online: false, hasAlert: false, isSwitch: false, wlanClients: 0, isGhost: true,
       };
     }
-    addEdge(fromId, toId, row.name || '', 0);
+    const toPort = (row.peerPort || row.remotePort || row.lldpRemotePort || '').toString().trim();
+    addEdge(fromId, toId, row.name || '', 0, toPort || undefined);
+  });
+
+  // 3) wired-station: lokaler Port + Gegenstelle per MAC/Name; Remote-Port aus Monitoring
+  (S.wiredStations || []).forEach(row => {
+    const fromId = row._deviceId || row.deviceId;
+    if (!fromId || !nodes[fromId]) return;
+    nodes[fromId].isSwitch = true;
+
+    let toId = null;
+    if (row.remoteMacAddress) {
+      const h = String(row.remoteMacAddress).replace(/[^0-9a-fA-F]/g, '').toLowerCase();
+      if (h.length === 12) {
+        toId = macToId[h] || macToId[h.match(/.{2}/g).join(':')];
+      }
+    }
+    if (!toId && row.remoteName) toId = resolveName(row.remoteName);
+    if (!toId && row.remoteDescription) toId = resolveName(row.remoteDescription);
+
+    const ghostKey = row.remoteName || row.remoteMacAddress || row.remoteDescription || row.macAddress || 'wired';
+    if (!toId) {
+      toId = 'ghost:' + ghostKey;
+      if (!nodes[toId]) {
+        nodes[toId] = {
+          id: toId,
+          name: String(ghostKey),
+          model: '', siteName: '',
+          online: false, hasAlert: false, isSwitch: false, wlanClients: 0, isGhost: true,
+        };
+      }
+    }
+    if (toId === fromId) return;
+
+    const lpNum = row.localPortId;
+    let fromPortLabel = '';
+    if (lpNum != null && lpNum !== '') {
+      const pr = lldpPortByDevNum.get(`${fromId}\t${Number(lpNum)}`)
+        || lldpPortByDevNum.get(`${fromId}\t${String(lpNum)}`);
+      fromPortLabel = pr?.portName || `Port ${lpNum}`;
+    }
+    if (!fromPortLabel) {
+      const wm = normMacHex(row.macAddress);
+      if (wm) {
+        const pr = lldpPortByDevMac.get(`${fromId}\t${wm}`);
+        if (pr?.portName) fromPortLabel = pr.portName;
+      }
+    }
+    const toPort = row.remotePortId != null && row.remotePortId !== ''
+      ? String(row.remotePortId).trim()
+      : '';
+    addEdge(fromId, toId, fromPortLabel, 0, toPort || undefined);
   });
 
   const edges = Object.values(edgeMap);
@@ -964,6 +1116,41 @@ function topoSiteExportLabel() {
   return topoSiteFilter || '–';
 }
 
+function topoExportFilenameSlug() {
+  const raw = topoSiteFilter === '' ? 'ohne-standort' : topoSiteFilter;
+  const s = String(raw).replace(/[^\w\-äöüÄÖÜß]+/gi, '-').replace(/^-+|-+$/g, '');
+  return (s || 'standort').slice(0, 48);
+}
+
+/** SVG → PNG (Data-URL) für PDF-Einbettung */
+async function topoSvgToPngDataUrl(svgXml) {
+  const blob = new Blob([svgXml], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('Topologie-Grafik konnte nicht gerendert werden'));
+      i.src = url;
+    });
+    const natW = img.naturalWidth || img.width || 800;
+    const natH = img.naturalHeight || img.height || 600;
+    const canvas = document.createElement('canvas');
+    const dpr = 2;
+    canvas.width = natW * dpr;
+    canvas.height = natH * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(dpr, dpr);
+    ctx.drawImage(img, 0, 0);
+    const aspect = natH / natW;
+    return { dataUrl: canvas.toDataURL('image/png'), aspect };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 /** Alle LLDP-Portzeilen (Monitoring) für Geräte am aktuellen Netzwerkplan-Standort */
 function topoLldpRowsForSite() {
   const siteIds = new Set(Object.values(S.devices).filter(d => topoMatchesSite(d)).map(d => d.id));
@@ -998,19 +1185,25 @@ function topoFmtSpeedPlain(kbps) {
   return `${kbps} kbit/s`;
 }
 
-/** Export als PDF: öffnet Druckansicht — im Dialog „Als PDF speichern“ / „Microsoft Print to PDF“ wählen (wie Netzwerk-Report). */
-function topoExportPdf() {
+/** PDF-Datei herunterladen: Topologie als PNG + LLDP-Tabellen (jsPDF) */
+async function topoExportPdf() {
   const gEl = document.getElementById('topo-g');
-  if (!gEl || !gEl.children.length) { toast('info', 'Netzwerkplan leer', 'Kein Inhalt zum Exportieren.'); return; }
-  const bbox = gEl.getBBox();
-  const pad = 50;
-  const W = Math.ceil(bbox.width + pad * 2);
-  const H = Math.ceil(bbox.height + pad * 2);
-  const tx = (pad - bbox.x).toFixed(1);
-  const ty = (pad - bbox.y).toFixed(1);
-  const inner = topoSvgInnerForExport(gEl.innerHTML);
+  if (!gEl || !gEl.children.length) {
+    toast('info', 'Netzwerkplan leer', 'Kein Inhalt zum Exportieren.');
+    return;
+  }
 
-  const svgBlock = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="max-width:100%;height:auto;display:block;border:1px solid #e2e8f0;border-radius:10px;background:#ffffff">
+  window.setLoading?.(true, 'PDF wird erzeugt…');
+  try {
+    const bbox = gEl.getBBox();
+    const pad = 50;
+    const W = Math.ceil(bbox.width + pad * 2);
+    const H = Math.ceil(bbox.height + pad * 2);
+    const tx = (pad - bbox.x).toFixed(1);
+    const ty = (pad - bbox.y).toFixed(1);
+    const inner = topoSvgInnerForExport(gEl.innerHTML);
+
+    const svgBlock = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
 <defs>
   <filter id="topo-glow" x="-40%" y="-40%" width="180%" height="180%">
     <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
@@ -1021,105 +1214,125 @@ function topoExportPdf() {
 <g transform="translate(${tx},${ty})">${inner}</g>
 </svg>`;
 
-  const siteLabel = escHtml(topoSiteExportLabel());
-  const dateStr = escHtml(new Date().toLocaleString('de-DE'));
+    const { dataUrl, aspect } = await topoSvgToPngDataUrl(svgBlock);
 
-  const portRows = topoLldpRowsForSite();
-  let portTable = `<table class="lldp-export-table"><thead><tr>
-    <th>Gerät</th><th>Port</th><th>Beschreibung</th><th>LLDP-Nachbarn</th><th>Aktiv</th><th>Geschwindigkeit</th><th>VLAN</th><th>PoE</th><th>RX</th><th>TX</th><th>Loops</th>
-  </tr></thead><tbody>`;
-  if (!portRows.length) {
-    portTable += `<tr><td colspan="11">Keine Port-/LLDP-Daten für diesen Standort (Tab „LLDP“ laden oder Daten aktualisieren).</td></tr>`;
-  } else {
-    portRows.forEach(p => {
-      const neighbors = (p.lldpNames || []).map(n => escHtml(n)).join(', ') || '–';
-      const poe = [p.poeStatus, p.poePower != null && p.poePower !== '' ? `${p.poePower} W` : ''].filter(Boolean).join(', ') || '–';
-      portTable += `<tr>
-        <td>${escHtml(p._deviceName || '')}</td>
-        <td>${escHtml(p.portName || '')}</td>
-        <td>${escHtml(p.description || '')}</td>
-        <td>${neighbors}</td>
-        <td>${p.active ? 'Ja' : 'Nein'}</td>
-        <td>${escHtml(topoFmtSpeedPlain(p.speed))}</td>
-        <td>${escHtml(String(p.vlan ?? '–'))}</td>
-        <td>${escHtml(poe)}</td>
-        <td>${escHtml(fmtRate(p.rxBitPerSec))}</td>
-        <td>${escHtml(fmtRate(p.txBitPerSec))}</td>
-        <td>${p.loops > 0 ? escHtml(String(p.loops)) : '0'}</td>
-      </tr>`;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    let y = margin;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Netzwerkplan', margin, y);
+    y += 9;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Standort: ${topoSiteExportLabel()} · ${new Date().toLocaleString('de-DE')}`, margin, y);
+    y += 11;
+
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text('Topologie', margin, y);
+    y += 6;
+
+    const maxImgW = pageW - 2 * margin;
+    const roomBelow = pageH - y - margin - 6;
+    let imgW = maxImgW;
+    let imgH = imgW * aspect;
+    if (imgH > roomBelow) {
+      imgH = roomBelow;
+      imgW = imgH / aspect;
+    }
+    doc.addImage(dataUrl, 'PNG', margin, y, imgW, imgH);
+    y += imgH + 10;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(0, 76, 151);
+    doc.text('LLDP / Ports (Monitoring)', margin, y);
+    y += 5;
+
+    const portRows = topoLldpRowsForSite();
+    const portHead = [['Gerät', 'Port', 'Beschreibung', 'LLDP-Nachbarn', 'Aktiv', 'Speed', 'VLAN', 'QoS', 'PoE', 'RX', 'TX', 'Loops']];
+    const portBody = portRows.length
+      ? portRows.map(p => [
+          String(p._deviceName || ''),
+          String(p.portName || ''),
+          String(p.description || ''),
+          (p.lldpNames || []).join(', ') || '–',
+          p.active ? 'Ja' : 'Nein',
+          topoFmtSpeedPlain(p.speed),
+          String(p.vlan ?? '–'),
+          p.qosClass !== undefined && p.qosClass !== null ? String(p.qosClass) : '–',
+          [p.poeStatus, p.poePower != null && p.poePower !== '' ? `${p.poePower} W` : ''].filter(Boolean).join(', ') || '–',
+          fmtRate(p.rxBitPerSec),
+          fmtRate(p.txBitPerSec),
+          p.loops > 0 ? String(p.loops) : '0',
+        ])
+      : [['–', '–', '–', 'Keine Daten (Tab „LLDP“ laden)', '–', '–', '–', '–', '–', '–', '–', '–']];
+
+    autoTable(doc, {
+      startY: y,
+      head: portHead,
+      body: portBody,
+      styles: { fontSize: 7, cellPadding: 1.2, overflow: 'linebreak', textColor: [15, 23, 42] },
+      headStyles: { fillColor: [0, 76, 151], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: margin, right: margin },
+      theme: 'striped',
     });
-  }
-  portTable += '</tbody></table>';
 
-  const ifRows = topoLldpTableRowsForSite();
-  let ifTable = `<table class="lldp-export-table"><thead><tr>
-    <th>Gerät</th><th>Schnittstelle</th><th>LLDP-Name</th><th>Aktiv</th><th>Beschreibung</th>
-  </tr></thead><tbody>`;
-  if (!ifRows.length) {
-    ifTable += `<tr><td colspan="5">Keine Schnittstellen-Zeilen für diesen Standort (optional, Daten aktualisieren).</td></tr>`;
-  } else {
-    ifRows.forEach(row => {
-      const did = row.deviceId || row._deviceId;
-      const dn = escHtml(deviceName(S.devices[did]) || did || '');
-      ifTable += `<tr>
-        <td>${dn}</td>
-        <td>${escHtml(row.name || '–')}</td>
-        <td>${escHtml(row.lldpName || '–')}</td>
-        <td>${row.active ? 'Ja' : 'Nein'}</td>
-        <td>${escHtml(row.description || '')}</td>
-      </tr>`;
+    let nextY = (doc.lastAutoTable && typeof doc.lastAutoTable.finalY === 'number')
+      ? doc.lastAutoTable.finalY + 10
+      : y + 40;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(0, 76, 151);
+    doc.text('Schnittstellen mit LLDP (Konfig-Tabelle)', margin, nextY);
+    nextY += 5;
+
+    const ifRows = topoLldpTableRowsForSite();
+    const ifHead = [['Gerät', 'Schnittstelle', 'LLDP-Name', 'LLDP-Cap.', 'Aktiv', 'Beschreibung']];
+    const ifBody = ifRows.length
+      ? ifRows.map(row => {
+          const did = row.deviceId || row._deviceId;
+          const cap = row.lldpCapabilities ? String(row.lldpCapabilities).slice(0, 40) + (String(row.lldpCapabilities).length > 40 ? '…' : '') : '–';
+          return [
+            deviceName(S.devices[did]) || String(did || ''),
+            String(row.name || '–'),
+            String(row.lldpName || '–'),
+            cap,
+            row.active ? 'Ja' : 'Nein',
+            String(row.description || ''),
+          ];
+        })
+      : [['–', '–', '–', '–', '–', 'Keine Daten']];
+
+    autoTable(doc, {
+      startY: nextY,
+      head: ifHead,
+      body: ifBody,
+      styles: { fontSize: 7, cellPadding: 1.2, overflow: 'linebreak', textColor: [15, 23, 42] },
+      headStyles: { fillColor: [0, 76, 151], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: margin, right: margin },
+      theme: 'striped',
     });
-  }
-  ifTable += '</tbody></table>';
 
-  const html = `<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Netzwerkplan · ${siteLabel}</title>
-<style>
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#eef2f7;color:#0f172a;margin:0;padding:28px 32px 48px;line-height:1.45;}
-h1{font-size:1.35rem;font-weight:700;margin:0 0 6px;}
-.meta{font-size:13px;color:#64748b;margin-bottom:22px;}
-.section{margin-bottom:32px;}
-.section h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin:0 0 12px;}
-.lldp-export-table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;}
-.lldp-export-table th,.lldp-export-table td{border:1px solid #e2e8f0;padding:8px 10px;text-align:left;vertical-align:top;}
-.lldp-export-table th{background:#f1f5f9;font-weight:600;}
-.lldp-export-table tbody tr:nth-child(even) td{background:#fafafa;}
-@media print{
-  body{background:#fff!important;padding:12mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .section{page-break-inside:avoid;margin-bottom:18px;}
-  .section h2{page-break-after:avoid;}
-  .lldp-export-table{font-size:8.5pt;}
-  .lldp-export-table th{font-size:8pt;padding:5px 7px;}
-  .lldp-export-table td{padding:4px 7px;font-size:8.5pt;}
-}
-</style>
-</head>
-<body>
-<h1>Netzwerkplan</h1>
-<div class="meta">Standort: <strong>${siteLabel}</strong> · Export: ${dateStr}</div>
-<div class="section"><h2>Topologie</h2>${svgBlock}</div>
-<div class="section"><h2>LLDP / Ports (Monitoring)</h2>${portTable}</div>
-<div class="section"><h2>Schnittstellen mit LLDP (Konfig-Tabelle)</h2>${ifTable}</div>
-<p style="font-size:11px;color:#94a3b8;margin-top:24px">OnSite Web · Nur Geräte am oben gewählten Netzwerkplan-Standort.</p>
-</body>
-</html>`;
-
-  const win = window.open('', '_blank');
-  if (!win) {
-    toast('error', 'Popup blockiert', 'Bitte Pop-ups für diese Seite erlauben, um den PDF-Export zu nutzen.');
-    return;
+    const fname = `netzwerkplan-${topoExportFilenameSlug()}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(fname);
+    toast('success', 'PDF heruntergeladen', fname);
+  } catch (e) {
+    console.error(e);
+    toast('error', 'PDF fehlgeschlagen', e?.message || String(e));
+  } finally {
+    window.setLoading?.(false);
   }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
-  try { win.document.title = `Netzwerkplan · ${topoSiteExportLabel()}`; } catch {}
-  win.focus();
-  setTimeout(() => { win.print(); }, 500);
-  toast('info', 'PDF erstellen', 'Im Druckdialog „Als PDF speichern“ wählen (z. B. Microsoft Print to PDF).');
 }
 
 function initTopoEvents() {

@@ -61,14 +61,67 @@ async function loadNeighborsData() {
   S.wlanNeighbors = await loadWlanNeighbors(ids);
 }
 
+/** LLDP-Nachbar kann String oder Objekt (JSON) sein — Topologie braucht einen Suchstring. */
+function normalizeLldpNeighborEntry(x) {
+  if (x == null) return '';
+  if (typeof x === 'string') return x.trim();
+  if (typeof x === 'object') {
+    const s = x.name || x.systemName || x.hostName || x.lldpName || x.sysName || x.chassisId || '';
+    return String(s).trim();
+  }
+  return String(x).trim();
+}
+
+async function loadWiredStations(deviceIds) {
+  if (!deviceIds.length) return [];
+  const from = new Date(Date.now() - 86400000).toISOString(); /* 24h — Aggregation oft nicht minütlich */
+  const cols = [
+    'deviceId', 'timeMs', 'localPortId', 'macAddress',
+    'remoteName', 'remoteMacAddress', 'remotePortId', 'remoteDescription',
+    'remoteCapabilitiesSupported', 'remoteCapabilitiesEnabled',
+  ];
+  const colStr = cols.map(c => `column=${encodeURIComponent(c)}`).join('&');
+  const all = [];
+  for (let i = 0; i < deviceIds.length; i += 10) {
+    const chunk = deviceIds.slice(i, i + 10);
+    const qs = chunk.map(id => `deviceId=${encodeURIComponent(id)}`).join('&')
+      + `&from=${encodeURIComponent(from)}&limit=2000&${colStr}`;
+    try {
+      const data = await api('monitoring', `/api/${S.accountId}/tables/wired-station?${qs}`);
+      const rows = data?.data || [];
+      const byKey = new Map();
+      for (const r of rows) {
+        const k = `${r.deviceId}__${r.macAddress || ''}`;
+        if (!byKey.has(k) || (r.timeMs || 0) > (byKey.get(k).timeMs || 0)) byKey.set(k, r);
+      }
+      for (const r of byKey.values()) {
+        const dev = S.devices[r.deviceId];
+        all.push({
+          ...r,
+          _deviceId: r.deviceId,
+          _deviceName: dev?.status?.name || deviceName(dev) || r.deviceId,
+        });
+      }
+    } catch (e) {
+      console.warn('[loadWiredStations]', e.message);
+    }
+  }
+  return all;
+}
+
 async function loadLldpFullData() {
-  const ids=Object.keys(S.devices);
-  const [lldpData, lldpTableData] = await Promise.all([
+  const ids = Object.keys(S.devices);
+  const [lldpData, lldpTableData, wiredData] = await Promise.all([
     loadLldpData(ids),
-    loadTable(ids, 'lan-interface', ['deviceId','name','lldpName','active','description']),
+    loadTable(ids, 'lan-interface', [
+      'deviceId','name','lldpName','lldpCapabilities','macAddress','qosClass','active','description',
+    ]),
+    /* wired-station: nicht nur isSwitchDevice — sonst fehlen Zeilen z. B. wenn LMC-Typ ≠ SWITCH trotz Switch-Modell */
+    ids.length ? loadWiredStations(ids) : Promise.resolve([]),
   ]);
-  S.lldpNeighbors=lldpData;
-  S.lldpTable=lldpTableData;
+  S.lldpNeighbors = lldpData;
+  S.lldpTable = lldpTableData;
+  S.wiredStations = wiredData;
   updateAllBadges();
 }
 
@@ -234,7 +287,7 @@ async function loadLldpData(deviceIds) {
               portNum: parseInt(portNum),
               portName: p.name||`LAN-${portNum}`,
               description: p.description||'',
-              lldpNames: p.lldpNames||[],
+              lldpNames: (p.lldpNames || []).map(normalizeLldpNeighborEntry).filter(Boolean),
               active: !!p.active,
               loops: p.loops||0,
               speed: p.speed,
@@ -245,6 +298,13 @@ async function loadLldpData(deviceIds) {
               txBitPerSec: (p.txBitPerSec || 0) / 1000,
               configuration: p.configuration||'',
               qosClass: p.qosClass,
+              portMac: p.macAddress || '',
+              lldpCapabilities: p.lldpCapabilities || '',
+              lldpRemotePorts: Array.isArray(p.lldpRemotePorts) ? p.lldpRemotePorts
+                : Array.isArray(p.lldpPeerPorts) ? p.lldpPeerPorts : undefined,
+              lldpRemoteIfNames: Array.isArray(p.lldpRemoteIfNames) ? p.lldpRemoteIfNames
+                : Array.isArray(p.lldpRemoteInterfaceNames) ? p.lldpRemoteInterfaceNames : undefined,
+              lldpRemotePort: p.lldpRemotePort || p.remotePort || '',
             }))
             .sort((a,b)=>a.portNum-b.portNum);
         } catch(e) {
@@ -369,4 +429,5 @@ export {
   loadNeighborsData,
   loadLldpFullData,
   loadConfigData,
+  loadWiredStations,
 };

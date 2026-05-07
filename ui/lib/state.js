@@ -6,7 +6,7 @@ const S = {
   wlanNetworkMap:{},   // "{deviceId}:{ssid}" → internal LCOS LX network name
   wlanNeighbors:[], // neighbor AP objects
   accountNetworks:[], // [{id, name}] — LMC config networks
-  vpnConnections:[], wanInterfaces:[], lldpNeighbors:[], lldpTable:[],
+  vpnConnections:[], wanInterfaces:[], lldpNeighbors:[], lldpTable:[], wiredStations:[],
   configStates:{},
   lastSync:null, filter:'all', wlanFilter:'all', nbFilter:'all',
   devFilter:'all', siteFilter:'all',

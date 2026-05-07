@@ -1,3 +1,5 @@
 node_modules/
 package-lock.json
 KNOWLEDGE.md
+# Lokale Test-Zugangsdaten (niemals committen)
+dev-bootstrap.json

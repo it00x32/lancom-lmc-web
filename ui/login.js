@@ -2,7 +2,7 @@ import S from './lib/state.js';
 import { api, toast } from './lib/api.js';
 import { escHtml } from './lib/helpers.js';
 
-const APP_VERSION = 'v1.14.13';
+const APP_VERSION = 'v1.14.21';
 
 document.title = `OnSite Web · ${APP_VERSION}`;
 
@@ -37,6 +37,12 @@ async function doLogin() {
     else localStorage.removeItem('lmc_api_key');
     if(customBase) localStorage.setItem('lmc_api_base',customBase);
     else localStorage.removeItem('lmc_api_base');
+    const pref = localStorage.getItem('lmc_account_id');
+    const prefAcc = pref && accounts.find(a => a.id === pref);
+    if (prefAcc) {
+      await selectAccount(prefAcc.id, prefAcc.name);
+      return;
+    }
     if(accounts.length===1) { await selectAccount(accounts[0].id); }
     else { showAccountPicker(accounts); }
   } catch(e) {
@@ -101,7 +107,7 @@ function doLogout() {
   clearInterval(S.timer);
   S.apiKey=S.accountId=S.accountName=S.apiBase='';
   S.devices={}; S.statistics={}; S.wlanClients={}; S.wlanStations=[]; S.wlanNeighbors=[]; S.wlanNetworkMap={}; S.accountNetworks=[];
-  S.vpnConnections=[]; S.wanInterfaces=[]; S.lldpNeighbors=[]; S.lldpTable=[]; S.configStates={};
+  S.vpnConnections=[]; S.wanInterfaces=[]; S.lldpNeighbors=[]; S.lldpTable=[]; S.wiredStations=[]; S.configStates={};
   S.siteFilter='all'; S.devFilter='all';
   S._loaded.clear();
   window.resetTopoState?.();

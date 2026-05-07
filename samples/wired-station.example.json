@@ -1,0 +1,20 @@
+{
+  "_comment": "Beispielstruktur für GET /api/{accountId}/tables/wired-station (Monitoring). Keine echten Gerätedaten.",
+  "data": [
+    {
+      "accountId": "00000000-0000-0000-0000-000000000000",
+      "siteId": "00000000-0000-0000-0000-000000000000",
+      "deviceId": "00000000-0000-0000-0000-000000000001",
+      "timeMs": 1746619200000,
+      "localPortId": 12,
+      "macAddress": "AA:BB:CC:DD:EE:01",
+      "remotePortId": "Gi1/0/1",
+      "remoteName": "example-peer.device",
+      "remoteMacAddress": "AA:BB:CC:DD:EE:02",
+      "remoteDescription": "Optional Beschreibung",
+      "remoteCapabilitiesSupported": "…",
+      "remoteCapabilitiesEnabled": "…"
+    }
+  ],
+  "metadata": { "totalRows": 1 }
+}

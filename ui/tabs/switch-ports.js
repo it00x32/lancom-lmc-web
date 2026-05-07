@@ -1,6 +1,6 @@
 import S from '../lib/state.js';
 import { api } from '../lib/api.js';
-import { escHtml, deviceName, isOnline, fmtRate } from '../lib/helpers.js';
+import { escHtml, deviceName, isOnline, fmtRate, isSwitchDevice } from '../lib/helpers.js';
 
 let spData = {};
 let spLoading = false;
@@ -14,10 +14,7 @@ async function loadSwitchPorts() {
   if (icon) icon.classList.add('fa-spin');
   spData = {};
 
-  const switches = Object.entries(S.devices).filter(([, d]) => {
-    const t = (d.status?.type || d.deviceType || '').toUpperCase();
-    return t === 'SWITCH';
-  });
+  const switches = Object.entries(S.devices).filter(([, d]) => isSwitchDevice(d));
 
   for (const [id, dev] of switches) {
     try {
@@ -44,7 +41,7 @@ function renderSwitchPorts() {
 
   const entries = Object.entries(spData);
   if (!entries.length) {
-    const swCount = Object.values(S.devices).filter(d => (d.status?.type || '').toUpperCase() === 'SWITCH').length;
+    const swCount = Object.values(S.devices).filter(isSwitchDevice).length;
     wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-ethernet"></i><h3>Keine Switch-Daten</h3><p>${swCount} Switches erkannt, keine Port-Details verfügbar.</p></div>`;
     return;
   }

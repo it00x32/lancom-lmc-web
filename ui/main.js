@@ -351,18 +351,43 @@ function setLoading(show, text) {
 window.setLoading = setLoading;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-function init() {
+async function init() {
+  const h = location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1') {
+    try {
+      const r = await fetch('/dev-bootstrap.json', { cache: 'no-store' });
+      if (r.ok) {
+        const j = await r.json();
+        if (j.accountId) localStorage.setItem('lmc_account_id', String(j.accountId).trim());
+        if (j.apiKey) {
+          document.getElementById('api-key-input').value = String(j.apiKey).trim();
+          document.getElementById('save-token-cb').checked = true;
+        }
+        if (j.apiBase) {
+          document.getElementById('api-base-input').value = String(j.apiBase).trim();
+          document.getElementById('login-advanced').open = true;
+        }
+      }
+    } catch (_) {}
+  }
+
   document.getElementById('app-version').textContent = APP_VERSION;
   const headerVer = document.getElementById('header-app-version');
   if (headerVer) headerVer.textContent = APP_VERSION;
 
-  const saved = localStorage.getItem('lmc_api_key');
-  if (saved) {
-    document.getElementById('api-key-input').value = saved;
-    document.getElementById('save-token-cb').checked = true;
+  const inpKey = document.getElementById('api-key-input');
+  if (!inpKey.value) {
+    const saved = localStorage.getItem('lmc_api_key');
+    if (saved) {
+      inpKey.value = saved;
+      document.getElementById('save-token-cb').checked = true;
+    }
   }
-  const savedBase = localStorage.getItem('lmc_api_base');
-  if (savedBase) document.getElementById('api-base-input').value = savedBase;
+  const inpBase = document.getElementById('api-base-input');
+  if (!inpBase.value) {
+    const savedBase = localStorage.getItem('lmc_api_base');
+    if (savedBase) inpBase.value = savedBase;
+  }
 
   const savedInterval = localStorage.getItem('lmc_refresh_interval');
   if (savedInterval) {
@@ -388,4 +413,4 @@ function init() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => { init(); });

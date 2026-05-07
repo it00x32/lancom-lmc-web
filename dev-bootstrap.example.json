@@ -1,0 +1,5 @@
+{
+  "apiKey": "LMC-API-KEY hier einfügen",
+  "accountId": "optional: UUID — bei mehreren Accounts wird dieser gewählt",
+  "apiBase": ""
+}

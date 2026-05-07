@@ -79,6 +79,13 @@ function deviceTypeLabel(d) {
   return raw.replace(/_/g, ' ');
 }
 
+/** Switch (LMC-Klassifikation): nur Gerätetyp aus API — keine Modellnamen-Heuristik (XS/CS/GS/…). */
+function isSwitchDevice(d) {
+  if (!d || typeof d !== 'object') return false;
+  const t = (d.status?.type || d.deviceType || '').toString().trim().toUpperCase();
+  return t === 'SWITCH';
+}
+
 function fmtRelTime(ts) {
   if(!ts) return '';
   const diff = Date.now() - new Date(ts).getTime();
@@ -125,7 +132,7 @@ function sevBadge(sev) {
 
 export {
   isOnline, isWanUp, fmtWanState, fmt, fmtBytes, fmtRate, signalLevel, signalBar,
-  bandBadge, statusDot, escHtml, deviceName, deviceTypeLabel, fmtRelTime, debounce,
+  bandBadge, statusDot, escHtml, deviceName, deviceTypeLabel, isSwitchDevice, fmtRelTime, debounce,
   _dirtyTabs, markAllTabsDirty, renderTabIfActive,
   debouncedRenderDevices, debouncedRenderWlan, debouncedRenderVpn, debouncedRenderWan,
   debouncedRenderNeighbors, debouncedRenderLldp, debouncedRenderLogTable,
